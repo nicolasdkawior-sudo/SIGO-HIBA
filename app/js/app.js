@@ -20,6 +20,7 @@ const App = {
   cashflowSearch: '',
   pipelineSelectedStage: null, // Etapa seleccionada al hacer clic en el gráfico
   charts: {},
+  chartsNeedRefresh: false,
 
   init() {
     DataStore.init();
@@ -97,6 +98,19 @@ const App = {
     document.getElementById('cardKpiSuspendidas')?.addEventListener('click', () => {
       this.setFiltroFinalizadas('suspendidas');
     });
+
+    // Detección en tiempo real de partida compartida en modal
+    document.getElementById('modalObraPartida')?.addEventListener('input', (e) => {
+      this.checkSharedPartidaNotice(e.target.value);
+    });
+
+    // Sincronización instantánea entre múltiples pestañas / ventanas del navegador
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'sigo_obras_data' || e.key === 'sigo_users_list') {
+        DataStore.init();
+        this.render();
+      }
+    });
   },
 
   // ================= RESTABLECER / LIMPIAR TODOS LOS FILTROS =================
@@ -168,6 +182,12 @@ const App = {
       if (el) el.classList.toggle('hidden', v !== viewName);
     });
 
+    if (viewName === 'dashboard' && this.chartsNeedRefresh) {
+      const kpis = DataStore.getKPIs(this.filters);
+      this.renderCharts(kpis);
+      this.chartsNeedRefresh = false;
+    }
+
     this.render();
   },
 
@@ -197,17 +217,18 @@ const App = {
     this.renderKPIs(kpis);
     this.renderMedicalAlert();
 
+    // Sincronizar y renderizar TODOS los tableros y registros para garantizar consistencia total
+    this.renderDashboardStageList();
+    this.renderKanban();
+    this.renderTable();
+    this.renderCashflow();
+    this.renderGantt();
+
     if (this.currentView === 'dashboard') {
       this.renderCharts(kpis);
-      this.renderDashboardStageList();
-    } else if (this.currentView === 'kanban') {
-      this.renderKanban();
-    } else if (this.currentView === 'table') {
-      this.renderTable();
-    } else if (this.currentView === 'gantt') {
-      this.renderGantt();
-    } else if (this.currentView === 'cashflow') {
-      this.renderCashflow();
+      this.chartsNeedRefresh = false;
+    } else {
+      this.chartsNeedRefresh = true;
     }
 
     if (window.lucide) {
@@ -2160,6 +2181,28 @@ const App = {
     if (window.lucide) lucide.createIcons();
   },
 
+  checkSharedPartidaNotice(partidaVal) {
+    const pVal = (partidaVal || '').trim();
+    const currentId = document.getElementById('modalObraId')?.innerText;
+    const noticeShared = document.getElementById('modalPartidaSharedNotice');
+    const textShared = document.getElementById('modalPartidaSharedText');
+    if (!noticeShared || !textShared) return;
+
+    if (pVal && pVal !== 'S/D' && pVal.toUpperCase() !== 'PENDIENTE') {
+      const related = DataStore.items.filter(x => x.id !== currentId && (x.partida || '').trim() === pVal);
+      if (related.length > 0) {
+        const namesPreview = related.slice(0, 2).map(x => `"${x.nombre}"`).join(', ');
+        const extra = related.length > 2 ? ` y ${related.length - 2} proyectos más` : '';
+        textShared.innerText = `Esta partida coincide con otros ${related.length} proyecto(s) (${namesPreview}${extra}).`;
+        noticeShared.classList.remove('hidden');
+      } else {
+        noticeShared.classList.add('hidden');
+      }
+    } else {
+      noticeShared.classList.add('hidden');
+    }
+  },
+
   openObraModal(id, startInEditMode = false) {
     const item = DataStore.getItemById(id);
     if (!item) return;
@@ -2179,6 +2222,11 @@ const App = {
 
     // Poblar campos del formulario
     this.populateObraModalFields(item);
+
+    // Detección de partida presupuestaria compartida
+    this.checkSharedPartidaNotice(item.partida);
+    const chkSync = document.getElementById('chkSyncSharedPartida');
+    if (chkSync) chkSync.checked = true;
 
     // Botón de asignación directa de partida si tiene permiso específico
     const btnAsignarPartida = document.getElementById('btnModalAsignarPartida');
@@ -2240,6 +2288,7 @@ const App = {
     const oldResponsable = item.responsable;
     const oldFechaFin = item.fecha_fin_etapa;
     const oldEstado = item.estado;
+    const oldPartida = (item.partida || '').trim();
 
     const newTitle = document.getElementById('modalObraTitle').value.trim();
     if (!newTitle) {
@@ -2270,7 +2319,7 @@ const App = {
     if ((oldResponsable || '') !== newResponsable) changes.push(`Responsable: "${oldResponsable || 'Sin asignar'}" ➔ "${newResponsable || 'Sin asignar'}"`);
     if ((oldFechaFin || '') !== newFechaFin) changes.push(`Fecha Fin: "${oldFechaFin || 'S/D'}" ➔ "${newFechaFin || 'S/D'}"`);
     if (oldEstado !== newEstado) changes.push(`Estado: "${oldEstado}" ➔ "${newEstado}"`);
-    if ((item.partida || '') !== newPartida) changes.push(`Partida: "${item.partida || 'Pendiente'}" ➔ "${newPartida || 'Pendiente'}"`);
+    if (oldPartida !== newPartida) changes.push(`Partida: "${oldPartida || 'Pendiente'}" ➔ "${newPartida || 'Pendiente'}"`);
 
     item.nombre = newTitle;
     item.sede = newSede;
@@ -2325,11 +2374,41 @@ const App = {
       observaciones: `✏️ Modificación Administrativa: ${changeSummary}`
     });
 
+    // Sincronización automática de partida presupuestaria en el resto de los registros vinculados
+    let syncCount = 0;
+    const chkSync = document.getElementById('chkSyncSharedPartida');
+    const shouldSync = chkSync ? chkSync.checked : true;
+
+    if (shouldSync && oldPartida && oldPartida !== 'S/D' && oldPartida.toUpperCase() !== 'PENDIENTE' && (oldPartida !== newPartida || (newMontoPartida > 0 && newMontoPartida !== item.monto_partida_usd))) {
+      const relatedToUpdate = DataStore.items.filter(x => x.id !== item.id && (x.partida || '').trim() === oldPartida);
+      relatedToUpdate.forEach(rel => {
+        rel.partida = newPartida;
+        if (newMontoPartida > 0) {
+          rel.monto_partida_usd = newMontoPartida;
+        }
+        if (!rel.historial) rel.historial = [];
+        rel.historial.unshift({
+          fecha: new Date().toLocaleDateString('es-AR') + ' ' + new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }),
+          usuario: `${u.nombre} (Administrador)`,
+          estado_anterior: rel.estado,
+          estado_nuevo: rel.estado,
+          observaciones: `🔄 Sincronización automática: Partida presupuestaria modificada en ${item.id} de "${oldPartida}" a "${newPartida}"`
+        });
+        DataStore.saveItem(rel);
+        syncCount++;
+      });
+    }
+
     DataStore.saveItem(item);
     this.toggleAdminEditMode(false);
     this.closeObraModal();
     this.render();
-    this.showToast(`✅ Obra "${item.id}" actualizada exitosamente por Administrador`);
+
+    if (syncCount > 0) {
+      this.showToast(`✅ Obra "${item.id}" y ${syncCount} registro(s) vinculado(s) actualizados en todos los tableros`);
+    } else {
+      this.showToast(`✅ Obra "${item.id}" actualizada exitosamente en todos los tableros y registros`);
+    }
   },
 
   closeObraModal() {
