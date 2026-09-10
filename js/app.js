@@ -307,6 +307,7 @@ const App = {
       ];
 
       const dataValues = labels.map(lbl => kpis.estadosCount[lbl] || 0);
+      const dataUsd = labels.map(lbl => (kpis.estadosUsd && kpis.estadosUsd[lbl]) ? kpis.estadosUsd[lbl] : 0);
 
       // Colores de las barras con borde destacado si una barra está seleccionada
       const baseColors = [
@@ -340,13 +341,48 @@ const App = {
             borderRadius: 6
           }]
         },
+        plugins: [{
+          id: 'topBarLabels',
+          afterDatasetsDraw(chart) {
+            const { ctx } = chart;
+            const meta = chart.getDatasetMeta(0);
+            if (!meta || !meta.data) return;
+            meta.data.forEach((bar, index) => {
+              const val = dataUsd[index] || 0;
+              const text = DataStore.formatMillionsUSD(val);
+              ctx.save();
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'bottom';
+              ctx.font = 'bold 10px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+              ctx.fillStyle = '#0f172a';
+              ctx.shadowColor = 'rgba(255, 255, 255, 0.85)';
+              ctx.shadowBlur = 3;
+              ctx.fillText(text, bar.x, bar.y - 4);
+              ctx.restore();
+            });
+          }
+        }],
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          layout: {
+            padding: {
+              top: 22
+            }
+          },
           plugins: { 
             legend: { display: false },
             tooltip: {
               callbacks: {
+                label: function(ctx) {
+                  const idx = ctx.dataIndex;
+                  const count = ctx.raw || 0;
+                  const usdVal = dataUsd[idx] || 0;
+                  return [
+                    ` Cantidad: ${count} obra(s)`,
+                    ` Inversión: ${DataStore.formatMillionsUSD(usdVal)} (${DataStore.formatUSD(usdVal)})`
+                  ];
+                },
                 footer: function() {
                   return '👉 Haz clic para ver las obras de esta etapa abajo';
                 }
@@ -354,7 +390,12 @@ const App = {
             }
           },
           scales: {
-            y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+            y: { 
+              beginAtZero: true, 
+              grace: '25%',
+              grid: { color: '#f1f5f9' },
+              ticks: { precision: 0 }
+            },
             x: { 
               grid: { display: false }, 
               ticks: { 
@@ -393,6 +434,7 @@ const App = {
       if (this.charts.sedes) this.charts.sedes.destroy();
       const labels = ['Central', 'San Justo', 'Periféricos'];
       const dataUsd = labels.map(s => kpis.sedesCount[s]?.usd || 0);
+      const totalSedesUsd = dataUsd.reduce((a, b) => a + b, 0);
 
       this.charts.sedes = new Chart(ctxSedes, {
         type: 'doughnut',
@@ -405,15 +447,94 @@ const App = {
             borderColor: '#ffffff'
           }]
         },
+        plugins: [
+          {
+            id: 'doughnutSliceLabels',
+            afterDatasetsDraw(chart) {
+              const { ctx } = chart;
+              const meta = chart.getDatasetMeta(0);
+              if (!meta || !meta.data) return;
+              meta.data.forEach((arc, index) => {
+                const val = dataUsd[index] || 0;
+                if (val <= 0) return;
+                const center = (typeof arc.getCenterPoint === 'function') ? arc.getCenterPoint() : null;
+                if (!center) return;
+                const text = DataStore.formatMillionsUSD(val);
+                ctx.save();
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = 'bold 11px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                ctx.fillStyle = '#ffffff';
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+                ctx.shadowBlur = 3;
+                ctx.fillText(text, center.x, center.y);
+                ctx.restore();
+              });
+            }
+          },
+          {
+            id: 'centerTextDoughnut',
+            beforeDraw(chart) {
+              const { ctx, width, height } = chart;
+              const meta = chart.getDatasetMeta(0);
+              const centerX = (meta && meta.data && meta.data[0]) ? meta.data[0].x : width / 2;
+              const centerY = (meta && meta.data && meta.data[0]) ? meta.data[0].y : height / 2;
+              
+              ctx.save();
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              
+              ctx.font = 'bold 13px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+              ctx.fillStyle = '#0f172a';
+              ctx.fillText(DataStore.formatMillionsUSD(totalSedesUsd), centerX, centerY - 7);
+              
+              ctx.font = 'bold 9px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+              ctx.fillStyle = '#64748b';
+              ctx.fillText('TOTAL INVERSIÓN', centerX, centerY + 10);
+              ctx.restore();
+            }
+          }
+        ],
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          cutout: '60%',
           plugins: {
-            legend: { position: 'bottom' },
+            legend: { 
+              position: 'bottom',
+              labels: {
+                boxWidth: 12,
+                font: { size: 11, weight: 'bold' },
+                generateLabels: function(chart) {
+                  const data = chart.data;
+                  if (data.labels.length && data.datasets.length) {
+                    return data.labels.map((label, i) => {
+                      const val = data.datasets[0].data[i] || 0;
+                      const fill = data.datasets[0].backgroundColor[i];
+                      return {
+                        text: `${label}: ${DataStore.formatMillionsUSD(val)}`,
+                        fillStyle: fill,
+                        strokeStyle: fill,
+                        lineWidth: 1,
+                        hidden: isNaN(data.datasets[0].data[i]) || chart.getDatasetMeta(0).data[i]?.hidden,
+                        index: i
+                      };
+                    });
+                  }
+                  return [];
+                }
+              }
+            },
             tooltip: {
               callbacks: {
                 label: function(ctx) {
-                  return ` ${DataStore.formatUSD(ctx.raw || 0)}`;
+                  const val = ctx.raw || 0;
+                  const sName = labels[ctx.dataIndex];
+                  const c = kpis.sedesCount[sName]?.count || 0;
+                  return [
+                    ` ${sName}: ${DataStore.formatMillionsUSD(val)} (${DataStore.formatUSD(val)})`,
+                    ` Obras asignadas: ${c}`
+                  ];
                 }
               }
             }
@@ -744,7 +865,7 @@ const App = {
           <td class="py-3 px-4 text-center" onclick="event.stopPropagation()">
             <div class="flex items-center justify-center space-x-1.5">
               ${isAdmin ? `
-                <button onclick="App.openObraModal('${item.id}', true)" 
+                <button onclick="event.stopPropagation(); App.openObraModal('${item.id}', true)" 
                         class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded text-xs font-bold inline-flex items-center space-x-1 transition shadow-2xs cursor-pointer" 
                         title="Editar Proyecto (Solo Administrador)">
                   <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
@@ -2041,31 +2162,37 @@ const App = {
   populateObraModalFields(item) {
     const pond = DataStore.getPonderacionGlobal(item);
 
-    document.getElementById('modalObraId').innerText = item.id;
-    document.getElementById('modalObraTitle').value = item.nombre || '';
-    document.getElementById('modalObraSede').value = item.sede || 'Central';
-    document.getElementById('modalObraTipo').value = item.tipo || 'Obra Civil';
-    document.getElementById('modalObraEstado').value = item.estado || 'Estudio de Factibilidad';
-    document.getElementById('modalObraPartida').value = item.partida || '';
-    const inputMontoPartidaEl = document.getElementById('modalObraMontoPartida');
-    if (inputMontoPartidaEl) {
-      inputMontoPartidaEl.value = item.monto_partida_usd || (item.partida ? item.monto_total_usd : '') || '';
-    }
-    document.getElementById('modalObraCategoria').value = item.categoria || 'Obra Civil';
-    document.getElementById('modalObraClasificacion').value = item.clasificacion || '';
-    document.getElementById('modalObraMontoObra').value = item.monto_obra_usd || 0;
-    document.getElementById('modalObraMontoEquip').value = item.monto_equipamiento_usd || 0;
-    document.getElementById('modalObraM2').value = item.superficie_m2 || 0;
-    document.getElementById('modalObraUsdM2').value = item.costo_usd_m2 || 0;
-    document.getElementById('modalObraResponsable').value = item.responsable || '';
-    document.getElementById('modalObraProveedor').value = item.proveedor || '';
-    document.getElementById('modalObraFechaInicio').value = item.fecha_inicio_etapa || '';
-    document.getElementById('modalObraFechaFin').value = item.fecha_fin_etapa || '';
-    document.getElementById('modalObraFechaFinGlobal').value = item.fecha_fin_obra || '';
-    document.getElementById('modalObraPrioridadTec').value = item.prioridad_tecnica || 1;
-    document.getElementById('modalObraPrioridadMed').value = item.prioridad_medica || '';
-    document.getElementById('modalObraPrioridadFin').value = pond.valor || 1;
-    document.getElementById('modalObraObservaciones').value = item.observaciones || '';
+    const setVal = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.value = val !== undefined && val !== null ? val : '';
+    };
+    const setText = (id, text) => {
+      const el = document.getElementById(id);
+      if (el) el.innerText = text !== undefined && text !== null ? text : '';
+    };
+
+    setText('modalObraId', item.id);
+    setVal('modalObraTitle', item.nombre);
+    setVal('modalObraSede', item.sede || 'Central');
+    setVal('modalObraTipo', item.tipo || 'Obra Civil');
+    setVal('modalObraEstado', item.estado || 'Estudio de Factibilidad');
+    setVal('modalObraPartida', item.partida || '');
+    setVal('modalObraMontoPartida', item.monto_partida_usd || (item.partida ? item.monto_total_usd : '') || '');
+    setVal('modalObraCategoria', item.categoria || 'Obra Civil');
+    setVal('modalObraClasificacion', item.clasificacion || '');
+    setVal('modalObraMontoObra', item.monto_obra_usd || 0);
+    setVal('modalObraMontoEquip', item.monto_equipamiento_usd || 0);
+    setVal('modalObraM2', item.superficie_m2 || 0);
+    setVal('modalObraUsdM2', item.costo_usd_m2 || 0);
+    setVal('modalObraResponsable', item.responsable || '');
+    setVal('modalObraProveedor', item.proveedor || '');
+    setVal('modalObraFechaInicio', item.fecha_inicio_etapa || '');
+    setVal('modalObraFechaFin', item.fecha_fin_etapa || '');
+    setVal('modalObraFechaFinGlobal', item.fecha_fin_obra || '');
+    setVal('modalObraPrioridadTec', item.prioridad_tecnica || 1);
+    setVal('modalObraPrioridadMed', item.prioridad_medica || '');
+    setVal('modalObraPrioridadFin', pond.valor || 1);
+    setVal('modalObraObservaciones', item.observaciones || '');
   },
 
   toggleAdminEditMode(enable) {
@@ -2336,24 +2463,29 @@ const App = {
       item.monto_partida_usd = newMontoPartida > 0 ? newMontoPartida : 0;
     }
 
-    item.categoria = document.getElementById('modalObraCategoria').value;
-    item.clasificacion = document.getElementById('modalObraClasificacion').value;
+    const getVal = (id, fallback = '') => {
+      const el = document.getElementById(id);
+      return el ? el.value : fallback;
+    };
+
+    item.categoria = getVal('modalObraCategoria', item.categoria || 'Obra Civil');
+    item.clasificacion = getVal('modalObraClasificacion', item.clasificacion || '');
     item.monto_obra_usd = newMontoObra;
     item.monto_equipamiento_usd = newMontoEquip;
     item.monto_total_usd = newMontoTotal;
-    item.superficie_m2 = parseFloat(document.getElementById('modalObraM2').value) || 0;
-    item.costo_usd_m2 = parseFloat(document.getElementById('modalObraUsdM2').value) || 0;
+    item.superficie_m2 = parseFloat(getVal('modalObraM2')) || 0;
+    item.costo_usd_m2 = parseFloat(getVal('modalObraUsdM2')) || 0;
     item.responsable = newResponsable;
     item.proveedor = newProveedor;
     item.fecha_inicio_etapa = newFechaInicio;
     item.fecha_fin_etapa = newFechaFin;
     item.fecha_fin_obra = newFechaFinGlobal;
-    item.prioridad_tecnica = parseFloat(document.getElementById('modalObraPrioridadTec').value) || 1;
-    item.prioridad_medica = parseFloat(document.getElementById('modalObraPrioridadMed').value) || null;
+    item.prioridad_tecnica = parseFloat(getVal('modalObraPrioridadTec')) || 1;
+    item.prioridad_medica = parseFloat(getVal('modalObraPrioridadMed')) || null;
 
     const pond = DataStore.getPonderacionGlobal(item);
     item.prioridad_final = pond.valor;
-    item.observaciones = document.getElementById('modalObraObservaciones').value;
+    item.observaciones = getVal('modalObraObservaciones', '');
 
     // Sincronizar estructura de cashflow si existe
     if (item.cashflow && typeof item.cashflow === 'object') {

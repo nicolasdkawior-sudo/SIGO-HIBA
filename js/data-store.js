@@ -436,6 +436,12 @@ const DataStore = {
     return `USD ${Math.round(n).toLocaleString('en-US')}`;
   },
 
+  formatMillionsUSD(amount) {
+    const n = parseFloat(amount) || 0;
+    const millions = n / 1000000;
+    return `USD ${millions.toFixed(2)}M`;
+  },
+
   // ================= CARGA DE FACTIBILIDAD =================
   createFactibilidad(data) {
     if (!this.currentUser) throw new Error('No hay sesión iniciada');
@@ -835,6 +841,16 @@ const DataStore = {
       'Suspendida': 0
     };
 
+    const estadosUsd = {
+      'Estudio de Factibilidad': 0,
+      'Proyecto': 0,
+      'Proyecto para licitar': 0,
+      'En licitación': 0,
+      'Obras en Curso': 0,
+      'Obras Finalizadas': 0,
+      'Suspendida': 0
+    };
+
     const sedesCount = {
       'Central': { count: 0, usd: 0 },
       'San Justo': { count: 0, usd: 0 },
@@ -873,8 +889,10 @@ const DataStore = {
       const est = (item.estado === 'Ante Proyecto') ? 'Estudio de Factibilidad' : item.estado;
       if (estadosCount.hasOwnProperty(est)) {
         estadosCount[est]++;
+        estadosUsd[est] = (estadosUsd[est] || 0) + mTotal;
       } else {
         estadosCount[est] = 1;
+        estadosUsd[est] = mTotal;
       }
 
       const s = item.sede || 'Central';
@@ -904,6 +922,7 @@ const DataStore = {
       suspendidas: suspendidasCount,
       porcentajeEnPlazo,
       estadosCount,
+      estadosUsd,
       sedesCount
     };
   },
