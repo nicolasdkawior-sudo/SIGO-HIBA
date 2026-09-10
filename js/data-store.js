@@ -263,12 +263,31 @@ const DataStore = {
 
   init() {
     // 1. Cargar Usuarios
+    let deletedList = [];
+    try {
+      deletedList = JSON.parse(localStorage.getItem('sigo_deleted_usernames') || '[]');
+    } catch (e) {
+      deletedList = [];
+    }
+    const isBlacklisted = (identifier) => {
+      if (!identifier) return false;
+      return deletedList.includes(identifier.toLowerCase());
+    };
+
     const localUsers = localStorage.getItem('sigo_users_list');
     if (localUsers) {
       try {
         this.users = JSON.parse(localUsers);
-        // Garantizar que los usuarios maestros obligatorios siempre existan
+        // Filtrar inmediatamente cualquier usuario que haya sido eliminado previamente
+        this.users = this.users.filter(u => 
+          !isBlacklisted(u.id) && !isBlacklisted(u.username) && !isBlacklisted(u.email)
+        );
+
+        // Garantizar que los usuarios maestros obligatorios existan ÚNICAMENTE si no fueron eliminados
         DEFAULT_USERS.forEach(defU => {
+          if (isBlacklisted(defU.id) || isBlacklisted(defU.username) || isBlacklisted(defU.email)) {
+            return; // Usuario fue expresamente eliminado por el usuario, JAMÁS restaurar
+          }
           const existing = this.users.find(u => 
             (u.username && u.username.toLowerCase() === defU.username.toLowerCase()) ||
             (u.email && u.email.toLowerCase() === defU.email.toLowerCase())
@@ -284,10 +303,14 @@ const DataStore = {
           }
         });
       } catch (e) {
-        this.users = [...DEFAULT_USERS];
+        this.users = DEFAULT_USERS.filter(defU => 
+          !isBlacklisted(defU.id) && !isBlacklisted(defU.username) && !isBlacklisted(defU.email)
+        ).map(u => ({ ...u }));
       }
     } else {
-      this.users = [...DEFAULT_USERS];
+      this.users = DEFAULT_USERS.filter(defU => 
+        !isBlacklisted(defU.id) && !isBlacklisted(defU.username) && !isBlacklisted(defU.email)
+      ).map(u => ({ ...u }));
     }
 
     // Asegurar que ningún usuario de la lista quede sin hash ni username
@@ -296,11 +319,15 @@ const DataStore = {
       if (!u.salt) u.salt = generateSalt();
       if (!u.password_hash) u.password_hash = hashPassword('Admin2025!', u.salt);
       if (u.debe_cambiar_clave === undefined) u.debe_cambiar_clave = false;
+      if (u.activo === undefined) u.activo = true;
     });
     this.persistUsers();
 
     const activeUsrId = localStorage.getItem('sigo_active_user_id');
     this.currentUser = activeUsrId ? (this.users.find(u => u.id === activeUsrId && u.activo) || null) : null;
+    if (activeUsrId && !this.currentUser) {
+      localStorage.removeItem('sigo_active_user_id');
+    }
 
     // 2. Cargar Obras
     const localObras = localStorage.getItem('sigo_obras_data');
@@ -809,6 +836,17 @@ const DataStore = {
       throw new Error(`El usuario "${username}" ya se encuentra registrado. Elige otro nombre de usuario.`);
     }
 
+    // Si el usuario estaba previamente en la lista negra de eliminados, removerlo al darlo de alta intencionalmente
+    let deletedList = [];
+    try {
+      deletedList = JSON.parse(localStorage.getItem('sigo_deleted_usernames') || '[]');
+    } catch (e) {
+      deletedList = [];
+    }
+    const identifiersToRemove = [username, (userData.email || '').toLowerCase()].filter(Boolean);
+    deletedList = deletedList.filter(item => !identifiersToRemove.includes(item));
+    localStorage.setItem('sigo_deleted_usernames', JSON.stringify(deletedList));
+
     const newUser = {
       id: `usr-${Date.now()}`,
       username: username,
@@ -841,20 +879,81 @@ const DataStore = {
       return { success: false, msg: 'Usuario no encontrado.' };
     }
     const deleted = this.users.splice(idx, 1)[0];
+
+    // Registrar en blacklist permanente en localStorage para que NUNCA vuelva a resucitar en recarga o reinicio
+    let deletedList = [];
+    try {
+      deletedList = JSON.parse(localStorage.getItem('sigo_deleted_usernames') || '[]');
+    } catch (e) {
+      deletedList = [];
+    }
+    const toAdd = [deleted.id, deleted.username, deleted.email].filter(Boolean).map(s => s.toLowerCase());
+    toAdd.forEach(item => {
+      if (!deletedList.includes(item)) deletedList.push(item);
+    });
+    localStorage.setItem('sigo_deleted_usernames', JSON.stringify(deletedList));
+
     this.persistUsers();
-    return { success: true, msg: `Usuario "${deleted.nombre}" (${deleted.username}) eliminado permanentemente.` };
+    return { success: true, msg: `Usuario "${deleted.nombre}" (@${deleted.username}) eliminado permanentemente del sistema.` };
   },
 
-  resetUserPassword(userId, newTempPassword = 'Hiba' + Math.floor(1000 + Math.random() * 9000) + '!') {
+  revokeUserAccess(userId) {
+    if (this.currentUser && this.currentUser.id === userId) {
+      return { success: false, msg: 'No puedes revocar tu propio acceso mientras estás conectado.' };
+    }
+    const user = this.users.find(u => u.id === userId);
+    if (!user) return { success: false, msg: 'Usuario no encontrado.' };
+    user.activo = false;
+    this.persistUsers();
+    return { success: true, msg: `Acceso revocado para "${user.nombre}". No podrá ingresar al sistema.` };
+  },
+
+  restoreUserAccess(userId) {
+    const user = this.users.find(u => u.id === userId);
+    if (!user) return { success: false, msg: 'Usuario no encontrado.' };
+    user.activo = true;
+    this.persistUsers();
+    return { success: true, msg: `Acceso restaurado para "${user.nombre}". Ya puede volver a ingresar.` };
+  },
+
+  forcePasswordChange(userId, tempPassword) {
     const user = this.users.find(u => u.id === userId);
     if (!user) return { success: false, msg: 'Usuario no encontrado.' };
 
+    const tempPwd = (tempPassword || ('Hiba' + Math.floor(1000 + Math.random() * 9000) + '!')).trim();
     const salt = generateSalt();
     user.salt = salt;
-    user.password_hash = hashPassword(newTempPassword, salt);
+    user.password_hash = hashPassword(tempPwd, salt);
     user.debe_cambiar_clave = true;
     this.persistUsers();
-    return { success: true, tempPassword: newTempPassword };
+    return { success: true, tempPassword: tempPwd, user: user };
+  },
+
+  resetUserPassword(userId, newTempPassword) {
+    return this.forcePasswordChange(userId, newTempPassword);
+  },
+
+  updateUserPermissions(userId, data) {
+    const user = this.users.find(u => u.id === userId);
+    if (!user) return { success: false, msg: 'Usuario no encontrado.' };
+
+    if (data.nombre) user.nombre = data.nombre.trim();
+    if (data.email) user.email = data.email.trim().toLowerCase();
+    if (data.sede) user.sede = data.sede;
+    if (data.rol) user.rol = data.rol;
+    if (data.puede_crear !== undefined) user.puede_crear = Boolean(data.puede_crear);
+    if (data.puede_avanzar !== undefined) user.puede_avanzar = Boolean(data.puede_avanzar);
+    if (data.puede_priorizar_medica !== undefined) user.puede_priorizar_medica = Boolean(data.puede_priorizar_medica);
+    if (data.puede_asignar_partida !== undefined) user.puede_asignar_partida = Boolean(data.puede_asignar_partida);
+    if (data.solo_lectura !== undefined) user.solo_lectura = Boolean(data.solo_lectura);
+    if (data.debe_cambiar_clave !== undefined) user.debe_cambiar_clave = Boolean(data.debe_cambiar_clave);
+
+    this.persistUsers();
+
+    if (this.currentUser && this.currentUser.id === userId) {
+      this.currentUser = { ...user };
+    }
+    return { success: true, user: user, msg: `Permisos de "${user.nombre}" actualizados correctamente.` };
   },
 
   changePassword(userId, newPassword) {
@@ -879,6 +978,9 @@ const DataStore = {
   toggleUserStatus(userId) {
     const u = this.users.find(x => x.id === userId);
     if (u) {
+      if (this.currentUser && this.currentUser.id === userId && u.activo) {
+        return false;
+      }
       u.activo = !u.activo;
       this.persistUsers();
       return u.activo;
@@ -922,7 +1024,7 @@ const DataStore = {
     if (!user.activo) {
       return { 
         success: false, 
-        msg: `⛔ Acceso Denegado: La cuenta de "${user.nombre}" fue desactivada por la Dirección.` 
+        msg: `⛔ Acceso Denegado: El acceso para "${user.nombre}" ha sido revocado. Contacta al Administrador para su habilitación.` 
       };
     }
 

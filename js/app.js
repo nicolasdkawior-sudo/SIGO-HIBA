@@ -1064,12 +1064,15 @@ const App = {
       html += `
         <tr class="border-b border-slate-100 hover:bg-slate-50 text-xs">
           <td class="py-2.5 px-3">
-            <div class="font-bold text-slate-800 font-mono text-blue-700">${u.username || 'sin_usuario'}</div>
-            ${u.debe_cambiar_clave ? '<span class="text-[9px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold">Clave Temporal</span>' : ''}
+            <div class="font-bold text-slate-800 font-mono text-blue-700">@${u.username || 'sin_usuario'}</div>
+            ${u.debe_cambiar_clave ? '<span class="text-[9px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold inline-flex items-center gap-1 mt-0.5"><i data-lucide="key" class="w-2.5 h-2.5"></i> Clave Provisoria</span>' : ''}
           </td>
           <td class="py-2.5 px-3">
-            <div class="font-bold text-slate-800">${u.nombre} ${isCurrent ? '<span class="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded ml-1 font-semibold">TÚ</span>' : ''}</div>
-            <div class="text-[11px] text-slate-400">${u.email || ''}</div>
+            <div class="font-bold text-slate-800 flex items-center gap-1">
+              <span>${u.nombre}</span>
+              ${isCurrent ? '<span class="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded font-semibold">TÚ</span>' : ''}
+            </div>
+            <div class="text-[11px] text-slate-400 font-normal">${u.email || ''}</div>
           </td>
           <td class="py-2.5 px-3">
             <span class="px-2 py-0.5 rounded font-semibold text-[11px] ${
@@ -1080,32 +1083,259 @@ const App = {
           </td>
           <td class="py-2.5 px-3 font-semibold text-slate-700 uppercase text-[10px]">${u.rol}</td>
           <td class="py-2.5 px-3">
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${u.activo ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}">
-              ${u.activo ? 'Activo' : 'Inactivo'}
-            </span>
+            ${u.activo 
+              ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>Acceso Habilitado</span>' 
+              : '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800"><span class="w-1.5 h-1.5 rounded-full bg-rose-500 mr-1.5"></span>Acceso Revocado</span>'
+            }
           </td>
-          <td class="py-2.5 px-3 text-right space-x-1 whitespace-nowrap">
-            <button type="button" onclick="App.switchUserAccount('${u.id}')" class="px-2 py-1 bg-slate-100 hover:bg-blue-100 text-slate-700 hover:text-blue-800 rounded font-medium text-[11px] transition cursor-pointer">
-              Simular
-            </button>
-            <button type="button" onclick="App.handleResetUserPassword('${u.id}')" title="Resetear contraseña a clave temporal" class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded font-medium text-[11px] transition cursor-pointer">
-              Reset Clave
-            </button>
-            ${!isCurrent ? `
-              <button type="button" onclick="App.toggleUserActive('${u.id}')" class="px-2 py-1 rounded text-[11px] font-medium transition cursor-pointer ${
-                u.activo ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-              }">
-                ${u.activo ? 'Desactivar' : 'Activar'}
+          <td class="py-2.5 px-3 text-right">
+            <div class="flex items-center justify-end space-x-1.5 flex-wrap gap-y-1">
+              <!-- 1. Botón Cambiar Permisos -->
+              <button type="button" onclick="App.openEditPermissionsModal('${u.id}')" title="Modificar rol, sede y permisos granulares" class="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded font-bold text-[11px] transition cursor-pointer flex items-center space-x-1">
+                <i data-lucide="settings" class="w-3 h-3"></i>
+                <span>Permisos</span>
               </button>
-              <button type="button" onclick="App.handleDeleteUser('${u.id}')" title="Eliminar usuario permanentemente" class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded font-medium text-[11px] transition cursor-pointer">
-                Eliminar
+
+              <!-- 2. Botón Quitar/Habilitar Acceso -->
+              ${!isCurrent ? `
+                <button type="button" onclick="App.handleToggleAccess('${u.id}')" title="${u.activo ? 'Quitar acceso al sistema' : 'Habilitar acceso al sistema'}" class="px-2 py-1 rounded font-bold text-[11px] transition cursor-pointer flex items-center space-x-1 border ${
+                  u.activo ? 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200'
+                }">
+                  <i data-lucide="${u.activo ? 'lock' : 'unlock'}" class="w-3 h-3"></i>
+                  <span>${u.activo ? 'Quitar Acceso' : 'Habilitar Acceso'}</span>
+                </button>
+              ` : ''}
+
+              <!-- 3. Botón Forzar Cambio de Clave -->
+              <button type="button" onclick="App.handleForcePasswordChange('${u.id}')" title="Generar clave temporal obligatoria por olvido de contraseña" class="px-2 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded font-bold text-[11px] transition cursor-pointer flex items-center space-x-1">
+                <i data-lucide="key" class="w-3 h-3"></i>
+                <span>Forzar Clave</span>
               </button>
-            ` : ''}
+
+              <!-- 4. Botón Eliminar Definitivamente -->
+              ${!isCurrent ? `
+                <button type="button" onclick="App.handleDeleteUserDirect('${u.id}')" title="Eliminar usuario definitivamente para que no vuelva a aparecer jamás" class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded font-bold text-[11px] transition cursor-pointer flex items-center space-x-1">
+                  <i data-lucide="trash-2" class="w-3 h-3"></i>
+                  <span>Eliminar</span>
+                </button>
+              ` : ''}
+
+              <!-- Simular sesión rápida -->
+              <button type="button" onclick="App.switchUserAccount('${u.id}')" title="Iniciar sesión con este perfil" class="px-1.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] font-medium transition cursor-pointer">
+                Simular
+              </button>
+            </div>
           </td>
         </tr>
       `;
     });
     listEl.innerHTML = html;
+    if (window.lucide) lucide.createIcons();
+  },
+
+  // ================= MODAL: EDITAR PERMISOS =================
+  openEditPermissionsModal(userId) {
+    const user = DataStore.users.find(x => x.id === userId);
+    if (!user) return;
+
+    document.getElementById('editUserId').value = user.id;
+    document.getElementById('editUserName').value = user.nombre || '';
+    document.getElementById('editUserUsername').value = `@${user.username || ''}`;
+    document.getElementById('editUserEmail').value = user.email || '';
+    document.getElementById('editUserSede').value = user.sede || 'Central';
+    document.getElementById('editUserRol').value = user.rol || 'pm_obra';
+
+    document.getElementById('editUserPuedeCrear').checked = Boolean(user.puede_crear);
+    document.getElementById('editUserPuedeAvanzar').checked = Boolean(user.puede_avanzar);
+    document.getElementById('editUserPuedeMedica').checked = Boolean(user.puede_priorizar_medica);
+    document.getElementById('editUserPuedePartida').checked = Boolean(user.puede_asignar_partida);
+    document.getElementById('editUserSoloLectura').checked = Boolean(user.solo_lectura);
+    document.getElementById('editUserDebeCambiarClave').checked = Boolean(user.debe_cambiar_clave);
+
+    const modal = document.getElementById('modalEditPermissions');
+    if (modal) {
+      modal.style.setProperty('display', 'flex', 'important');
+      modal.classList.remove('hidden');
+    }
+    if (window.lucide) lucide.createIcons();
+  },
+
+  closeEditPermissionsModal() {
+    const modal = document.getElementById('modalEditPermissions');
+    if (modal) {
+      modal.style.setProperty('display', 'none', 'important');
+      modal.classList.add('hidden');
+    }
+  },
+
+  handleSaveEditPermissionsSubmit(e) {
+    e.preventDefault();
+    const userId = document.getElementById('editUserId').value;
+    const nombre = document.getElementById('editUserName').value.trim();
+    const email = document.getElementById('editUserEmail').value.trim();
+    const sede = document.getElementById('editUserSede').value;
+    const rol = document.getElementById('editUserRol').value;
+
+    const puedeCrear = document.getElementById('editUserPuedeCrear').checked;
+    const puedeAvanzar = document.getElementById('editUserPuedeAvanzar').checked;
+    const puedeMedica = document.getElementById('editUserPuedeMedica').checked;
+    const puedePartida = document.getElementById('editUserPuedePartida').checked;
+    const soloLectura = document.getElementById('editUserSoloLectura').checked;
+    const debeCambiarClave = document.getElementById('editUserDebeCambiarClave').checked;
+
+    const res = DataStore.updateUserPermissions(userId, {
+      nombre,
+      email,
+      sede,
+      rol,
+      puede_crear: puedeCrear,
+      puede_avanzar: puedeAvanzar,
+      puede_priorizar_medica: puedeMedica,
+      puede_asignar_partida: puedePartida,
+      solo_lectura: soloLectura,
+      debe_cambiar_clave: debeCambiarClave
+    });
+
+    if (res.success) {
+      this.closeEditPermissionsModal();
+      this.renderUsersList();
+      this.renderLoginScreenProfiles();
+      this.updateUserUI();
+      this.render();
+      this.showToast(`✅ ${res.msg}`);
+    } else {
+      alert(res.msg);
+    }
+  },
+
+  // ================= QUITAR / HABILITAR ACCESO =================
+  handleToggleAccess(userId) {
+    const user = DataStore.users.find(x => x.id === userId);
+    if (!user) return;
+
+    if (DataStore.currentUser && DataStore.currentUser.id === userId) {
+      alert("No puedes quitarte el acceso a ti mismo mientras tienes tu sesión activa.");
+      return;
+    }
+
+    if (user.activo) {
+      if (confirm(`¿Estás seguro de QUITAR EL ACCESO al usuario "${user.nombre}" (@${user.username})?\n\nEl usuario quedará deshabilitado y no podrá iniciar sesión en la plataforma.`)) {
+        const res = DataStore.revokeUserAccess(userId);
+        if (res.success) {
+          this.renderUsersList();
+          this.renderLoginScreenProfiles();
+          this.showToast(res.msg);
+        } else {
+          alert(res.msg);
+        }
+      }
+    } else {
+      const res = DataStore.restoreUserAccess(userId);
+      if (res.success) {
+        this.renderUsersList();
+        this.renderLoginScreenProfiles();
+        this.showToast(res.msg);
+      } else {
+        alert(res.msg);
+      }
+    }
+  },
+
+  // ================= FORZAR CAMBIO DE CLAVE (OLVIDO DE CLAVE) =================
+  handleForcePasswordChange(userId) {
+    const user = DataStore.users.find(x => x.id === userId);
+    if (!user) return;
+
+    const res = DataStore.forcePasswordChange(userId);
+    if (res.success) {
+      this.renderUsersList();
+      this.openForcedPasswordModal(user.nombre, user.username, res.tempPassword);
+      this.showToast(`🔑 Clave provisoria generada para @${user.username}`);
+    } else {
+      alert(res.msg);
+    }
+  },
+
+  openForcedPasswordModal(nombre, username, tempPassword) {
+    const descEl = document.getElementById('forcedPasswordModalUserDesc');
+    const valEl = document.getElementById('forcedPasswordValue');
+    const copyBtnText = document.getElementById('btnCopyForcedPasswordText');
+    const modal = document.getElementById('modalForcedPasswordAlert');
+
+    if (descEl) descEl.innerHTML = `Se ha restablecido la clave para <strong>${nombre}</strong> (<code>@${username}</code>).`;
+    if (valEl) valEl.value = tempPassword;
+    if (copyBtnText) copyBtnText.innerText = 'Copiar';
+
+    if (modal) {
+      modal.style.setProperty('display', 'flex', 'important');
+      modal.classList.remove('hidden');
+    }
+    if (window.lucide) lucide.createIcons();
+  },
+
+  closeForcedPasswordModal() {
+    const modal = document.getElementById('modalForcedPasswordAlert');
+    if (modal) {
+      modal.style.setProperty('display', 'none', 'important');
+      modal.classList.add('hidden');
+    }
+  },
+
+  copyForcedPasswordToClipboard() {
+    const valEl = document.getElementById('forcedPasswordValue');
+    const copyBtnText = document.getElementById('btnCopyForcedPasswordText');
+    if (!valEl) return;
+
+    const textToCopy = valEl.value;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        if (copyBtnText) copyBtnText.innerText = '¡Copiado!';
+        this.showToast('📋 ¡Clave provisoria copiada al portapapeles!');
+        setTimeout(() => {
+          if (copyBtnText) copyBtnText.innerText = 'Copiar';
+        }, 2500);
+      }).catch(() => {
+        valEl.select();
+        document.execCommand('copy');
+        if (copyBtnText) copyBtnText.innerText = '¡Copiado!';
+        this.showToast('📋 ¡Clave provisoria copiada!');
+      });
+    } else {
+      valEl.select();
+      document.execCommand('copy');
+      if (copyBtnText) copyBtnText.innerText = '¡Copiado!';
+      this.showToast('📋 ¡Clave provisoria copiada!');
+    }
+  },
+
+  // ================= ELIMINACIÓN DIRECTA Y DEFINITIVA =================
+  handleDeleteUserDirect(userId) {
+    const user = DataStore.users.find(x => x.id === userId);
+    if (!user) return;
+
+    if (DataStore.currentUser && DataStore.currentUser.id === userId) {
+      alert("No puedes eliminar tu propia cuenta mientras estás conectado.");
+      return;
+    }
+
+    if (confirm(`¿ELIMINAR DEFINITIVAMENTE al usuario "${user.nombre}" (@${user.username})?\n\n⚠️ Esta acción borrará el registro de forma permanente. El usuario NO volverá a aparecer en la lista de usuarios, ni al reiniciar o recargar el sistema.`)) {
+      const res = DataStore.deleteUser(userId);
+      if (res.success) {
+        this.renderUsersList();
+        this.renderLoginScreenProfiles();
+        this.showToast(res.msg);
+      } else {
+        alert(res.msg);
+      }
+    }
+  },
+
+  handleDeleteUser(userId) {
+    this.handleDeleteUserDirect(userId);
+  },
+
+  handleResetUserPassword(userId) {
+    this.handleForcePasswordChange(userId);
   },
 
   handleCreateUser(e) {
@@ -1150,37 +1380,9 @@ const App = {
       this.renderUsersList();
       this.renderLoginScreenProfiles();
       this.showToast(`Usuario "${username}" creado. Clave temporal: ${result.tempPassword}`);
-      alert(`✅ Usuario "${result.user.nombre}" creado con éxito.\n\n• Usuario: ${result.user.username}\n• Clave temporal: ${result.tempPassword}\n\nEn su primer inicio de sesión, el sistema le solicitará cambiar la contraseña.`);
+      this.openForcedPasswordModal(result.user.nombre, result.user.username, result.tempPassword);
     } catch (err) {
       alert("Error al dar de alta usuario: " + err.message);
-    }
-  },
-
-  handleDeleteUser(userId) {
-    const user = DataStore.users.find(x => x.id === userId);
-    if (!user) return;
-
-    if (confirm(`¿Estás seguro de ELIMINAR PERMANENTEMENTE al usuario "${user.nombre}" (@${user.username})?\n\nEsta acción borrará definitivamente su registro del sistema.`)) {
-      const res = DataStore.deleteUser(userId);
-      if (res.success) {
-        this.renderUsersList();
-        this.renderLoginScreenProfiles();
-        this.showToast(res.msg);
-      } else {
-        alert(res.msg);
-      }
-    }
-  },
-
-  handleResetUserPassword(userId) {
-    const user = DataStore.users.find(x => x.id === userId);
-    if (!user) return;
-
-    const res = DataStore.resetUserPassword(userId);
-    if (res.success) {
-      this.renderUsersList();
-      alert(`🔑 Contraseña restablecida para ${user.nombre} (@${user.username}):\n\n• Nueva Clave Temporal: ${res.tempPassword}\n\nEl usuario deberá ingresar con esta clave temporal y se le solicitará actualizarla.`);
-      this.showToast(`Clave temporal generada: ${res.tempPassword}`);
     }
   },
 
@@ -1192,10 +1394,7 @@ const App = {
   },
 
   toggleUserActive(userId) {
-    const activo = DataStore.toggleUserStatus(userId);
-    this.renderUsersList();
-    this.renderLoginScreenProfiles();
-    this.showToast(activo ? "Usuario reactivado" : "Usuario dado de baja");
+    this.handleToggleAccess(userId);
   },
 
   switchUserAccount(userId) {
