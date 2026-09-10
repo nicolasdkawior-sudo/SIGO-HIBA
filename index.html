@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIGO HIBA | Gestión Integral de Obras e Inversiones</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- SheetJS CDN para exportar Excel -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <!-- Supabase JS Client v2 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col">
+
+  <!-- ================= TOPBAR BRANDING & AUTH ================= -->
+  <header class="bg-slate-900 text-white border-b border-slate-800 px-6 py-3 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+    <div class="flex items-center space-x-4">
+      <div class="bg-blue-600 text-white p-2 rounded-lg font-bold flex items-center justify-center shadow-md">
+        <i data-lucide="building-2" class="w-5 h-5"></i>
+      </div>
+      <div>
+        <div class="flex items-center space-x-2">
+          <h1 class="font-extrabold text-base tracking-tight">SIGO <span class="text-blue-400 font-normal">| HIBA</span></h1>
+          <span class="text-[11px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">v2.5 Enterprise</span>
+        </div>
+        <p class="text-xs text-slate-400">Sistema Integral de Gestión de Obras e Inversiones</p>
+      </div>
+    </div>
+
+    <!-- Right Controls: Cloud Status, Role Selector, Settings, New Obra -->
+    <div class="flex items-center space-x-4">
+      <!-- Status Cloud / Local -->
+      <div class="flex items-center space-x-2 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700 text-xs">
+        <span id="cloudStatusIndicator" class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+        <span id="cloudStatusText" class="text-slate-300 font-medium">Modo Local / Demo</span>
+      </div>
+
+      <!-- Role Selector -->
+      <button onclick="App.openRoleModal()" class="flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700 text-xs transition">
+        <i data-lucide="user-check" class="w-3.5 h-3.5 text-blue-400"></i>
+        <div class="text-left">
+          <div id="userNameLabel" class="font-semibold text-white leading-tight">Dirección General</div>
+          <div id="userRoleBadge" class="text-[10px] text-blue-400">ADMIN</div>
+        </div>
+      </button>
+
+      <!-- Botón Configurar Supabase -->
+      <button onclick="App.openSettingsModal()" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition" title="Configuración de Supabase">
+        <i data-lucide="settings" class="w-5 h-5"></i>
+      </button>
+
+      <!-- Botón + Nueva Obra -->
+      <button onclick="App.openNewObraModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center space-x-1.5 shadow-sm transition">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        <span>Nueva Obra</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ================= SUB-HEADER: GLOBAL FILTERS & NAVIGATION ================= -->
+  <div class="bg-white border-b border-slate-200 px-6 py-2.5 flex flex-wrap items-center justify-between gap-4 sticky top-[57px] z-30 shadow-xs">
+    <!-- Navigation Tabs -->
+    <nav class="flex space-x-1 sm:space-x-4 border-b border-transparent">
+      <button data-view-target="dashboard" class="nav-tab-active px-3 py-2 text-xs sm:text-sm flex items-center space-x-2">
+        <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+        <span>Dashboard</span>
+      </button>
+      <button data-view-target="kanban" class="text-slate-500 hover:text-slate-900 px-3 py-2 text-xs sm:text-sm flex items-center space-x-2 border-b-2 border-transparent">
+        <i data-lucide="columns-3" class="w-4 h-4"></i>
+        <span>Tablero Kanban</span>
+      </button>
+      <button data-view-target="table" class="text-slate-500 hover:text-slate-900 px-3 py-2 text-xs sm:text-sm flex items-center space-x-2 border-b-2 border-transparent">
+        <i data-lucide="table" class="w-4 h-4"></i>
+        <span>Listado ERP</span>
+      </button>
+      <button data-view-target="gantt" class="text-slate-500 hover:text-slate-900 px-3 py-2 text-xs sm:text-sm flex items-center space-x-2 border-b-2 border-transparent">
+        <i data-lucide="calendar" class="w-4 h-4"></i>
+        <span>Cronograma Gantt</span>
+      </button>
+      <button data-view-target="cashflow" class="text-slate-500 hover:text-slate-900 px-3 py-2 text-xs sm:text-sm flex items-center space-x-2 border-b-2 border-transparent">
+        <i data-lucide="dollar-sign" class="w-4 h-4"></i>
+        <span>Cashflow Anual</span>
+      </button>
+    </nav>
+
+    <!-- Global Controls: Sede, Tipo, Buscador, Exportar -->
+    <div class="flex items-center space-x-3">
+      <!-- Sede Filter -->
+      <div class="flex items-center space-x-1.5 text-xs">
+        <span class="text-slate-500 font-medium">Sede:</span>
+        <select id="filterSede" class="bg-slate-100 border border-slate-300 text-slate-800 rounded-md px-2.5 py-1.5 font-medium focus:outline-none focus:ring-1 focus:ring-blue-500">
+          <option value="TODAS">Todas las Sedes</option>
+          <option value="Almagro">Almagro</option>
+          <option value="San Justo">San Justo</option>
+          <option value="Periférico">Periféricos</option>
+        </select>
+      </div>
+
+      <!-- Tipo Filter -->
+      <div class="flex items-center space-x-1.5 text-xs">
+        <span class="text-slate-500 font-medium">Módulo:</span>
+        <select id="filterTipo" class="bg-slate-100 border border-slate-300 text-slate-800 rounded-md px-2.5 py-1.5 font-medium focus:outline-none focus:ring-1 focus:ring-blue-500">
+          <option value="TODOS">Todos los Proyectos</option>
+          <option value="Obra Civil">Obras Civiles</option>
+          <option value="Infraestructura">Infraestructura</option>
+        </select>
+      </div>
+
+      <!-- Buscador -->
+      <div class="relative">
+        <input type="text" id="inputSearch" placeholder="Buscar proyecto, PM, partida..." 
+               class="bg-slate-100 border border-slate-300 text-xs rounded-md pl-8 pr-3 py-1.5 w-52 focus:w-64 transition-all focus:outline-none focus:ring-1 focus:ring-blue-500">
+        <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5"></i>
+      </div>
+
+      <!-- Exportar Excel -->
+      <button onclick="App.exportExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded-md flex items-center space-x-1 shadow-xs transition">
+        <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+        <span>Excel</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= MAIN CONTENT AREA ================= -->
+  <main class="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+
+    <!-- KPI CARDS SUMMARY -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <!-- Card 1: Inversión Total -->
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+        <div class="flex items-center justify-between text-slate-500 mb-1">
+          <span class="text-xs font-semibold uppercase tracking-wider">Inversión Comprometida</span>
+          <i data-lucide="wallet" class="w-4 h-4 text-blue-500"></i>
+        </div>
+        <div class="text-xl font-extrabold text-slate-900" id="kpiTotalUsd">$0</div>
+        <div class="text-xs text-slate-400 mt-1" id="kpiTotalProyectos">0 proyectos</div>
+      </div>
+
+      <!-- Card 2: En Plazo -->
+      <div id="cardKpiEnPlazo" class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between cursor-pointer hover:border-emerald-300 transition">
+        <div class="flex items-center justify-between text-slate-500 mb-1">
+          <span class="text-xs font-semibold uppercase tracking-wider">En Curso en Plazo</span>
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+        </div>
+        <div class="flex items-baseline space-x-2">
+          <div class="text-xl font-extrabold text-emerald-600" id="kpiEnPlazoCount">0</div>
+          <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded" id="kpiEnPlazoPct">0%</span>
+        </div>
+        <div class="text-xs text-slate-400 mt-1">Cumpliendo cronograma</div>
+      </div>
+
+      <!-- Card 3: Por Vencer (< 30 días) -->
+      <div id="cardKpiPorVencer" class="bg-white p-4 rounded-xl border border-amber-200 bg-amber-50/20 shadow-xs flex flex-col justify-between cursor-pointer hover:border-amber-400 transition">
+        <div class="flex items-center justify-between text-amber-700 mb-1">
+          <span class="text-xs font-semibold uppercase tracking-wider">Por Vencer (&le; 30d)</span>
+          <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-500"></i>
+        </div>
+        <div class="text-xl font-extrabold text-amber-600" id="kpiPorVencerCount">0</div>
+        <div class="text-xs text-amber-600/80 mt-1">Requiere atención próxima</div>
+      </div>
+
+      <!-- Card 4: Vencidos (Alerta Roja) -->
+      <div id="cardKpiVencidos" class="bg-white p-4 rounded-xl border border-red-200 bg-red-50/30 shadow-xs flex flex-col justify-between cursor-pointer hover:border-red-400 transition">
+        <div class="flex items-center justify-between text-red-700 mb-1">
+          <span class="text-xs font-semibold uppercase tracking-wider">Vencidos / Desvío</span>
+          <i data-lucide="clock-alert" class="w-4 h-4 text-red-500 animate-pulse"></i>
+        </div>
+        <div class="text-xl font-extrabold text-red-600" id="kpiVencidosCount">0</div>
+        <div class="text-xs text-red-500 font-medium mt-1">Clic para filtrar desvíos</div>
+      </div>
+
+      <!-- Card 5: Finalizadas / Suspendidas -->
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+        <div class="flex items-center justify-between text-slate-500 mb-1">
+          <span class="text-xs font-semibold uppercase tracking-wider">Cierre & Pausas</span>
+          <i data-lucide="check-check" class="w-4 h-4 text-blue-500"></i>
+        </div>
+        <div class="flex items-center space-x-3">
+          <div>
+            <div class="text-lg font-bold text-slate-800" id="kpiFinalizadasCount">0</div>
+            <div class="text-[11px] text-slate-400">Finalizadas</div>
+          </div>
+          <div class="h-6 w-px bg-slate-200"></div>
+          <div>
+            <div class="text-lg font-bold text-slate-500" id="kpiSuspendidasCount">0</div>
+            <div class="text-[11px] text-slate-400">Pausadas</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= VIEW 1: DASHBOARD ================= -->
+    <div id="view-dashboard" class="space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Chart Pipeline Estados -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs lg:col-span-2">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="font-bold text-slate-800 text-sm">Embudo de Avance de Obras (Pipeline)</h3>
+              <p class="text-xs text-slate-400">Distribución de proyectos en cada fase de ciclo de vida</p>
+            </div>
+            <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded">Todas las fases</span>
+          </div>
+          <div class="h-64 relative">
+            <canvas id="chartPipeline"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart Sedes Inversión -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="font-bold text-slate-800 text-sm">Inversión por Sede (USD)</h3>
+              <p class="text-xs text-slate-400">Almagro vs San Justo vs Periféricos</p>
+            </div>
+          </div>
+          <div class="h-64 relative flex items-center justify-center">
+            <canvas id="chartSedes"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Critical List: Vencidos y Próximos a Vencer -->
+      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center space-x-2">
+            <i data-lucide="alert-circle" class="w-4 h-4 text-red-500"></i>
+            <h3 class="font-bold text-slate-800 text-sm">Obras con Mayor Desvío o Próximo Vencimiento</h3>
+          </div>
+          <span class="text-xs text-slate-400 font-medium">Priorizadas por monto de inversión</span>
+        </div>
+        <div id="criticalListContainer">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= VIEW 2: KANBAN ================= -->
+    <div id="view-kanban" class="hidden">
+      <div id="kanbanContainer" class="w-full">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- ================= VIEW 3: TABLE ERP ================= -->
+    <div id="view-table" class="hidden space-y-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <span id="tableFilteredCount" class="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded">0 obras</span>
+          <span id="activeFilterBadge" class="hidden text-xs font-bold text-red-700 bg-red-100 px-2.5 py-1 rounded">Filtro activo</span>
+        </div>
+        <button onclick="App.filters.semaforo = 'TODOS'; App.render();" class="text-xs text-blue-600 hover:underline">Limpiar filtro semáforo</button>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider">
+              <tr>
+                <th class="py-3 px-4">Código</th>
+                <th class="py-3 px-4">Sede</th>
+                <th class="py-3 px-4">Inversión / Nombre</th>
+                <th class="py-3 px-4">Estado</th>
+                <th class="py-3 px-4">Semáforo</th>
+                <th class="py-3 px-4 text-right">Monto (USD)</th>
+                <th class="py-3 px-4">Responsable</th>
+                <th class="py-3 px-4">Fecha Límite</th>
+                <th class="py-3 px-4 text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tableObrasBody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= VIEW 4: GANTT ================= -->
+    <div id="view-gantt" class="hidden space-y-4">
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h3 class="font-bold text-slate-800 text-sm">Cronograma Temporal de Obras</h3>
+            <p class="text-xs text-slate-400">Proyección mensual según fechas de inicio y fin de etapa (2026 - 2027)</p>
+          </div>
+          <div class="flex items-center space-x-3 text-xs">
+            <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded bg-red-500"></span><span>Vencido</span></span>
+            <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded bg-amber-500"></span><span>Por Vencer</span></span>
+            <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded bg-blue-500"></span><span>En Plazo</span></span>
+          </div>
+        </div>
+        <div id="ganttContainer"></div>
+      </div>
+    </div>
+
+    <!-- ================= VIEW 5: CASHFLOW ================= -->
+    <div id="view-cashflow" class="hidden space-y-4">
+      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
+        <div class="mb-4">
+          <h3 class="font-bold text-slate-800 text-sm">Matriz de Cashflow y Desembolsos Multianuales</h3>
+          <p class="text-xs text-slate-400">Proyección presupuestaria 2026 a 2029 por obra (Valores en USD)</p>
+        </div>
+        <div id="cashflowContainer"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ================= MODAL: DETALLE / EDICIÓN DE OBRA ================= -->
+  <div id="modalObraDetail" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden border border-slate-100">
+      
+      <!-- Modal Header -->
+      <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <span id="modalObraId" class="bg-blue-600 text-white text-xs font-mono font-bold px-2 py-0.5 rounded">OBRA-000</span>
+          <span class="text-sm font-bold text-slate-200">Ficha de Proyecto e Inversión</span>
+        </div>
+        <button onclick="App.closeObraModal()" class="text-slate-400 hover:text-white transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body (Formulario con Secciones) -->
+      <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
+        
+        <!-- Nombre Principal -->
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Nombre de la Inversión / Obra</label>
+          <input type="text" id="modalObraTitle" class="w-full text-sm font-semibold border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Sede</label>
+            <select id="modalObraSede" class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white">
+              <option value="Almagro">Almagro</option>
+              <option value="San Justo">San Justo</option>
+              <option value="Periférico">Periférico</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Módulo</label>
+            <select id="modalObraTipo" class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white">
+              <option value="Obra Civil">Obra Civil</option>
+              <option value="Infraestructura">Infraestructura</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Estado de Avance</label>
+            <select id="modalObraEstado" class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white font-semibold text-blue-600">
+              <option value="Estudio de Factibilidad">Estudio de Factibilidad</option>
+              <option value="Ante Proyecto">Ante Proyecto</option>
+              <option value="Proyecto">Proyecto</option>
+              <option value="Proyecto para licitar">Proyecto para licitar</option>
+              <option value="En licitación">En licitación</option>
+              <option value="Obras en Curso">Obras en Curso</option>
+              <option value="Obras Finalizadas">Obras Finalizadas</option>
+              <option value="Suspendida">Suspendida</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Partida Presupuestaria</label>
+            <input type="text" id="modalObraPartida" class="w-full border border-slate-300 rounded-lg px-3 py-2">
+          </div>
+        </div>
+
+        <!-- Cronograma y Fechas Límite -->
+        <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+          <div class="font-bold text-blue-900 text-xs mb-3 flex items-center space-x-1.5">
+            <i data-lucide="calendar-clock" class="w-4 h-4 text-blue-600"></i>
+            <span>Cronograma y Control de Vencimiento de la Etapa</span>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block font-medium text-slate-700 mb-1">Inicio de la Etapa</label>
+              <input type="date" id="modalObraFechaInicio" class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white">
+            </div>
+            <div>
+              <label class="block font-medium text-slate-700 mb-1">Límite Estimado de la Etapa (Semáforo)</label>
+              <input type="date" id="modalObraFechaFin" class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white">
+            </div>
+            <div>
+              <label class="block font-medium text-slate-700 mb-1">Fin Global Estimado de Obra</label>
+              <input type="date" id="modalObraFechaFinGlobal" class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white">
+            </div>
+          </div>
+        </div>
+
+        <!-- Aspectos Económicos -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Monto Obra (USD)</label>
+            <input type="number" id="modalObraMontoObra" class="w-full border border-slate-300 rounded-lg px-3 py-2 font-mono">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Monto Equipamiento (USD)</label>
+            <input type="number" id="modalObraMontoEquip" class="w-full border border-slate-300 rounded-lg px-3 py-2 font-mono">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Superficie (M2)</label>
+            <input type="number" id="modalObraM2" class="w-full border border-slate-300 rounded-lg px-3 py-2 font-mono">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">USD / M2</label>
+            <input type="number" id="modalObraUsdM2" class="w-full border border-slate-300 rounded-lg px-3 py-2 font-mono">
+          </div>
+        </div>
+
+        <!-- Actores y Prioridades -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Jefe de Obra / PM Responsable</label>
+            <input type="text" id="modalObraResponsable" class="w-full border border-slate-300 rounded-lg px-3 py-2">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Proveedor / Contratista</label>
+            <input type="text" id="modalObraProveedor" class="w-full border border-slate-300 rounded-lg px-3 py-2">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Categoría Técnica</label>
+            <input type="text" id="modalObraCategoria" class="w-full border border-slate-300 rounded-lg px-3 py-2">
+          </div>
+        </div>
+
+        <!-- Prioridades (1 a 5) -->
+        <div class="bg-slate-100 p-4 rounded-xl border border-slate-200">
+          <div class="font-bold text-slate-800 text-xs mb-2">Evaluación y Prioridades (1 = Sin prioridad, 5 = Crítica)</div>
+          <div class="grid grid-cols-3 gap-4">
+            <div>
+              <label class="block text-slate-600 mb-1">Prioridad Técnica (1-5)</label>
+              <input type="number" min="1" max="5" step="0.1" id="modalObraPrioridadTec" class="w-full border border-slate-300 rounded px-2 py-1 bg-white font-bold">
+            </div>
+            <div>
+              <label class="block text-slate-600 mb-1">Prioridad Médica (1-5)</label>
+              <input type="number" min="1" max="5" step="0.1" id="modalObraPrioridadMed" class="w-full border border-slate-300 rounded px-2 py-1 bg-white font-bold">
+            </div>
+            <div>
+              <label class="block text-slate-600 mb-1">Prioridad Final (1-5)</label>
+              <input type="number" min="1" max="5" step="0.1" id="modalObraPrioridadFin" class="w-full border border-slate-300 rounded px-2 py-1 bg-white font-black text-blue-600">
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Observaciones y Decisiones Relevantes</label>
+          <textarea id="modalObraObservaciones" rows="2" class="w-full border border-slate-300 rounded-lg p-3"></textarea>
+        </div>
+
+        <!-- Historial de Trazabilidad -->
+        <div>
+          <div class="font-bold text-slate-700 mb-2">Historial de Transiciones de Estado</div>
+          <div id="modalObraHistorial" class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2 max-h-36 overflow-y-auto"></div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="bg-slate-100 px-6 py-3 border-t border-slate-200 flex items-center justify-end space-x-3">
+        <button onclick="App.closeObraModal()" class="px-4 py-2 border border-slate-300 rounded-lg font-semibold text-slate-700 hover:bg-slate-200 transition">Cancelar</button>
+        <button onclick="App.saveObraModal()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-xs transition">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: TRANSICIÓN RÁPIDA DE ESTADO ================= -->
+  <div id="modalTransition" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden border border-slate-100 text-xs">
+      <div class="bg-blue-600 text-white px-5 py-3 flex items-center justify-between font-bold">
+        <span>Avanzar Etapa de Proyecto</span>
+        <button onclick="App.closeTransitionModal()"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <div class="p-5 space-y-4">
+        <input type="hidden" id="transItemId">
+        <div>
+          <div class="text-slate-400 text-[11px]">Proyecto</div>
+          <div class="font-bold text-slate-800 text-sm" id="transItemName"></div>
+        </div>
+        <div class="flex items-center space-x-2 text-xs">
+          <span class="text-slate-500">Estado Actual:</span>
+          <span class="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded" id="transCurrentStage"></span>
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Nuevo Estado</label>
+          <select id="transNextStage" class="w-full border border-slate-300 rounded-lg p-2 font-semibold text-blue-700 bg-white">
+            <option value="Estudio de Factibilidad">Estudio de Factibilidad</option>
+            <option value="Ante Proyecto">Ante Proyecto</option>
+            <option value="Proyecto">Proyecto</option>
+            <option value="Proyecto para licitar">Proyecto para licitar</option>
+            <option value="En licitación">En licitación</option>
+            <option value="Obras en Curso">Obras en Curso</option>
+            <option value="Obras Finalizadas">Obras Finalizadas</option>
+            <option value="Suspendida">Suspendida</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Nueva Fecha Límite para esta Fase</label>
+          <input type="date" id="transNewDeadline" class="w-full border border-slate-300 rounded-lg p-2">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Notas / Motivo del Cambio</label>
+          <textarea id="transNotes" rows="2" placeholder="Ej: Pliegos aprobados por dirección médica..." class="w-full border border-slate-300 rounded-lg p-2"></textarea>
+        </div>
+      </div>
+      <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-end space-x-2">
+        <button onclick="App.closeTransitionModal()" class="px-3 py-1.5 border border-slate-300 rounded font-semibold text-slate-600">Cancelar</button>
+        <button onclick="App.confirmTransition()" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold">Confirmar Pase</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: CONFIGURAR SUPABASE ================= -->
+  <div id="modalSettings" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white rounded-xl shadow-xl max-w-lg w-full overflow-hidden border border-slate-100 text-xs">
+      <div class="bg-slate-900 text-white px-5 py-3 flex items-center justify-between font-bold">
+        <span>⚙️ Configuración de Conexión Supabase</span>
+        <button onclick="App.closeSettingsModal()"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <div class="p-5 space-y-4">
+        <p class="text-slate-500">Conecta tu base de datos Supabase en tiempo real. Si dejas los campos vacíos, la aplicación seguirá funcionando en <strong>Modo Local / Demo</strong> con persistencia en el navegador.</p>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Project URL de Supabase</label>
+          <input type="text" id="inputSupabaseUrl" placeholder="https://xyzcompany.supabase.co" class="w-full border border-slate-300 rounded-lg p-2 font-mono">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">API Key Anónima (anon public)</label>
+          <input type="password" id="inputSupabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5..." class="w-full border border-slate-300 rounded-lg p-2 font-mono">
+        </div>
+        <div class="bg-slate-50 p-3 rounded-lg text-slate-500 text-[11px] border border-slate-200">
+          💡 Puedes obtener estas credenciales desde tu panel en <strong>supabase.com ➡️ Project Settings ➡️ API</strong>.
+        </div>
+      </div>
+      <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-end space-x-2">
+        <button onclick="App.closeSettingsModal()" class="px-3 py-1.5 border border-slate-300 rounded font-semibold text-slate-600">Cerrar</button>
+        <button onclick="App.saveSettingsModal()" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold">Guardar y Conectar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: SELECTOR DE ROL / PERFIL ================= -->
+  <div id="modalRole" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white rounded-xl shadow-xl max-w-sm w-full overflow-hidden border border-slate-100 text-xs">
+      <div class="bg-slate-900 text-white px-5 py-3 flex items-center justify-between font-bold">
+        <span>Simular Rol de Usuario</span>
+        <button onclick="document.getElementById('modalRole').classList.add('hidden')"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <div class="p-4 space-y-2">
+        <button onclick="App.switchRole('admin', 'Dirección General')" class="w-full text-left p-2.5 rounded-lg border border-slate-200 hover:bg-blue-50 flex items-center space-x-3">
+          <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+          <div>
+            <div class="font-bold text-slate-800">Dirección General</div>
+            <div class="text-[10px] text-slate-400">Control total, KPIs, priorización</div>
+          </div>
+        </button>
+        <button onclick="App.switchRole('pm_obra', 'Arq. Palmioli (PM)')" class="w-full text-left p-2.5 rounded-lg border border-slate-200 hover:bg-blue-50 flex items-center space-x-3">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
+          <div>
+            <div class="font-bold text-slate-800">Jefe de Obra / PM</div>
+            <div class="text-[10px] text-slate-400">Carga de avance y fechas de etapa</div>
+          </div>
+        </button>
+        <button onclick="App.switchRole('direccion_medica', 'Dirección Médica')" class="w-full text-left p-2.5 rounded-lg border border-slate-200 hover:bg-blue-50 flex items-center space-x-3">
+          <span class="w-2.5 h-2.5 rounded-full bg-purple-600"></span>
+          <div>
+            <div class="font-bold text-slate-800">Dirección Médica</div>
+            <div class="text-[10px] text-slate-400">Prioridad médica y factibilidad</div>
+          </div>
+        </button>
+        <button onclick="App.switchRole('licitaciones', 'Dpto. Compras y Licitaciones')" class="w-full text-left p-2.5 rounded-lg border border-slate-200 hover:bg-blue-50 flex items-center space-x-3">
+          <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+          <div>
+            <div class="font-bold text-slate-800">Compras y Licitaciones</div>
+            <div class="text-[10px] text-slate-400">Proveedores, adjudicaciones y pliegos</div>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toastNotification" class="hidden fixed bottom-5 right-5 z-50 bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-lg shadow-xl flex items-center space-x-2">
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/initial-data.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/data-store.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
