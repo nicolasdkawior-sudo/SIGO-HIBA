@@ -627,7 +627,7 @@
 
         <!-- Mensaje de Flujo -->
         <div class="bg-blue-50 p-3.5 rounded-xl border border-blue-200 text-blue-900 text-xs">
-          💡 <strong>Próximo paso del flujo:</strong> Al guardar, la obra quedará registrada en <strong>Estudio de Factibilidad</strong> y aparecerá automáticamente en el panel de la <strong>Dirección Médica / General</strong> para que le asignen su Prioridad. Una vez ponderada, se solicitará e ingresará el número de <strong>Partida Presupuestaria</strong> para arrancar formalmente el proceso de Anteproyecto.
+          💡 <strong>Próximo paso del flujo:</strong> Al guardar, la obra quedará registrada en <strong>Estudio de Factibilidad</strong> y aparecerá automáticamente en el panel de la <strong>Dirección Médica / General</strong> para su priorización. Para avanzar a la siguiente etapa (<strong>Proyecto</strong>), el sistema exigirá obligatoriamente el <strong>Número de Partida Presupuestaria</strong> asignado.
         </div>
 
         <div class="bg-slate-100 -mx-6 -mb-6 p-4 border-t border-slate-200 flex justify-end space-x-2">
@@ -702,13 +702,14 @@
           </div>
         </div>
 
-        <!-- Aviso si avanza a Anteproyecto sin Partida -->
+        <!-- Aviso si avanza a Proyecto sin Partida -->
         <div id="transSinPartidaNotice" class="hidden bg-amber-50 border border-amber-300 text-amber-900 p-3 rounded-xl text-xs font-semibold">
-          ⚠️ Esta obra aún no tiene asignado un <strong>Número de Partida Presupuestaria</strong>. Ingresa el número para habilitar el Anteproyecto:
+          ⚠️ Para avanzar a la etapa de <strong>Proyecto</strong>, el sistema exige obligatoriamente un <strong>Número de Partida Presupuestaria</strong> asignado por la Dirección:
         </div>
         <div id="transQuickPartidaContainer" class="hidden">
-          <label class="block font-bold text-slate-700 mb-1">Asignar Partida Presupuestaria ahora:</label>
-          <input type="text" id="transQuickPartidaInput" placeholder="Ej: 6060826" class="w-full border border-slate-300 rounded-lg p-2 font-mono font-bold">
+          <label class="block font-bold text-slate-700 mb-1">Ingresar Número de Partida Presupuestaria <span class="text-red-500">*</span>:</label>
+          <input type="text" id="transQuickPartidaInput" placeholder="Ej: 6060826" class="w-full border border-slate-300 rounded-lg p-2 font-mono font-bold text-slate-900 bg-white">
+          <p class="text-[10px] text-amber-800 mt-1 font-semibold">Si no dispones de número de partida, el sistema no te permitirá avanzar a Proyecto.</p>
         </div>
 
         <!-- Aviso si pasa a Finalizada -->
@@ -1081,7 +1082,6 @@
             <label class="block font-semibold text-slate-700 mb-1">Estado de Avance</label>
             <select id="modalObraEstado" class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white font-semibold text-blue-600">
               <option value="Estudio de Factibilidad">Estudio de Factibilidad</option>
-              <option value="Ante Proyecto">Ante Proyecto</option>
               <option value="Proyecto">Proyecto</option>
               <option value="Proyecto para licitar">Proyecto para licitar</option>
               <option value="En licitación">En licitación</option>

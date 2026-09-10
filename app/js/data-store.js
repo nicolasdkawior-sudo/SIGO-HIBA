@@ -96,7 +96,6 @@ function generateSalt(len = 16) {
 
 const STAGES_SEQUENCE = [
   'Estudio de Factibilidad',
-  'Ante Proyecto',
   'Proyecto',
   'Proyecto para licitar',
   'En licitación',
@@ -105,8 +104,7 @@ const STAGES_SEQUENCE = [
 ];
 
 const DEFAULT_STAGE_DAYS = {
-  'Estudio de Factibilidad': 30,
-  'Ante Proyecto': 45,
+  'Estudio de Factibilidad': 45,
   'Proyecto': 60,
   'Proyecto para licitar': 30,
   'En licitación': 45,
@@ -349,9 +347,10 @@ const DataStore = {
           if (item.sede === 'Almagro') item.sede = 'Central';
           if (item.sede === 'Periférico') item.sede = 'Periféricos';
           if (!item.sede) item.sede = 'Central';
+          if (item.estado === 'Ante Proyecto') item.estado = 'Estudio de Factibilidad';
           
           if (!item.fecha_fin_etapa) {
-            const days = DEFAULT_STAGE_DAYS[item.estado] || 30;
+            const days = DEFAULT_STAGE_DAYS[item.estado] || 45;
             const d = new Date();
             d.setDate(d.getDate() + days);
             item.fecha_fin_etapa = d.toISOString().split('T')[0];
@@ -362,10 +361,11 @@ const DataStore = {
       }
     }
 
-    // Normalizar datos
+    // Normalizar datos (unificación de Anteproyecto en Estudio de Factibilidad)
     this.items.forEach(item => {
       if (item.sede === 'Almagro') item.sede = 'Central';
       if (item.sede === 'Periférico') item.sede = 'Periféricos';
+      if (item.estado === 'Ante Proyecto') item.estado = 'Estudio de Factibilidad';
 
       if (!item.historial) {
         item.historial = [{
@@ -458,7 +458,7 @@ const DataStore = {
       usuario: this.currentUser.nombre,
       estado_anterior: item.estado,
       estado_nuevo: item.estado,
-      observaciones: `Partida presupuestaria N° ${item.partida} asignada por ${this.currentUser.nombre}. Habilita inicio de Anteproyecto.`
+      observaciones: `Partida presupuestaria N° ${item.partida} asignada por ${this.currentUser.nombre}. Habilita avance a etapa de Proyecto.`
     });
 
     this.saveItem(item);
@@ -475,44 +475,40 @@ const DataStore = {
       // Si ambos coinciden en 5 o se promedian
       ponderacion = Math.round(((pTec + pMed) / 2) * 10) / 10;
       if (pTec === 5 && pMed === 5) ponderacion = 5.0;
-    } else if (pMed > 0) {
-      ponderacion = pMed;
-    } else if (pTec > 0) {
+    } else {
+      // Solo prioridad técnica inicial
       ponderacion = pTec;
     }
 
-    let colorClass = 'bg-blue-100 text-blue-800 border-blue-300';
-    let nivelLabel = 'Mínima / Nivel 1';
-    let esCritico = false;
+    // Escala y color visual
+    let nivelLabel = 'Media';
+    let colorClass = 'text-amber-600 bg-amber-50 border-amber-200';
 
-    if (ponderacion >= 4.8) {
-      colorClass = 'bg-red-600 text-white border-red-700 font-black animate-pulse';
-      nivelLabel = 'CRÍTICA / NIVEL 5';
-      esCritico = true;
-    } else if (ponderacion >= 3.8) {
-      colorClass = 'bg-orange-500 text-white border-orange-600 font-extrabold';
-      nivelLabel = 'ALTA / NIVEL 4';
-    } else if (ponderacion >= 2.8) {
-      colorClass = 'bg-amber-400 text-slate-900 border-amber-500 font-bold';
-      nivelLabel = 'MEDIA / NIVEL 3';
-    } else if (ponderacion >= 1.8) {
-      colorClass = 'bg-emerald-500 text-white border-emerald-600 font-semibold';
-      nivelLabel = 'BAJA / NIVEL 2';
+    if (ponderacion >= 4.5) {
+      nivelLabel = 'Crítica / Muy Alta';
+      colorClass = 'text-rose-700 bg-rose-50 border-rose-200 font-black';
+    } else if (ponderacion >= 3.5) {
+      nivelLabel = 'Alta';
+      colorClass = 'text-blue-700 bg-blue-50 border-blue-200 font-bold';
+    } else if (ponderacion >= 2.5) {
+      nivelLabel = 'Media';
+      colorClass = 'text-amber-700 bg-amber-50 border-amber-200';
+    } else {
+      nivelLabel = 'Baja';
+      colorClass = 'text-slate-600 bg-slate-50 border-slate-200';
     }
 
     return {
       valor: ponderacion,
-      nivelLabel,
-      colorClass,
-      esCritico,
-      pTec,
-      pMed,
+      nivelLabel: nivelLabel,
+      colorClass: colorClass,
       faltaMedica: (pMed === 0 || item.prioridad_medica === null)
     };
   },
 
   // ================= WORKFLOW SECUENCIAL =================
   getNextStage(currentStage) {
+    if (currentStage === 'Ante Proyecto') return 'Proyecto';
     const idx = STAGES_SEQUENCE.indexOf(currentStage);
     if (idx >= 0 && idx < STAGES_SEQUENCE.length - 1) {
       return STAGES_SEQUENCE[idx + 1];
@@ -544,12 +540,12 @@ const DataStore = {
       return { success: false, msg: 'Esta obra ya se encuentra en su etapa final' };
     }
 
-    // VALIDACIÓN CRÍTICA: De Factibilidad a Anteproyecto se REQUIERE número de partida presupuestaria
-    if (currentStage === 'Estudio de Factibilidad' && nextStage === 'Ante Proyecto') {
-      if (!item.partida || item.partida.trim() === '' || item.partida === 'S/D') {
+    // VALIDACIÓN CRÍTICA: De Factibilidad a Proyecto se REQUIERE OBLIGATORIAMENTE número de partida presupuestaria
+    if (currentStage === 'Estudio de Factibilidad' && nextStage === 'Proyecto') {
+      if (!item.partida || item.partida.trim() === '' || item.partida === 'S/D' || item.partida.toUpperCase() === 'PENDIENTE') {
         return { 
           success: false, 
-          msg: 'Para iniciar el Anteproyecto se requiere tener asignado un Número de Partida Presupuestaria por la Dirección o Administrador.',
+          msg: '⛔ Bloqueado: Para avanzar a la etapa de "Proyecto" es OBLIGATORIO contar con un Número de Partida Presupuestaria asignado. Si no existe número de partida, el sistema no permite avanzar.',
           requierePartida: true 
         };
       }
@@ -710,7 +706,6 @@ const DataStore = {
 
     const estadosCount = {
       'Estudio de Factibilidad': 0,
-      'Ante Proyecto': 0,
       'Proyecto': 0,
       'Proyecto para licitar': 0,
       'En licitación': 0,
@@ -754,10 +749,11 @@ const DataStore = {
       else if (sem.status === 'por_vencer') porVencer++;
       else if (sem.status === 'en_plazo') enPlazo++;
 
-      if (estadosCount.hasOwnProperty(item.estado)) {
-        estadosCount[item.estado]++;
+      const est = (item.estado === 'Ante Proyecto') ? 'Estudio de Factibilidad' : item.estado;
+      if (estadosCount.hasOwnProperty(est)) {
+        estadosCount[est]++;
       } else {
-        estadosCount[item.estado] = 1;
+        estadosCount[est] = 1;
       }
 
       const s = item.sede || 'Central';

@@ -272,7 +272,6 @@ const App = {
       
       const labels = [
         'Estudio de Factibilidad', 
-        'Ante Proyecto', 
         'Proyecto', 
         'Proyecto para licitar', 
         'En licitación', 
@@ -285,7 +284,7 @@ const App = {
 
       // Colores de las barras con borde destacado si una barra está seleccionada
       const baseColors = [
-        '#94a3b8', '#64748b', '#3b82f6', '#0284c7', 
+        '#94a3b8', '#3b82f6', '#0284c7', 
         '#eab308', '#22c55e', '#10b981', '#f43f5e'
       ];
 
@@ -519,7 +518,6 @@ const App = {
 
     let stages = [
       'Estudio de Factibilidad',
-      'Ante Proyecto',
       'Proyecto',
       'Proyecto para licitar',
       'En licitación',
@@ -935,7 +933,13 @@ const App = {
 
     const warnSinPartida = document.getElementById('transSinPartidaNotice');
     const inputQuickPartida = document.getElementById('transQuickPartidaContainer');
-    if (currentStage === 'Estudio de Factibilidad' && (!item.partida || item.partida.trim() === '')) {
+    const quickPartidaInput = document.getElementById('transQuickPartidaInput');
+    if (quickPartidaInput) quickPartidaInput.value = item.partida || '';
+
+    const requierePartida = (currentStage === 'Estudio de Factibilidad' && nextStage === 'Proyecto');
+    const tienePartida = item.partida && item.partida.trim() !== '' && item.partida !== 'S/D' && item.partida.toUpperCase() !== 'PENDIENTE';
+
+    if (requierePartida && !tienePartida) {
       if (warnSinPartida) warnSinPartida.classList.remove('hidden');
       if (inputQuickPartida) inputQuickPartida.classList.remove('hidden');
     } else {
@@ -955,13 +959,33 @@ const App = {
   confirmTransition() {
     const id = document.getElementById('transItemId').value;
     const item = DataStore.getItemById(id);
+    if (!item) return;
+
+    const currentStage = item.estado;
+    const nextStage = DataStore.getNextStage(currentStage);
+
     const compDate = document.getElementById('transCompletionDate').value;
     const newDeadline = document.getElementById('transNewDeadline').value;
     const notes = document.getElementById('transNotes').value;
 
     const quickPartidaInput = document.getElementById('transQuickPartidaInput');
-    if (quickPartidaInput && !quickPartidaInput.parentElement.classList.contains('hidden') && quickPartidaInput.value.trim() !== '') {
-      DataStore.asignarPartidaPresupuestaria(id, quickPartidaInput.value.trim());
+    const enteredPartida = quickPartidaInput ? quickPartidaInput.value.trim() : '';
+    if (enteredPartida) {
+      DataStore.asignarPartidaPresupuestaria(id, enteredPartida);
+    }
+
+    // VALIDACIÓN ESTRICTA: Para avanzar de Estudio de Factibilidad a Proyecto es OBLIGATORIO tener partida presupuestaria
+    if (currentStage === 'Estudio de Factibilidad' && nextStage === 'Proyecto') {
+      const finalPartida = (item.partida || enteredPartida).trim();
+      if (!finalPartida || finalPartida === '' || finalPartida === 'S/D' || finalPartida.toUpperCase() === 'PENDIENTE') {
+        alert("⛔ No es posible avanzar a la etapa de Proyecto:\n\nEl sistema requiere obligatoriamente que la obra cuente con un Número de Partida Presupuestaria asignado por la Dirección.\n\nSi no existe número de partida, el sistema no te permitirá avanzar.");
+        if (quickPartidaInput) {
+          document.getElementById('transQuickPartidaContainer')?.classList.remove('hidden');
+          document.getElementById('transSinPartidaNotice')?.classList.remove('hidden');
+          quickPartidaInput.focus();
+        }
+        return;
+      }
     }
 
     const res = DataStore.confirmAndAdvanceStage(id, compDate, newDeadline, notes);
@@ -1701,11 +1725,24 @@ const App = {
       return;
     }
 
+    const currentStage = item.estado;
+    const newEstado = document.getElementById('modalObraEstado').value;
+    const newPartida = document.getElementById('modalObraPartida').value.trim();
+
+    // Validar requerimiento obligatorio de partida presupuestaria para salir de Estudio de Factibilidad
+    if (currentStage === 'Estudio de Factibilidad' && newEstado !== 'Estudio de Factibilidad' && newEstado !== 'Suspendida') {
+      if (!newPartida || newPartida === '' || newPartida === 'S/D' || newPartida.toUpperCase() === 'PENDIENTE') {
+        alert("⛔ No es posible avanzar la obra a '" + newEstado + "':\n\nEl sistema requiere obligatoriamente que la obra cuente con un Número de Partida Presupuestaria asignado por la Dirección.");
+        document.getElementById('modalObraPartida').focus();
+        return;
+      }
+    }
+
     item.nombre = document.getElementById('modalObraTitle').value;
     item.sede = document.getElementById('modalObraSede').value;
     item.tipo = document.getElementById('modalObraTipo').value;
-    item.estado = document.getElementById('modalObraEstado').value;
-    item.partida = document.getElementById('modalObraPartida').value.trim();
+    item.estado = newEstado;
+    item.partida = newPartida;
     item.categoria = document.getElementById('modalObraCategoria').value;
     item.clasificacion = document.getElementById('modalObraClasificacion').value;
     item.monto_obra_usd = parseFloat(document.getElementById('modalObraMontoObra').value) || 0;
