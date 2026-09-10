@@ -29,13 +29,13 @@
       <div>
         <div class="flex items-center space-x-2">
           <h1 class="font-extrabold text-base tracking-tight">SIGO <span class="text-blue-400 font-normal">| HIBA</span></h1>
-          <span class="text-[11px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">v2.0 Flow</span>
+          <span class="text-[11px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">v2.1 USD</span>
         </div>
         <p class="text-xs text-slate-400">Sistema Integral de Gestión de Obras e Inversiones</p>
       </div>
     </div>
 
-    <!-- Right Controls: Sede badge, User Profile, Admin Users, Google Login, Settings, New Obra -->
+    <!-- Right Controls -->
     <div class="flex items-center space-x-3">
       <!-- Status Cloud / Local -->
       <div class="hidden sm:flex items-center space-x-2 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700 text-xs">
@@ -79,15 +79,15 @@
         <i data-lucide="settings" class="w-4 h-4"></i>
       </button>
 
-      <!-- Botón + Nueva Obra -->
-      <button onclick="App.openNewObraModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3.5 py-1.5 rounded-lg flex items-center space-x-1 shadow-sm transition">
+      <!-- Botón + Nueva Obra (Abre Factibilidad) -->
+      <button id="btnNuevaObraTop" onclick="App.openNewObraModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg flex items-center space-x-1 shadow-sm transition">
         <i data-lucide="plus" class="w-4 h-4"></i>
         <span>Nueva Obra</span>
       </button>
     </div>
   </header>
 
-  <!-- ================= SUB-HEADER: GLOBAL FILTERS & NAVIGATION ================= -->
+  <!-- ================= SUB-HEADER: FILTROS GLOBALES ================= -->
   <div class="bg-white border-b border-slate-200 px-6 py-2.5 flex flex-wrap items-center justify-between gap-4 sticky top-[57px] z-30 shadow-2xs">
     <!-- Navigation Tabs -->
     <nav class="flex space-x-1 sm:space-x-3 border-b border-transparent">
@@ -113,7 +113,7 @@
       </button>
     </nav>
 
-    <!-- Global Controls: Sede, Tipo, Toggle Finalizadas, Buscador, Exportar -->
+    <!-- Global Controls -->
     <div class="flex items-center space-x-3 flex-wrap gap-y-2">
       <!-- Sede Filter -->
       <div class="flex items-center space-x-1.5 text-xs">
@@ -136,7 +136,7 @@
         </select>
       </div>
 
-      <!-- BOTÓN FILTRO DE FINALIZADAS (Requerimiento Usuario) -->
+      <!-- BOTÓN FILTRO DE FINALIZADAS -->
       <button id="btnToggleFinalizadas" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-md font-semibold flex items-center space-x-1.5 border border-slate-300 transition">
         <i data-lucide="play-circle" class="w-3.5 h-3.5 text-emerald-600"></i>
         <span>Viendo: Activas</span>
@@ -150,7 +150,7 @@
       </div>
 
       <!-- Exportar Excel -->
-      <button onclick="App.exportExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded-md flex items-center space-x-1 shadow-2xs font-semibold transition">
+      <button onclick="App.exportExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded-md flex items-center space-x-1 shadow-2xs font-bold transition">
         <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
         <span>Excel</span>
       </button>
@@ -160,7 +160,7 @@
   <!-- ================= MAIN CONTENT AREA ================= -->
   <main class="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
 
-    <!-- BANNER PERSONALIZADO PARA DIRECCIÓN MÉDICA (Requerimiento Usuario) -->
+    <!-- BANNER PERSONALIZADO PARA DIRECCIÓN MÉDICA -->
     <div id="medicalPriorityBanner" class="hidden bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 text-white p-4 rounded-2xl shadow-md flex flex-col sm:flex-row items-center justify-between gap-4 border border-indigo-500/30">
       <div class="flex items-center space-x-3.5">
         <div class="bg-white/20 p-2.5 rounded-xl backdrop-blur-xs flex items-center justify-center">
@@ -182,22 +182,31 @@
       </button>
     </div>
 
-    <!-- KPI CARDS SUMMARY -->
+    <!-- KPI CARDS SUMMARY CON MONEDA EN USD Y DESGLOSE CLARO -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-      <!-- Card 1: Inversión Total -->
+      
+      <!-- Card 1: Inversión Cartera Activa (USD) -->
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between">
-        <div class="flex items-center justify-between text-slate-500 mb-1">
-          <span class="text-xs font-semibold uppercase tracking-wider">Inversión Total</span>
-          <i data-lucide="wallet" class="w-4 h-4 text-blue-500"></i>
+        <div>
+          <div class="flex items-center justify-between text-slate-500 mb-1">
+            <span class="text-xs font-bold uppercase tracking-wider">Cartera Activa (USD)</span>
+            <span class="text-[10px] font-black bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200">USD</span>
+          </div>
+          <div class="text-xl font-black text-slate-900" id="kpiTotalUsd">USD 0</div>
+          <div class="text-xs text-slate-400 mt-0.5" id="kpiTotalProyectos">0 proyectos</div>
         </div>
-        <div class="text-xl font-extrabold text-slate-900" id="kpiTotalUsd">$0</div>
-        <div class="text-xs text-slate-400 mt-1" id="kpiTotalProyectos">0 proyectos</div>
+        <!-- Desglose transparente -->
+        <div class="flex flex-wrap gap-1 mt-2.5 pt-2 border-t border-slate-100 text-[10px]">
+          <span id="kpiPillCivil" class="bg-blue-50 text-blue-800 px-1.5 py-0.5 rounded font-bold">Civil: USD 0</span>
+          <span id="kpiPillEquip" class="bg-purple-50 text-purple-800 px-1.5 py-0.5 rounded font-bold">Equip: USD 0</span>
+          <span id="kpiPillInfra" class="bg-emerald-50 text-emerald-800 px-1.5 py-0.5 rounded font-bold">Infra: USD 0</span>
+        </div>
       </div>
 
       <!-- Card 2: En Plazo -->
       <div id="cardKpiEnPlazo" class="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between cursor-pointer hover:border-emerald-300 transition">
         <div class="flex items-center justify-between text-slate-500 mb-1">
-          <span class="text-xs font-semibold uppercase tracking-wider">En Curso en Plazo</span>
+          <span class="text-xs font-semibold uppercase tracking-wider">En Plazo</span>
           <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
         </div>
         <div class="flex items-baseline space-x-2">
@@ -217,10 +226,10 @@
         <div class="text-xs text-amber-600/80 mt-1">Requiere atención próxima</div>
       </div>
 
-      <!-- Card 4: Vencidos (Semáforo Rojo por falta de confirmación) -->
+      <!-- Card 4: Vencidos (Semáforo Rojo) -->
       <div id="cardKpiVencidos" class="bg-white p-4 rounded-xl border border-red-200 bg-red-50/30 shadow-2xs flex flex-col justify-between cursor-pointer hover:border-red-400 transition">
         <div class="flex items-center justify-between text-red-700 mb-1">
-          <span class="text-xs font-semibold uppercase tracking-wider">Vencidos / Desvío</span>
+          <span class="text-xs font-semibold uppercase tracking-wider">Vencidos</span>
           <i data-lucide="clock-alert" class="w-4 h-4 text-red-500 animate-pulse"></i>
         </div>
         <div class="text-xl font-extrabold text-red-600" id="kpiVencidosCount">0</div>
@@ -236,10 +245,10 @@
         <div class="flex items-center space-x-3">
           <div>
             <div class="text-xl font-extrabold text-blue-700" id="kpiFinalizadasCount">0</div>
-            <div class="text-[10px] text-slate-400 font-medium">Clic para verlas</div>
+            <div class="text-[10px] text-slate-400 font-medium">Ver terminadas</div>
           </div>
           <div class="h-6 w-px bg-slate-200"></div>
-          <div>
+          <div id="cardKpiSuspendidas" class="cursor-pointer hover:text-red-500">
             <div class="text-sm font-bold text-slate-500" id="kpiSuspendidasCount">0</div>
             <div class="text-[10px] text-slate-400">Pausadas</div>
           </div>
@@ -278,14 +287,14 @@
         </div>
       </div>
 
-      <!-- Critical List: Vencidos y Próximos a Vencer con Botón de Avance -->
+      <!-- Critical List: Vencidos y Próximos a Vencer con Ponderación -->
       <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs">
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center space-x-2">
             <i data-lucide="alert-circle" class="w-4 h-4 text-red-500"></i>
-            <h3 class="font-bold text-slate-800 text-sm">Obras con Desvío o Próximo Vencimiento de Etapa</h3>
+            <h3 class="font-bold text-slate-800 text-sm">Obras con Desvío de Plazo o Próximo Vencimiento</h3>
           </div>
-          <span class="text-xs text-slate-400 font-medium">Permite confirmar y avanzar a la siguiente etapa</span>
+          <span class="text-xs text-slate-400 font-medium">Muestra ponderación global y botón de avance rápido</span>
         </div>
         <div id="criticalListContainer"></div>
       </div>
@@ -304,9 +313,9 @@
           <div id="tableActiveBadges" class="flex items-center space-x-1.5"></div>
         </div>
         <div class="flex items-center space-x-3">
-          <button onclick="App.setFiltroFinalizadas('todas')" class="text-xs text-blue-600 hover:underline">Ver Todas</button>
+          <button onclick="App.setFiltroFinalizadas('todas')" class="text-xs text-blue-600 hover:underline font-semibold">Ver Todas</button>
           <span class="text-slate-300">•</span>
-          <button onclick="App.setFiltroFinalizadas('activas')" class="text-xs text-blue-600 hover:underline">Solo Activas</button>
+          <button onclick="App.setFiltroFinalizadas('activas')" class="text-xs text-blue-600 hover:underline font-semibold">Solo Activas</button>
           <span class="text-slate-300">•</span>
           <button onclick="App.filters.semaforo = 'TODOS'; App.render();" class="text-xs text-blue-600 hover:underline">Limpiar semáforo</button>
         </div>
@@ -321,6 +330,7 @@
                 <th class="py-3 px-4">Sede</th>
                 <th class="py-3 px-4">Inversión / Nombre</th>
                 <th class="py-3 px-4">Estado</th>
+                <th class="py-3 px-4 text-center">Ponderación</th>
                 <th class="py-3 px-4">Semáforo</th>
                 <th class="py-3 px-4 text-right">Monto (USD)</th>
                 <th class="py-3 px-4">Responsable</th>
@@ -365,6 +375,142 @@
 
   </main>
 
+  <!-- ================= MODAL: CARGA DE NUEVA OBRA / FACTIBILIDAD (Requerimiento Usuario) ================= -->
+  <div id="modalNuevaFactibilidad" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-slate-100 text-xs">
+      
+      <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="bg-blue-600 p-1.5 rounded-lg text-white">
+            <i data-lucide="file-plus" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm">Carga de Estudio de Factibilidad (Nueva Obra)</h3>
+            <p class="text-[11px] text-slate-400">Fase inicial: Registro técnico para evaluación de Dirección y asignación de partida</p>
+          </div>
+        </div>
+        <button onclick="App.closeNewObraModal()"><i data-lucide="x" class="w-5 h-5 text-slate-400 hover:text-white"></i></button>
+      </div>
+
+      <form id="formNuevaFactibilidad" onsubmit="App.handleCreateFactibilidadSubmit(event)" class="p-6 overflow-y-auto flex-1 space-y-4">
+        
+        <!-- Nombre de la Obra -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Nombre / Título de la Obra <span class="text-red-500">*</span></label>
+          <input type="text" id="factNombre" placeholder="Ej: Cambio de tablero en Guardia Central" required
+                 class="w-full border border-slate-300 rounded-lg p-2.5 text-sm font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Sede -->
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Sede de la Obra <span class="text-red-500">*</span></label>
+            <select id="factSede" class="w-full border border-slate-300 rounded-lg p-2 bg-white font-semibold">
+              <option value="Central">Central</option>
+              <option value="San Justo">San Justo</option>
+              <option value="Periféricos">Periféricos</option>
+            </select>
+          </div>
+
+          <!-- Sector Solicitante -->
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Sector Solicitante <span class="text-red-500">*</span></label>
+            <input type="text" id="factSector" placeholder="Ej: Guardia Central, Quirófanos, UTI..." required
+                   class="w-full border border-slate-300 rounded-lg p-2 bg-white font-medium">
+          </div>
+        </div>
+
+        <!-- Motivo de la Obra -->
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Motivo de la Obra (Justificación Sanitaria / Técnica) <span class="text-red-500">*</span></label>
+          <textarea id="factMotivo" rows="2" placeholder="Explica por qué es necesaria la intervención y qué problema resuelve..." required
+                    class="w-full border border-slate-300 rounded-lg p-2.5"></textarea>
+        </div>
+
+        <!-- Requerimiento Mínimo -->
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Requerimiento Mínimo / Alcance Técnico Inicial <span class="text-red-500">*</span></label>
+          <textarea id="factRequerimiento" rows="2" placeholder="Detalle técnico mínimo estimado: metros, equipos, materiales o intervenciones indispensables..." required
+                    class="w-full border border-slate-300 rounded-lg p-2.5"></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+          <!-- Monto Estimado (USD) -->
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Monto Estimado (USD)</label>
+            <div class="relative">
+              <span class="absolute left-3 top-2 font-bold text-slate-400">USD</span>
+              <input type="number" id="factMonto" placeholder="50000" min="0" step="1000"
+                     class="w-full border border-slate-300 rounded-lg p-2 pl-12 font-mono font-bold text-slate-900">
+            </div>
+          </div>
+
+          <!-- Profesional Solicitante -->
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Profesional que Carga</label>
+            <input type="text" id="factResponsable" placeholder="Ingeniero / Arquitecto" required
+                   class="w-full border border-slate-300 rounded-lg p-2 bg-slate-50 font-semibold text-slate-700">
+          </div>
+
+          <!-- Prioridad Inicial (OBLIGATORIA) -->
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Prioridad Solicitante <span class="text-red-500">*</span></label>
+            <select id="factPrioridad" required class="w-full border-2 border-blue-500 rounded-lg p-2 bg-blue-50 font-black text-blue-900">
+              <option value="5">5 ★ - CRÍTICA (Riesgo / Urgente)</option>
+              <option value="4">4 ★ - ALTA</option>
+              <option value="3" selected>3 ★ - MEDIA</option>
+              <option value="2">2 ★ - BAJA</option>
+              <option value="1">1 ★ - MÍNIMA</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Mensaje de Flujo -->
+        <div class="bg-blue-50 p-3.5 rounded-xl border border-blue-200 text-blue-900 text-xs">
+          💡 <strong>Próximo paso del flujo:</strong> Al guardar, la obra quedará registrada en <strong>Estudio de Factibilidad</strong> y aparecerá automáticamente en el panel de la <strong>Dirección Médica / General</strong> para que le asignen su Prioridad. Una vez ponderada, se solicitará e ingresará el número de <strong>Partida Presupuestaria</strong> para arrancar formalmente el proceso de Anteproyecto.
+        </div>
+
+        <div class="bg-slate-100 -mx-6 -mb-6 p-4 border-t border-slate-200 flex justify-end space-x-2">
+          <button type="button" onclick="App.closeNewObraModal()" class="px-4 py-2 border border-slate-300 rounded-lg font-bold text-slate-600 hover:bg-slate-200">Cancelar</button>
+          <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-extrabold shadow-sm transition">
+            + Registrar Factibilidad y Enviar a Dirección
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: ASIGNACIÓN DE PARTIDA PRESUPUESTARIA ================= -->
+  <div id="modalAsignarPartida" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-100 text-xs">
+      <div class="bg-slate-900 text-white px-5 py-3.5 flex items-center justify-between font-bold">
+        <span>Asignar Partida Presupuestaria</span>
+        <button onclick="App.closeAsignarPartidaModal()"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <form onsubmit="App.handleGuardarPartidaSubmit(event)" class="p-5 space-y-4">
+        <input type="hidden" id="partidaItemId">
+        <div>
+          <div class="text-slate-400 text-[11px] font-semibold">Proyecto</div>
+          <div class="font-bold text-slate-800 text-sm" id="partidaItemName"></div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Número de Partida Presupuestaria <span class="text-red-500">*</span></label>
+          <input type="text" id="inputNumeroPartida" placeholder="Ej: 6060826" required
+                 class="w-full border-2 border-blue-500 rounded-lg p-2.5 font-mono text-sm font-black text-slate-900 focus:outline-none">
+          <p class="text-[11px] text-slate-400 mt-1">Ingresado por la Dirección o Finanzas para habilitar el inicio formal del Anteproyecto.</p>
+        </div>
+
+        <div class="bg-slate-50 -mx-5 -mb-5 p-4 border-t border-slate-200 flex justify-end space-x-2">
+          <button type="button" onclick="App.closeAsignarPartidaModal()" class="px-3 py-1.5 border border-slate-300 rounded-lg font-bold text-slate-600">Cancelar</button>
+          <button type="submit" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-xs">
+            Confirmar Partida y Habilitar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- ================= MODAL: TRANSICIÓN SECUENCIAL AUTOMATIZADA ================= -->
   <div id="modalTransition" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-100 text-xs">
@@ -394,6 +540,15 @@
             <div class="text-[10px] text-blue-600 font-bold uppercase">Siguiente Etapa Automática</div>
             <div class="font-bold text-blue-700 text-xs" id="transNextStageAuto">-</div>
           </div>
+        </div>
+
+        <!-- Aviso si avanza a Anteproyecto sin Partida -->
+        <div id="transSinPartidaNotice" class="hidden bg-amber-50 border border-amber-300 text-amber-900 p-3 rounded-xl text-xs font-semibold">
+          ⚠️ Esta obra aún no tiene asignado un <strong>Número de Partida Presupuestaria</strong>. Ingresa el número para habilitar el Anteproyecto:
+        </div>
+        <div id="transQuickPartidaContainer" class="hidden">
+          <label class="block font-bold text-slate-700 mb-1">Asignar Partida Presupuestaria ahora:</label>
+          <input type="text" id="transQuickPartidaInput" placeholder="Ej: 6060826" class="w-full border border-slate-300 rounded-lg p-2 font-mono font-bold">
         </div>
 
         <!-- Aviso si pasa a Finalizada -->
@@ -468,8 +623,6 @@
       </div>
 
       <div class="p-6 overflow-y-auto flex-1 space-y-6">
-        
-        <!-- Formulario Alta de Usuario -->
         <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
           <div class="font-bold text-slate-800 mb-3 flex items-center space-x-1.5">
             <i data-lucide="user-plus" class="w-4 h-4 text-blue-600"></i>
@@ -501,7 +654,7 @@
                 <label class="block font-semibold text-slate-600 mb-1">Rol Principal</label>
                 <select id="newUserRol" class="w-full border border-slate-300 rounded-lg p-2 bg-white font-medium">
                   <option value="pm_obra">Jefe de Obra / PM</option>
-                  <option value="direccion_medica">Dirección Médica (Solo Prioridades)</option>
+                  <option value="direccion_medica">Dirección Médica</option>
                   <option value="licitaciones">Compras y Licitaciones</option>
                   <option value="visualizador">Visualizador (Solo Lectura)</option>
                   <option value="admin">Administrador General</option>
@@ -509,10 +662,9 @@
               </div>
             </div>
 
-            <!-- Permisos Granulares -->
             <div class="pt-2 border-t border-slate-200">
               <span class="block font-semibold text-slate-700 mb-2">Permisos Específicos:</span>
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-slate-700">
+              <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-slate-700">
                 <label class="flex items-center space-x-1.5 cursor-pointer">
                   <input type="checkbox" id="newUserPuedeCrear" checked class="rounded text-blue-600">
                   <span>Crear Obras</span>
@@ -524,6 +676,10 @@
                 <label class="flex items-center space-x-1.5 cursor-pointer">
                   <input type="checkbox" id="newUserPuedeMedica" class="rounded text-blue-600">
                   <span>Prioridad Médica</span>
+                </label>
+                <label class="flex items-center space-x-1.5 cursor-pointer">
+                  <input type="checkbox" id="newUserPuedePartida" class="rounded text-blue-600">
+                  <span>Asignar Partida</span>
                 </label>
                 <label class="flex items-center space-x-1.5 cursor-pointer">
                   <input type="checkbox" id="newUserSoloLectura" class="rounded text-blue-600">
@@ -540,7 +696,6 @@
           </form>
         </div>
 
-        <!-- Tabla de Usuarios Registrados -->
         <div>
           <div class="font-bold text-slate-800 mb-2">Usuarios Registrados en la Plataforma</div>
           <div class="border border-slate-200 rounded-xl overflow-hidden">
@@ -558,7 +713,6 @@
             </table>
           </div>
         </div>
-
       </div>
 
       <div class="bg-slate-100 px-6 py-3 border-t border-slate-200 flex justify-end">
@@ -615,7 +769,6 @@
       </div>
 
       <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
-        <!-- Warning si la sede está bloqueada para el usuario -->
         <div id="modalSedeRestrWarning" class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl font-medium">
           🔒 Esta obra pertenece a otra sede. Tu usuario solo tiene permisos de visualización sobre ella.
         </div>
@@ -655,8 +808,14 @@
             </select>
           </div>
           <div>
-            <label class="block font-semibold text-slate-700 mb-1">Partida Presupuestaria</label>
-            <input type="text" id="modalObraPartida" class="w-full border border-slate-300 rounded-lg px-3 py-2">
+            <div class="flex items-center justify-between mb-1">
+              <label class="font-semibold text-slate-700">Partida Presupuestaria</label>
+              <button type="button" id="btnModalAsignarPartida" onclick="App.openAsignarPartidaModal(document.getElementById('modalObraId').innerText)" 
+                      class="text-blue-600 font-bold hover:underline">
+                + Asignar
+              </button>
+            </div>
+            <input type="text" id="modalObraPartida" placeholder="Ej: 6060826" class="w-full border border-slate-300 rounded-lg px-3 py-2 font-mono font-bold text-slate-900">
           </div>
         </div>
 
@@ -686,11 +845,11 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label class="block font-semibold text-slate-700 mb-1">Monto Obra (USD)</label>
-            <input type="number" id="modalObraMontoObra" class="w-full border border-slate-300 rounded-lg px-3 py-2 font-mono">
+            <input type="number" id="modalObraMontoObra" class="w-full border border-slate-300 rounded-lg px-3 py-2 font-mono font-bold">
           </div>
           <div>
             <label class="block font-semibold text-slate-700 mb-1">Monto Equipamiento (USD)</label>
-            <input type="number" id="modalObraMontoEquip" class="w-full border border-slate-300 rounded-lg px-3 py-2 font-mono">
+            <input type="number" id="modalObraMontoEquip" class="w-full border border-slate-300 rounded-lg px-3 py-2 font-mono font-bold">
           </div>
           <div>
             <label class="block font-semibold text-slate-700 mb-1">Superficie (M2)</label>
@@ -718,12 +877,12 @@
           </div>
         </div>
 
-        <!-- Prioridades (1 a 5) -->
+        <!-- Prioridades (1 a 5) y Ponderación Global -->
         <div class="bg-slate-100 p-4 rounded-xl border border-slate-200">
-          <div class="font-bold text-slate-800 text-xs mb-2">Evaluación y Prioridades (1 = Sin prioridad, 5 = Crítica)</div>
+          <div class="font-bold text-slate-800 text-xs mb-2">Evaluación y Ponderación Global (1 = Sin prioridad, 5 = Crítica)</div>
           <div class="grid grid-cols-3 gap-4">
             <div>
-              <label class="block text-slate-600 mb-1">Prioridad Técnica (1-5)</label>
+              <label class="block text-slate-600 mb-1">Prioridad Técnica (Solicitante)</label>
               <input type="number" min="1" max="5" step="0.1" id="modalObraPrioridadTec" class="w-full border border-slate-300 rounded px-2 py-1 bg-white font-bold">
             </div>
             <div>
@@ -731,8 +890,8 @@
               <input type="number" min="1" max="5" step="0.1" id="modalObraPrioridadMed" placeholder="Pendiente" class="w-full border border-slate-300 rounded px-2 py-1 bg-white font-bold text-indigo-700">
             </div>
             <div>
-              <label class="block text-slate-600 mb-1">Prioridad Final (Ponderada)</label>
-              <input type="number" min="1" max="5" step="0.1" id="modalObraPrioridadFin" class="w-full border border-slate-300 rounded px-2 py-1 bg-white font-black text-blue-600">
+              <label class="block text-slate-600 mb-1">Ponderación Final</label>
+              <input type="number" min="1" max="5" step="0.1" id="modalObraPrioridadFin" readonly class="w-full border border-slate-300 rounded px-2 py-1 bg-slate-200 font-black text-blue-700">
             </div>
           </div>
         </div>

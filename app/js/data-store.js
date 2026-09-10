@@ -1,5 +1,6 @@
 // ==============================================================================
-// GESTOR DE DATOS, ESTADOS, USUARIOS Y WORKFLOW SECUENCIAL - SIGO HIBA v2.0
+// GESTOR DE DATOS, ESTADOS, USUARIOS Y WORKFLOW SECUENCIAL - SIGO HIBA v2.1
+// Formato USD estricto, Carga de Factibilidad, Asignación de Partida y Ponderación
 // ==============================================================================
 
 const STAGES_SEQUENCE = [
@@ -32,6 +33,7 @@ const DEFAULT_USERS = [
     puede_crear: true,
     puede_avanzar: true,
     puede_priorizar_medica: true,
+    puede_asignar_partida: true,
     solo_lectura: false
   },
   {
@@ -44,6 +46,7 @@ const DEFAULT_USERS = [
     puede_crear: false,
     puede_avanzar: false,
     puede_priorizar_medica: true,
+    puede_asignar_partida: true,
     solo_lectura: false
   },
   {
@@ -56,6 +59,7 @@ const DEFAULT_USERS = [
     puede_crear: true,
     puede_avanzar: true,
     puede_priorizar_medica: false,
+    puede_asignar_partida: false,
     solo_lectura: false
   },
   {
@@ -68,6 +72,7 @@ const DEFAULT_USERS = [
     puede_crear: true,
     puede_avanzar: true,
     puede_priorizar_medica: false,
+    puede_asignar_partida: false,
     solo_lectura: false
   },
   {
@@ -80,6 +85,7 @@ const DEFAULT_USERS = [
     puede_crear: true,
     puede_avanzar: true,
     puede_priorizar_medica: false,
+    puede_asignar_partida: false,
     solo_lectura: false
   },
   {
@@ -92,6 +98,7 @@ const DEFAULT_USERS = [
     puede_crear: false,
     puede_avanzar: true,
     puede_priorizar_medica: false,
+    puede_asignar_partida: false,
     solo_lectura: false
   },
   {
@@ -104,6 +111,7 @@ const DEFAULT_USERS = [
     puede_crear: false,
     puede_avanzar: false,
     puede_priorizar_medica: false,
+    puede_asignar_partida: false,
     solo_lectura: true
   }
 ];
@@ -127,7 +135,6 @@ const DataStore = {
       this.persistUsers();
     }
 
-    // Usuario activo inicial (Admin por defecto)
     const activeUsrId = localStorage.getItem('sigo_active_user_id');
     this.currentUser = this.users.find(u => u.id === activeUsrId) || this.users[0];
 
@@ -147,13 +154,11 @@ const DataStore = {
         const rawInfra = window.INITIAL_DATA.infraestructura || [];
         this.items = [...rawObras, ...rawInfra];
         
-        // Normalizar sedes: Almagro -> Central
         this.items.forEach(item => {
           if (item.sede === 'Almagro') item.sede = 'Central';
           if (item.sede === 'Periférico') item.sede = 'Periféricos';
           if (!item.sede) item.sede = 'Central';
           
-          // Asignar fecha fin si no tiene
           if (!item.fecha_fin_etapa) {
             const days = DEFAULT_STAGE_DAYS[item.estado] || 30;
             const d = new Date();
@@ -166,7 +171,7 @@ const DataStore = {
       }
     }
 
-    // Normalizar historial y propiedades
+    // Normalizar datos
     this.items.forEach(item => {
       if (item.sede === 'Almagro') item.sede = 'Central';
       if (item.sede === 'Periférico') item.sede = 'Periféricos';
@@ -182,7 +187,7 @@ const DataStore = {
       }
     });
 
-    console.log(`DataStore listo: ${this.items.length} obras, ${this.users.length} usuarios. Activo: ${this.currentUser.nombre}`);
+    console.log(`DataStore v2.1 inicializado: ${this.items.length} proyectos. Usuario activo: ${this.currentUser.nombre}`);
   },
 
   persist() {
@@ -193,7 +198,129 @@ const DataStore = {
     localStorage.setItem('sigo_users_list', JSON.stringify(this.users));
   },
 
-  // ================= SECUENCIA Y AVANCE AUTOMÁTICO =================
+  // ================= FORMATO DE MONEDA EN USD =================
+  formatUSD(amount) {
+    const n = parseFloat(amount) || 0;
+    return `USD ${Math.round(n).toLocaleString('en-US')}`;
+  },
+
+  // ================= CARGA DE FACTIBILIDAD =================
+  createFactibilidad(data) {
+    const userSede = this.currentUser.sede !== 'Todas' ? this.currentUser.sede : (data.sede || 'Central');
+    const newId = `OBRA-${(this.items.length + 1).toString().padStart(3, '0')}`;
+    const pTec = parseFloat(data.prioridad_tecnica) || 3;
+    const monto = parseFloat(data.monto_estimado) || 0;
+
+    const newItem = {
+      id: newId,
+      tipo: data.tipo || 'Obra Civil',
+      partida: '', // Pendiente de asignación formal
+      nombre: data.nombre.trim(),
+      sede: userSede,
+      sector_solicitante: data.sector_solicitante || '',
+      motivo: data.motivo || '',
+      requerimiento_minimo: data.requerimiento_minimo || '',
+      estado: 'Estudio de Factibilidad',
+      monto_obra_usd: monto,
+      monto_equipamiento_usd: 0,
+      monto_total_usd: monto,
+      prioridad_tecnica: pTec,
+      prioridad_medica: null, // Pendiente de dirección
+      prioridad_final: pTec,
+      responsable: data.responsable || this.currentUser.nombre || 'Sin Asignar',
+      categoria: data.categoria || 'Obra Civil',
+      clasificacion: 'Nueva Solicitud',
+      observaciones: `Sector: ${data.sector_solicitante || 'S/D'} | Motivo: ${data.motivo || 'S/D'}`,
+      fecha_inicio_etapa: new Date().toISOString().split('T')[0],
+      fecha_fin_etapa: this.getDefaultDeadlineForStage('Estudio de Factibilidad'),
+      historial: [{
+        fecha: new Date().toISOString().split('T')[0],
+        usuario: this.currentUser.nombre,
+        estado_anterior: null,
+        estado_nuevo: 'Estudio de Factibilidad',
+        observaciones: `Solicitud de factibilidad registrada por ${this.currentUser.nombre} con Prioridad Inicial ${pTec}★. Esperando revisión de Dirección y asignación de partida.`
+      }]
+    };
+
+    this.items.unshift(newItem);
+    this.persist();
+
+    if (SupabaseManager.isConfigured) {
+      SupabaseManager.upsertObraInCloud(newItem);
+    }
+
+    return newItem;
+  },
+
+  // ================= ASIGNACIÓN DE PARTIDA PRESUPUESTARIA =================
+  asignarPartidaPresupuestaria(itemId, partidaNum) {
+    const item = this.getItemById(itemId);
+    if (!item) return { success: false, msg: 'Obra no encontrada' };
+
+    if (!partidaNum || partidaNum.trim() === '') {
+      return { success: false, msg: 'Debes ingresar un número de partida válido' };
+    }
+
+    item.partida = partidaNum.trim();
+    item.historial.unshift({
+      fecha: new Date().toISOString().split('T')[0],
+      usuario: this.currentUser.nombre,
+      estado_anterior: item.estado,
+      estado_nuevo: item.estado,
+      observaciones: `Partida presupuestaria N° ${item.partida} asignada por ${this.currentUser.nombre}. Habilita inicio de Anteproyecto.`
+    });
+
+    this.saveItem(item);
+    return { success: true, partida: item.partida };
+  },
+
+  // ================= PONDERACIÓN GLOBAL Y ESCALA DE COLORES =================
+  getPonderacionGlobal(item) {
+    const pTec = parseFloat(item.prioridad_tecnica) || 0;
+    const pMed = parseFloat(item.prioridad_medica) || 0;
+
+    let ponderacion = 0;
+    if (pMed > 0 && pTec > 0) {
+      // Si ambos coinciden en 5 o se promedian
+      ponderacion = Math.round(((pTec + pMed) / 2) * 10) / 10;
+      if (pTec === 5 && pMed === 5) ponderacion = 5.0;
+    } else if (pMed > 0) {
+      ponderacion = pMed;
+    } else if (pTec > 0) {
+      ponderacion = pTec;
+    }
+
+    let colorClass = 'bg-blue-100 text-blue-800 border-blue-300';
+    let nivelLabel = 'Mínima / Nivel 1';
+    let esCritico = false;
+
+    if (ponderacion >= 4.8) {
+      colorClass = 'bg-red-600 text-white border-red-700 font-black animate-pulse';
+      nivelLabel = 'CRÍTICA / NIVEL 5';
+      esCritico = true;
+    } else if (ponderacion >= 3.8) {
+      colorClass = 'bg-orange-500 text-white border-orange-600 font-extrabold';
+      nivelLabel = 'ALTA / NIVEL 4';
+    } else if (ponderacion >= 2.8) {
+      colorClass = 'bg-amber-400 text-slate-900 border-amber-500 font-bold';
+      nivelLabel = 'MEDIA / NIVEL 3';
+    } else if (ponderacion >= 1.8) {
+      colorClass = 'bg-emerald-500 text-white border-emerald-600 font-semibold';
+      nivelLabel = 'BAJA / NIVEL 2';
+    }
+
+    return {
+      valor: ponderacion,
+      nivelLabel,
+      colorClass,
+      esCritico,
+      pTec,
+      pMed,
+      faltaMedica: (pMed === 0 || item.prioridad_medica === null)
+    };
+  },
+
+  // ================= WORKFLOW SECUENCIAL =================
   getNextStage(currentStage) {
     const idx = STAGES_SEQUENCE.indexOf(currentStage);
     if (idx >= 0 && idx < STAGES_SEQUENCE.length - 1) {
@@ -213,7 +340,6 @@ const DataStore = {
     const item = this.getItemById(itemId);
     if (!item) return { success: false, msg: 'Obra no encontrada' };
 
-    // Validar permiso de usuario
     if (!this.canUserEditObra(item)) {
       return { success: false, msg: `No tienes permisos para modificar obras de la sede ${item.sede}` };
     }
@@ -227,20 +353,29 @@ const DataStore = {
       return { success: false, msg: 'Esta obra ya se encuentra en su etapa final' };
     }
 
+    // VALIDACIÓN CRÍTICA: De Factibilidad a Anteproyecto se REQUIERE número de partida presupuestaria
+    if (currentStage === 'Estudio de Factibilidad' && nextStage === 'Ante Proyecto') {
+      if (!item.partida || item.partida.trim() === '' || item.partida === 'S/D') {
+        return { 
+          success: false, 
+          msg: 'Para iniciar el Anteproyecto se requiere tener asignado un Número de Partida Presupuestaria por la Dirección o Administrador.',
+          requierePartida: true 
+        };
+      }
+    }
+
     const today = new Date().toISOString().split('T')[0];
     const compDate = completionDate || today;
 
-    // Registrar en historial el cierre de la etapa previa
     item.historial.unshift({
       fecha: compDate,
       usuario: this.currentUser.nombre,
       estado_anterior: currentStage,
       estado_nuevo: nextStage,
       fecha_limite: nextDeadline,
-      observaciones: notes || `Etapa '${currentStage}' finalizada y confirmada por ${this.currentUser.nombre}. Avanza a '${nextStage}'.`
+      observaciones: notes || `Etapa '${currentStage}' completada y confirmada. Avanza a '${nextStage}'.`
     });
 
-    // Actualizar estado y fechas
     item.estado = nextStage;
     item.fecha_inicio_etapa = compDate;
     item.fecha_fin_etapa = nextDeadline || this.getDefaultDeadlineForStage(nextStage);
@@ -276,7 +411,6 @@ const DataStore = {
     const diffTime = targetDate.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    // Si venció y no se confirmó -> ROJO
     if (diffDays < 0) {
       return { 
         status: 'vencido', 
@@ -301,7 +435,6 @@ const DataStore = {
     }
   },
 
-  // ================= RESTRICCIÓN POR SEDE Y PERMISOS =================
   canUserEditObra(item) {
     if (!this.currentUser) return false;
     if (this.currentUser.rol === 'admin') return true;
@@ -316,50 +449,43 @@ const DataStore = {
     return (this.currentUser.sede || '').toLowerCase() === (sede || '').toLowerCase();
   },
 
-  // ================= FILTROS Y DATOS =================
+  // ================= FILTROS Y KPIS DESGLOSADOS =================
   getFilteredItems(filters = {}) {
     return this.items.filter(item => {
-      // 1. Restricción obligatoria de Sede según usuario logueado (si no es 'Todas')
+      // Restricción de Sede por usuario
       if (this.currentUser && this.currentUser.sede !== 'Todas') {
-        if ((item.sede || '').toLowerCase() !== this.currentUser.sede.toLowerCase()) {
-          return false;
-        }
+        if ((item.sede || '').toLowerCase() !== this.currentUser.sede.toLowerCase()) return false;
       }
-
-      // 2. Filtro de Sede explícito (cuando el usuario tiene permiso multi-sede)
+      // Filtro Sede explícito
       if (filters.sede && filters.sede !== 'TODAS') {
         if ((item.sede || '').toLowerCase() !== filters.sede.toLowerCase()) return false;
       }
-
-      // 3. Filtro Tipo (Obra Civil vs Infraestructura)
+      // Filtro Tipo
       if (filters.tipo && filters.tipo !== 'TODOS') {
         if (item.tipo !== filters.tipo) return false;
       }
-
-      // 4. Filtro de Obras Finalizadas vs Activas
+      // Filtro Finalizadas
       if (filters.filtroFinalizadas === 'activas') {
-        if (item.estado === 'Obras Finalizadas') return false;
+        if (item.estado === 'Obras Finalizadas' || item.estado === 'Suspendida') return false;
       } else if (filters.filtroFinalizadas === 'finalizadas') {
         if (item.estado !== 'Obras Finalizadas') return false;
+      } else if (filters.filtroFinalizadas === 'suspendidas') {
+        if (item.estado !== 'Suspendida') return false;
       }
-
-      // 5. Filtro Estado específico
+      // Filtro Estado
       if (filters.estado && filters.estado !== 'TODOS') {
         if (item.estado !== filters.estado) return false;
       }
-
-      // 6. Filtro Semáforo
+      // Filtro Semáforo
       if (filters.semaforo && filters.semaforo !== 'TODOS') {
         const sem = this.calculateSemaforo(item);
         if (sem.status !== filters.semaforo) return false;
       }
-
-      // 7. Filtro Responsable
+      // Filtro Responsable
       if (filters.responsable && filters.responsable !== 'TODOS') {
         if ((item.responsable || '').toLowerCase() !== filters.responsable.toLowerCase()) return false;
       }
-
-      // 8. Búsqueda texto libre
+      // Búsqueda
       if (filters.search && filters.search.trim() !== '') {
         const q = filters.search.toLowerCase();
         const match = 
@@ -368,22 +494,28 @@ const DataStore = {
           (item.partida || '').toLowerCase().includes(q) ||
           (item.proveedor || '').toLowerCase().includes(q) ||
           (item.responsable || '').toLowerCase().includes(q) ||
+          (item.sector_solicitante || '').toLowerCase().includes(q) ||
           (item.clasificacion || '').toLowerCase().includes(q);
         if (!match) return false;
       }
-
       return true;
     });
   },
 
   getKPIs(filters = {}) {
     const list = this.getFilteredItems(filters);
-    let totalUsd = 0;
+
+    let sumObraActiva = 0;
+    let sumEquipActivo = 0;
+    let sumInfraActiva = 0;
+    let sumSuspendidas = 0;
+    let sumFinalizadas = 0;
+
     let vencidos = 0;
     let porVencer = 0;
     let enPlazo = 0;
-    let finalizadas = 0;
-    let suspendidas = 0;
+    let finalizadasCount = 0;
+    let suspendidasCount = 0;
 
     const estadosCount = {
       'Estudio de Factibilidad': 0,
@@ -403,15 +535,33 @@ const DataStore = {
     };
 
     list.forEach(item => {
-      const monto = (item.monto_total_usd || item.monto_obra_usd || 0);
-      totalUsd += monto;
+      const mObra = item.monto_obra_usd || 0;
+      const mEquip = item.monto_equipamiento_usd || 0;
+      const mTotal = mObra + mEquip;
+
+      const isFinalizada = item.estado === 'Obras Finalizadas';
+      const isSuspendida = item.estado === 'Suspendida';
+
+      if (isFinalizada) {
+        sumFinalizadas += mTotal;
+        finalizadasCount++;
+      } else if (isSuspendida) {
+        sumSuspendidas += mTotal;
+        suspendidasCount++;
+      } else {
+        // Obra activa
+        if (item.tipo === 'Infraestructura') {
+          sumInfraActiva += mObra;
+        } else {
+          sumObraActiva += mObra;
+          sumEquipActivo += mEquip;
+        }
+      }
 
       const sem = this.calculateSemaforo(item);
       if (sem.status === 'vencido') vencidos++;
       else if (sem.status === 'por_vencer') porVencer++;
       else if (sem.status === 'en_plazo') enPlazo++;
-      else if (sem.status === 'finalizado') finalizadas++;
-      else if (sem.status === 'suspendido') suspendidas++;
 
       if (estadosCount.hasOwnProperty(item.estado)) {
         estadosCount[item.estado]++;
@@ -422,20 +572,28 @@ const DataStore = {
       const s = item.sede || 'Central';
       if (!sedesCount[s]) sedesCount[s] = { count: 0, usd: 0 };
       sedesCount[s].count++;
-      sedesCount[s].usd += monto;
+      sedesCount[s].usd += mTotal;
     });
 
     const activeTotal = vencidos + porVencer + enPlazo;
     const porcentajeEnPlazo = activeTotal > 0 ? Math.round((enPlazo / activeTotal) * 100) : 100;
 
+    // Total en cartera activa (lo que realmente está en juego sin duplicar)
+    const totalCarteraActiva = sumObraActiva + sumEquipActivo + sumInfraActiva;
+
     return {
       totalItems: list.length,
-      totalUsd,
+      totalCarteraActiva,
+      sumObraActiva,
+      sumEquipActivo,
+      sumInfraActiva,
+      sumSuspendidas,
+      sumFinalizadas,
       vencidos,
       porVencer,
       enPlazo,
-      finalizadas,
-      suspendidas,
+      finalizadas: finalizadasCount,
+      suspendidas: suspendidasCount,
       porcentajeEnPlazo,
       estadosCount,
       sedesCount
@@ -459,9 +617,9 @@ const DataStore = {
     if (!item) return false;
 
     item.prioridad_medica = parseFloat(priorityVal) || 1;
-    // Recalcular prioridad final si técnica existe
     const pTec = item.prioridad_tecnica || 1;
-    item.prioridad_final = Math.max(item.prioridad_medica, pTec);
+    item.prioridad_final = Math.round(((pTec + item.prioridad_medica) / 2) * 10) / 10;
+    if (pTec === 5 && item.prioridad_medica === 5) item.prioridad_final = 5.0;
 
     if (!item.historial) item.historial = [];
     item.historial.unshift({
@@ -469,14 +627,14 @@ const DataStore = {
       usuario: this.currentUser.nombre,
       estado_anterior: item.estado,
       estado_nuevo: item.estado,
-      observaciones: `Prioridad Médica asignada: ${priorityVal} estrellas. ${notes || ''}`
+      observaciones: `Prioridad Médica asignada: ${priorityVal}★ por Dirección. Ponderación final resultante: ${item.prioridad_final}.`
     });
 
     this.saveItem(item);
     return true;
   },
 
-  // ================= GESTIÓN DE USUARIOS =================
+  // ================= USUARIOS =================
   addUser(userData) {
     const newUser = {
       id: `usr-${Date.now()}`,
@@ -488,6 +646,7 @@ const DataStore = {
       puede_crear: userData.puede_crear ?? true,
       puede_avanzar: userData.puede_avanzar ?? true,
       puede_priorizar_medica: userData.puede_priorizar_medica ?? false,
+      puede_asignar_partida: userData.puede_asignar_partida ?? false,
       solo_lectura: userData.solo_lectura ?? false
     };
     this.users.push(newUser);
@@ -518,12 +677,11 @@ const DataStore = {
   loginWithGoogle(email) {
     const existing = this.users.find(u => u.email.toLowerCase() === email.toLowerCase());
     if (existing) {
-      if (!existing.activo) return { success: false, msg: 'Este usuario se encuentra inactivo. Contacta al administrador.' };
+      if (!existing.activo) return { success: false, msg: 'Usuario inactivo.' };
       this.currentUser = existing;
       localStorage.setItem('sigo_active_user_id', existing.id);
       return { success: true, user: existing };
     }
-    // Si no existe, dar de alta como usuario pendiente o visualizador
     const newUser = this.addUser({
       nombre: email.split('@')[0],
       email: email,
@@ -536,7 +694,7 @@ const DataStore = {
     });
     this.currentUser = newUser;
     localStorage.setItem('sigo_active_user_id', newUser.id);
-    return { success: true, user: newUser, msg: 'Usuario registrado con acceso de lectura. Un administrador asignará tus permisos.' };
+    return { success: true, user: newUser, msg: 'Usuario registrado con acceso de lectura.' };
   },
 
   getItemById(id) {
@@ -561,28 +719,29 @@ const DataStore = {
   exportToExcel(filters = {}) {
     const data = this.getFilteredItems(filters).map(item => {
       const sem = this.calculateSemaforo(item);
+      const pond = this.getPonderacionGlobal(item);
       return {
         'Código': item.id,
         'Tipo': item.tipo,
         'Sede': item.sede,
         'Inversión / Nombre': item.nombre,
-        'Partida': item.partida || '',
+        'Sector Solicitante': item.sector_solicitante || '',
+        'Partida': item.partida || 'PENDIENTE',
         'Estado': item.estado,
         'Semáforo': sem.status.toUpperCase(),
         'Días Restantes': sem.days !== null ? sem.days : '',
         'Monto Obra USD': item.monto_obra_usd || 0,
         'Monto Equipamiento USD': item.monto_equipamiento_usd || 0,
-        'Total USD': item.monto_total_usd || (item.monto_obra_usd + item.monto_equipamiento_usd) || 0,
-        'Prioridad Técnica': item.prioridad_tecnica || '',
-        'Prioridad Médica': item.prioridad_medica || 'Pendiente',
-        'Prioridad Final': item.prioridad_final || '',
+        'Total USD': (item.monto_obra_usd || 0) + (item.monto_equipamiento_usd || 0),
+        'Prioridad Técnica (Solicitante)': item.prioridad_tecnica || '',
+        'Prioridad Médica (Dirección)': item.prioridad_medica || 'Pendiente',
+        'Ponderación Global': pond.valor,
+        'Nivel Ponderación': pond.nivelLabel,
         'Responsable': item.responsable || '',
         'Proveedor': item.proveedor || '',
         'Categoría': item.categoria || '',
-        'Clasificación': item.clasificacion || '',
         'Fecha Inicio Etapa': item.fecha_inicio_etapa || '',
         'Fecha Límite Etapa': item.fecha_fin_etapa || '',
-        'Fecha Fin Obra': item.fecha_fin_obra || '',
         'Fecha Real Finalizada': item.fecha_real_finalizada || '',
         'Observaciones': item.observaciones || ''
       };
