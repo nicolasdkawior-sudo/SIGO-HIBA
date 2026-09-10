@@ -1186,6 +1186,10 @@ const App = {
   },
 
   login(email) {
+    const errBox = document.getElementById('loginErrorMessage');
+    const errText = document.getElementById('loginErrorText');
+    if (errBox) errBox.classList.add('hidden');
+
     const res = DataStore.loginWithGoogle(email);
     if (res.success) {
       if (DataStore.currentUser && DataStore.currentUser.sede !== 'Todas') {
@@ -1194,17 +1198,24 @@ const App = {
       this.checkAuth();
       this.updateUserUI();
       this.render();
-      this.showToast(res.msg || `¡Bienvenido/a ${res.user.nombre}!`);
+      this.showToast(`¡Bienvenido/a ${res.user.nombre}!`);
       if (window.lucide) lucide.createIcons();
     } else {
-      alert(res.msg);
+      if (errBox && errText) {
+        errText.innerText = res.msg;
+        errBox.classList.remove('hidden');
+      } else {
+        alert(res.msg);
+      }
+      if (window.lucide) lucide.createIcons();
     }
   },
 
   loginWithGooglePrompt() {
-    const email = prompt("Ingresa tu correo de Gmail personal para ingresar:", "admin.obras@gmail.com");
-    if (email) {
-      this.login(email.trim());
+    if (SupabaseManager.isConfigured) {
+      SupabaseManager.signInWithGoogle();
+    } else {
+      this.openGoogleLoginModal();
     }
   },
 
@@ -1222,7 +1233,10 @@ const App = {
   },
 
   openGoogleLoginModal() {
+    const err = document.getElementById('modalGoogleLoginError');
+    if (err) err.classList.add('hidden');
     document.getElementById('modalGoogleLogin').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
   },
 
   closeGoogleLoginModal() {
@@ -1231,12 +1245,49 @@ const App = {
 
   handleGoogleLoginSubmit() {
     const email = document.getElementById('inputGoogleEmail').value.trim();
+    const pwd = document.getElementById('inputGooglePassword')?.value.trim() || '';
+    const errBox = document.getElementById('modalGoogleLoginError');
+    const errText = document.getElementById('modalGoogleLoginErrorText');
+
     if (!email || !email.includes('@')) {
-      alert("Por favor ingresa un correo de Gmail válido");
+      if (errBox && errText) {
+        errText.innerText = 'Por favor ingresa un correo de Gmail válido';
+        errBox.classList.remove('hidden');
+      } else {
+        alert('Por favor ingresa un correo de Gmail válido');
+      }
       return;
     }
-    this.login(email);
-    this.closeGoogleLoginModal();
+
+    if (!pwd) {
+      if (errBox && errText) {
+        errText.innerText = 'Por favor ingresa la contraseña de tu cuenta de Google';
+        errBox.classList.remove('hidden');
+      }
+      return;
+    }
+
+    const res = DataStore.loginWithGoogle(email);
+    if (res.success) {
+      if (errBox) errBox.classList.add('hidden');
+      if (DataStore.currentUser && DataStore.currentUser.sede !== 'Todas') {
+        this.filters.sede = DataStore.currentUser.sede;
+      }
+      this.closeGoogleLoginModal();
+      this.checkAuth();
+      this.updateUserUI();
+      this.render();
+      this.showToast(`¡Autenticación con Google exitosa! Bienvenido/a ${res.user.nombre}`);
+      if (window.lucide) lucide.createIcons();
+    } else {
+      if (errBox && errText) {
+        errText.innerText = res.msg;
+        errBox.classList.remove('hidden');
+      } else {
+        alert(res.msg);
+      }
+      if (window.lucide) lucide.createIcons();
+    }
   },
 
   updateUserUI() {

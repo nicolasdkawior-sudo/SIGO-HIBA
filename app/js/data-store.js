@@ -680,26 +680,28 @@ const DataStore = {
   },
 
   loginWithGoogle(email) {
-    const existing = this.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (!email || !email.trim()) {
+      return { success: false, msg: 'Por favor ingresa tu correo de Gmail.' };
+    }
+    const cleanEmail = email.trim().toLowerCase();
+    const existing = this.users.find(u => (u.email || '').toLowerCase() === cleanEmail);
     if (existing) {
-      if (!existing.activo) return { success: false, msg: 'Usuario inactivo.' };
+      if (!existing.activo) {
+        return { 
+          success: false, 
+          msg: `⛔ Acceso Denegado: Tu cuenta (${existing.nombre}) fue desactivada por el Administrador. Solicita la reactivación a la Dirección.` 
+        };
+      }
       this.currentUser = existing;
       localStorage.setItem('sigo_active_user_id', existing.id);
       return { success: true, user: existing };
     }
-    const newUser = this.addUser({
-      nombre: email.split('@')[0],
-      email: email,
-      sede: 'Todas',
-      rol: 'visualizador',
-      solo_lectura: true,
-      puede_crear: false,
-      puede_avanzar: false,
-      puede_priorizar_medica: false
-    });
-    this.currentUser = newUser;
-    localStorage.setItem('sigo_active_user_id', newUser.id);
-    return { success: true, user: newUser, msg: 'Usuario registrado con acceso de lectura.' };
+
+    // BLOQUEO ESTRICTO: NO SE PERMITE EL ACCESO A CORREOS NO DADOS DE ALTA
+    return { 
+      success: false, 
+      msg: `⛔ Acceso Denegado: La cuenta "${cleanEmail}" no está autorizada en el sistema. El Administrador debe darte de alta previamente en el panel de usuarios para que puedas ingresar.` 
+    };
   },
 
   getItemById(id) {
