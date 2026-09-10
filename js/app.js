@@ -1,6 +1,6 @@
 // ==============================================================================
-// CONTROLADOR PRINCIPAL SIGO HIBA v2.1
-// Formato USD estricto, Flujo de Factibilidad, Asignación de Partidas y Ponderación
+// CONTROLADOR PRINCIPAL SIGO HIBA v2.2
+// Gráfico interactivo con desglose por clic, Limpieza de filtros y USD estricto
 // ==============================================================================
 
 const App = {
@@ -11,9 +11,10 @@ const App = {
     estado: 'TODOS',
     semaforo: 'TODOS',
     responsable: 'TODOS',
-    filtroFinalizadas: 'activas', // 'activas', 'finalizadas', 'suspendidas', 'todas'
+    filtroFinalizadas: 'todas', // 'todas', 'activas', 'finalizadas', 'suspendidas'
     search: ''
   },
+  pipelineSelectedStage: null, // Etapa seleccionada al hacer clic en el gráfico
   charts: {},
 
   init() {
@@ -63,6 +64,8 @@ const App = {
     document.getElementById('btnToggleFinalizadas')?.addEventListener('click', () => {
       if (this.filters.filtroFinalizadas === 'activas') {
         this.setFiltroFinalizadas('finalizadas');
+      } else if (this.filters.filtroFinalizadas === 'finalizadas') {
+        this.setFiltroFinalizadas('todas');
       } else {
         this.setFiltroFinalizadas('activas');
       }
@@ -84,6 +87,34 @@ const App = {
     document.getElementById('cardKpiSuspendidas')?.addEventListener('click', () => {
       this.setFiltroFinalizadas('suspendidas');
     });
+  },
+
+  // ================= RESTABLECER / LIMPIAR TODOS LOS FILTROS =================
+  resetAllFilters() {
+    const userSede = DataStore.currentUser && DataStore.currentUser.sede !== 'Todas' ? DataStore.currentUser.sede : 'TODAS';
+    
+    this.filters = {
+      sede: userSede,
+      tipo: 'TODOS',
+      estado: 'TODOS',
+      semaforo: 'TODOS',
+      responsable: 'TODOS',
+      filtroFinalizadas: 'todas',
+      search: ''
+    };
+    this.pipelineSelectedStage = null;
+
+    // Sincronizar inputs del DOM
+    const selSede = document.getElementById('filterSede');
+    if (selSede) selSede.value = userSede;
+    const selTipo = document.getElementById('filterTipo');
+    if (selTipo) selTipo.value = 'TODOS';
+    const inSearch = document.getElementById('inputSearch');
+    if (inSearch) inSearch.value = '';
+
+    this.setFiltroFinalizadas('todas');
+    this.render();
+    this.showToast('Todos los filtros han sido restablecidos. Viendo cartera completa.');
   },
 
   setFiltroFinalizadas(modo) {
@@ -135,6 +166,22 @@ const App = {
     this.switchView('table');
   },
 
+  // ================= FILTRADO POR CLIC EN BARRA DEL PIPELINE =================
+  filterByPipelineStage(stageName) {
+    if (this.pipelineSelectedStage === stageName) {
+      this.pipelineSelectedStage = null; // Deseleccionar al hacer clic de nuevo
+      this.showToast(`Deseleccionado. Mostrando obras prioritarias.`);
+    } else {
+      this.pipelineSelectedStage = stageName;
+      this.showToast(`Filtrando obras en etapa: ${stageName}`);
+    }
+    this.renderDashboardStageList();
+    this.renderCharts(DataStore.getKPIs(this.filters));
+    
+    // Scroll suave hacia la lista de obras
+    document.getElementById('dashboardStageListSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  },
+
   render() {
     const kpis = DataStore.getKPIs(this.filters);
     this.renderKPIs(kpis);
@@ -142,7 +189,7 @@ const App = {
 
     if (this.currentView === 'dashboard') {
       this.renderCharts(kpis);
-      this.renderCriticalList();
+      this.renderDashboardStageList();
     } else if (this.currentView === 'kanban') {
       this.renderKanban();
     } else if (this.currentView === 'table') {
@@ -159,27 +206,22 @@ const App = {
   },
 
   renderKPIs(kpis) {
-    // 1. Inversión Cartera Activa (USD)
     document.getElementById('kpiTotalUsd').innerText = DataStore.formatUSD(kpis.totalCarteraActiva);
     document.getElementById('kpiTotalProyectos').innerText = `${kpis.totalItems} proyectos en lista`;
 
-    // Desglose transparente
     const pillCivil = document.getElementById('kpiPillCivil');
     const pillEquip = document.getElementById('kpiPillEquip');
     const pillInfra = document.getElementById('kpiPillInfra');
-    if (pillCivil) pillCivil.innerText = `Obra: ${DataStore.formatUSD(kpis.sumObraActiva)}`;
+    if (pillCivil) pillCivil.innerText = `Civil: ${DataStore.formatUSD(kpis.sumObraActiva)}`;
     if (pillEquip) pillEquip.innerText = `Equip: ${DataStore.formatUSD(kpis.sumEquipActivo)}`;
     if (pillInfra) pillInfra.innerText = `Infra: ${DataStore.formatUSD(kpis.sumInfraActiva)}`;
 
-    // 2. En Plazo
     document.getElementById('kpiEnPlazoCount').innerText = `${kpis.enPlazo}`;
     document.getElementById('kpiEnPlazoPct').innerText = `${kpis.porcentajeEnPlazo}%`;
 
-    // 3. Por Vencer & Vencidos
     document.getElementById('kpiPorVencerCount').innerText = `${kpis.porVencer}`;
     document.getElementById('kpiVencidosCount').innerText = `${kpis.vencidos}`;
 
-    // 4. Finalizadas & Suspendidas
     document.getElementById('kpiFinalizadasCount').innerText = `${kpis.finalizadas}`;
     document.getElementById('kpiSuspendidasCount').innerText = `${kpis.suspendidas}`;
 
@@ -221,8 +263,38 @@ const App = {
     const ctxPipeline = document.getElementById('chartPipeline')?.getContext('2d');
     if (ctxPipeline) {
       if (this.charts.pipeline) this.charts.pipeline.destroy();
-      const labels = Object.keys(kpis.estadosCount);
-      const dataValues = Object.values(kpis.estadosCount);
+      
+      const labels = [
+        'Estudio de Factibilidad', 
+        'Ante Proyecto', 
+        'Proyecto', 
+        'Proyecto para licitar', 
+        'En licitación', 
+        'Obras en Curso', 
+        'Obras Finalizadas', 
+        'Suspendida'
+      ];
+
+      const dataValues = labels.map(lbl => kpis.estadosCount[lbl] || 0);
+
+      // Colores de las barras con borde destacado si una barra está seleccionada
+      const baseColors = [
+        '#94a3b8', '#64748b', '#3b82f6', '#0284c7', 
+        '#eab308', '#22c55e', '#10b981', '#f43f5e'
+      ];
+
+      const bgColors = labels.map((lbl, idx) => {
+        if (!this.pipelineSelectedStage) return baseColors[idx];
+        return lbl === this.pipelineSelectedStage ? baseColors[idx] : baseColors[idx] + '44';
+      });
+
+      const borderColors = labels.map((lbl) => {
+        return lbl === this.pipelineSelectedStage ? '#0f172a' : 'transparent';
+      });
+
+      const borderWidths = labels.map((lbl) => {
+        return lbl === this.pipelineSelectedStage ? 3 : 0;
+      });
 
       this.charts.pipeline = new Chart(ctxPipeline, {
         type: 'bar',
@@ -231,25 +303,60 @@ const App = {
           datasets: [{
             label: 'Cantidad de Obras',
             data: dataValues,
-            backgroundColor: [
-              '#94a3b8', '#64748b', '#3b82f6', '#0284c7', 
-              '#eab308', '#22c55e', '#10b981', '#f43f5e'
-            ],
+            backgroundColor: bgColors,
+            borderColor: borderColors,
+            borderWidth: borderWidths,
             borderRadius: 6
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
+          plugins: { 
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                footer: function() {
+                  return '👉 Haz clic para ver las obras de esta etapa abajo';
+                }
+              }
+            }
+          },
           scales: {
             y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
-            x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+            x: { 
+              grid: { display: false }, 
+              ticks: { 
+                font: { size: 10, weight: 'bold' },
+                callback: function(val, idx) {
+                  const label = labels[idx];
+                  if (label === 'Estudio de Factibilidad') return 'Factibilidad';
+                  if (label === 'Proyecto para licitar') return 'Para Licitar';
+                  if (label === 'Obras en Curso') return 'En Curso';
+                  if (label === 'Obras Finalizadas') return 'Finalizadas';
+                  return label;
+                }
+              } 
+            }
+          },
+          // INTERACCIÓN: CLIC EN LA BARRA PARA FILTRAR
+          onClick: (evt, elements) => {
+            if (elements && elements.length > 0) {
+              const elementIndex = elements[0].index;
+              const selectedStage = labels[elementIndex];
+              App.filterByPipelineStage(selectedStage);
+            }
+          },
+          onHover: (event, chartElement) => {
+            if (event.native && event.native.target) {
+              event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+            }
           }
         }
       });
     }
 
+    // Chart Sedes
     const ctxSedes = document.getElementById('chartSedes')?.getContext('2d');
     if (ctxSedes) {
       if (this.charts.sedes) this.charts.sedes.destroy();
@@ -285,24 +392,73 @@ const App = {
     }
   },
 
-  renderCriticalList() {
+  // ================= LISTA DINÁMICA DE OBRAS EN EL DASHBOARD =================
+  renderDashboardStageList() {
     const listContainer = document.getElementById('criticalListContainer');
+    const titleContainer = document.getElementById('dashboardStageListTitle');
+    const subtitleContainer = document.getElementById('dashboardStageListSubtitle');
+    const btnClearStage = document.getElementById('btnDeselectPipelineStage');
     if (!listContainer) return;
 
-    const critical = DataStore.getFilteredItems(this.filters)
-      .filter(x => x.estado !== 'Obras Finalizadas' && x.estado !== 'Suspendida')
-      .map(item => ({ item, sem: DataStore.calculateSemaforo(item), pond: DataStore.getPonderacionGlobal(item) }))
-      .filter(x => x.sem.status === 'vencido' || x.sem.status === 'por_vencer')
-      .sort((a, b) => (b.item.monto_total_usd || b.item.monto_obra_usd || 0) - (a.item.monto_total_usd || a.item.monto_obra_usd || 0))
-      .slice(0, 6);
+    let itemsToDisplay = [];
+    let isFilteredByStage = !!this.pipelineSelectedStage;
 
-    if (critical.length === 0) {
-      listContainer.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm">No hay obras vencidas ni por vencer con los filtros actuales. 🎉</div>`;
+    if (isFilteredByStage) {
+      // Filtrar todas las obras de la etapa seleccionada respetando filtros generales (Sede, Tipo)
+      itemsToDisplay = DataStore.items.filter(item => {
+        if (item.estado !== this.pipelineSelectedStage) return false;
+        if (this.filters.sede !== 'TODAS' && (item.sede || '').toLowerCase() !== this.filters.sede.toLowerCase()) return false;
+        if (this.filters.tipo !== 'TODOS' && item.tipo !== this.filters.tipo) return false;
+        return true;
+      });
+
+      const totalStageUsd = itemsToDisplay.reduce((acc, x) => acc + (x.monto_total_usd || x.monto_obra_usd || 0), 0);
+
+      if (titleContainer) {
+        titleContainer.innerHTML = `
+          <div class="flex items-center space-x-2">
+            <span class="bg-blue-600 text-white p-1 rounded"><i data-lucide="filter" class="w-3.5 h-3.5"></i></span>
+            <span>Obras en Etapa: <span class="text-blue-700 underline">${this.pipelineSelectedStage}</span></span>
+            <span class="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full font-bold">${itemsToDisplay.length} obras</span>
+          </div>
+        `;
+      }
+      if (subtitleContainer) {
+        subtitleContainer.innerText = `Total comprometido en esta etapa: ${DataStore.formatUSD(totalStageUsd)}`;
+      }
+      if (btnClearStage) btnClearStage.classList.remove('hidden');
+
+    } else {
+      // Vista predeterminada: Obras críticas (vencidas o por vencer de mayor monto)
+      itemsToDisplay = DataStore.getFilteredItems(this.filters)
+        .filter(x => x.estado !== 'Obras Finalizadas' && x.estado !== 'Suspendida')
+        .sort((a, b) => (b.monto_total_usd || b.monto_obra_usd || 0) - (a.item?.monto_total_usd || a.monto_obra_usd || 0))
+        .slice(0, 8);
+
+      if (titleContainer) {
+        titleContainer.innerHTML = `
+          <div class="flex items-center space-x-2">
+            <i data-lucide="alert-circle" class="w-4 h-4 text-red-500"></i>
+            <span>Obras con Desvío de Plazo o Atención Prioritaria</span>
+          </div>
+        `;
+      }
+      if (subtitleContainer) {
+        subtitleContainer.innerHTML = `💡 <em>Haz clic en cualquier barra del embudo superior para explorar las obras de esa fase específica</em>`;
+      }
+      if (btnClearStage) btnClearStage.classList.add('hidden');
+    }
+
+    if (itemsToDisplay.length === 0) {
+      listContainer.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">No hay proyectos para mostrar en esta etapa con los filtros actuales.</div>`;
+      if (window.lucide) lucide.createIcons();
       return;
     }
 
     let html = '<div class="divide-y divide-slate-100">';
-    critical.forEach(({ item, sem, pond }) => {
+    itemsToDisplay.forEach(item => {
+      const sem = DataStore.calculateSemaforo(item);
+      const pond = DataStore.getPonderacionGlobal(item);
       const monto = DataStore.formatUSD(item.monto_total_usd || item.monto_obra_usd || 0);
       const nextStage = DataStore.getNextStage(item.estado);
 
@@ -315,7 +471,7 @@ const App = {
             <div>
               <div class="font-bold text-slate-800 text-sm flex items-center space-x-2">
                 <span>${item.nombre}</span>
-                <span class="px-2 py-0.2 text-[10px] rounded border ${pond.colorClass}">
+                <span class="px-1.5 py-0.2 text-[10px] rounded border ${pond.colorClass}">
                   ${pond.nivelLabel} (${pond.valor}★)
                 </span>
                 ${!item.partida || item.partida === 'S/D' ? `<span class="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.2 rounded font-bold">Sin Partida</span>` : ''}
@@ -326,6 +482,7 @@ const App = {
                 <span>Fase: <strong class="text-blue-600">${item.estado}</strong></span>
                 <span>•</span>
                 <span>PM: ${item.responsable || 'Sin asignar'}</span>
+                ${item.sector_solicitante ? `<span>• Sector: <strong>${item.sector_solicitante}</strong></span>` : ''}
               </div>
             </div>
           </div>
@@ -347,6 +504,7 @@ const App = {
     });
     html += '</div>';
     listContainer.innerHTML = html;
+    if (window.lucide) lucide.createIcons();
   },
 
   renderKanban() {
@@ -409,7 +567,6 @@ const App = {
                 <span class="px-2 py-0.5 text-[11px] font-semibold rounded ${sem.class}">${sem.label}</span>
               </div>
 
-              <!-- Badge de Ponderación -->
               <div class="mb-2 flex items-center space-x-1.5">
                 <span class="px-1.5 py-0.2 text-[10px] rounded border ${pond.colorClass}">
                   ${pond.nivelLabel} (${pond.valor}★)
@@ -424,7 +581,6 @@ const App = {
                 <span class="font-bold text-slate-800">${monto}</span>
               </div>
 
-              <!-- Fechas -->
               <div class="bg-slate-50 p-2 rounded-lg text-[11px] text-slate-500 mb-2.5 flex items-center justify-between">
                 <span>Límite etapa:</span>
                 <span class="font-semibold ${sem.status === 'vencido' ? 'text-red-600 font-bold' : 'text-slate-700'}">
@@ -660,7 +816,6 @@ const App = {
   openNewObraModal() {
     const userSede = DataStore.currentUser.sede !== 'Todas' ? DataStore.currentUser.sede : 'Central';
 
-    // Cargar valores iniciales en modal de factibilidad
     const form = document.getElementById('formNuevaFactibilidad');
     if (form) form.reset();
 
@@ -711,7 +866,7 @@ const App = {
 
     this.closeNewObraModal();
     this.render();
-    this.showToast(`¡Estudio de Factibilidad ${newObra.id} registrado con éxito! Enviado a Dirección para evaluación.`);
+    this.showToast(`¡Estudio de Factibilidad ${newObra.id} registrado con éxito! Enviado a Dirección.`);
   },
 
   // ================= MODAL ASIGNAR PARTIDA =================
@@ -767,13 +922,11 @@ const App = {
     document.getElementById('transCurrentStage').innerText = currentStage;
     document.getElementById('transNextStageAuto').innerText = nextStage;
     
-    // Sugerencia de fecha límite automática
     const defaultDeadline = DataStore.getDefaultDeadlineForStage(nextStage);
     document.getElementById('transNewDeadline').value = defaultDeadline;
     document.getElementById('transCompletionDate').value = new Date().toISOString().split('T')[0];
     document.getElementById('transNotes').value = '';
 
-    // Si avanza a Anteproyecto pero no tiene partida
     const warnSinPartida = document.getElementById('transSinPartidaNotice');
     const inputQuickPartida = document.getElementById('transQuickPartidaContainer');
     if (currentStage === 'Estudio de Factibilidad' && (!item.partida || item.partida.trim() === '')) {
@@ -800,7 +953,6 @@ const App = {
     const newDeadline = document.getElementById('transNewDeadline').value;
     const notes = document.getElementById('transNotes').value;
 
-    // Si estaba sin partida y la cargó en el modal
     const quickPartidaInput = document.getElementById('transQuickPartidaInput');
     if (quickPartidaInput && !quickPartidaInput.parentElement.classList.contains('hidden') && quickPartidaInput.value.trim() !== '') {
       DataStore.asignarPartidaPresupuestaria(id, quickPartidaInput.value.trim());
@@ -850,7 +1002,6 @@ const App = {
               </div>
             </div>
 
-            <!-- Selector 1 a 5 estrellas -->
             <div class="flex items-center space-x-1.5 bg-white p-2 rounded-xl border border-slate-200 shadow-2xs">
               <span class="text-xs font-bold text-slate-700 mr-2">Prioridad Dirección:</span>
               ${[1, 2, 3, 4, 5].map(p => `
@@ -886,7 +1037,7 @@ const App = {
     document.getElementById('modalMedicalPriority').classList.add('hidden');
   },
 
-  // ================= GESTIÓN DE USUARIOS (ADMIN) =================
+  // ================= GESTIÓN DE USUARIOS =================
   openUsersAdminModal() {
     this.renderUsersList();
     document.getElementById('modalUsersAdmin').classList.remove('hidden');
@@ -1051,7 +1202,7 @@ const App = {
     }
   },
 
-  // ================= MODAL DETALLE / EDICIÓN OBRA =================
+  // ================= MODAL DETALLE OBRA =================
   openObraModal(id) {
     const item = DataStore.getItemById(id);
     if (!item) return;
@@ -1081,7 +1232,6 @@ const App = {
     document.getElementById('modalObraPrioridadFin').value = pond.valor || 1;
     document.getElementById('modalObraObservaciones').value = item.observaciones || '';
 
-    // Botón para asignar partida si no tiene
     const btnAsignarPartida = document.getElementById('btnModalAsignarPartida');
     if (btnAsignarPartida) {
       btnAsignarPartida.classList.toggle('hidden', !!(item.partida && item.partida.trim() !== ''));

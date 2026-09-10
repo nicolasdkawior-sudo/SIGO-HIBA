@@ -142,6 +142,12 @@
         <span>Viendo: Activas</span>
       </button>
 
+      <!-- BOTÓN RESTABLECER FILTROS -->
+      <button onclick="App.resetAllFilters()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-2.5 py-1.5 rounded-md font-semibold flex items-center space-x-1 border border-slate-300 transition" title="Quitar todos los filtros y volver a la cartera completa">
+        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-slate-500"></i>
+        <span>Restablecer</span>
+      </button>
+
       <!-- Buscador -->
       <div class="relative">
         <input type="text" id="inputSearch" placeholder="Buscar proyecto, PM, partida..." 
@@ -287,14 +293,22 @@
         </div>
       </div>
 
-      <!-- Critical List: Vencidos y Próximos a Vencer con Ponderación -->
-      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs">
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center space-x-2">
-            <i data-lucide="alert-circle" class="w-4 h-4 text-red-500"></i>
-            <h3 class="font-bold text-slate-800 text-sm">Obras con Desvío de Plazo o Próximo Vencimiento</h3>
+      <!-- Dynamic Stage / Critical List Section -->
+      <div id="dashboardStageListSection" class="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs">
+        <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <div>
+            <h3 id="dashboardStageListTitle" class="font-bold text-slate-800 text-sm flex items-center space-x-2">
+              <i data-lucide="alert-circle" class="w-4 h-4 text-red-500"></i>
+              <span>Obras con Desvío de Plazo o Atención Prioritaria</span>
+            </h3>
+            <p id="dashboardStageListSubtitle" class="text-xs text-slate-400 font-medium">
+              💡 <em>Haz clic en cualquier barra del embudo superior para explorar las obras de esa fase específica</em>
+            </p>
           </div>
-          <span class="text-xs text-slate-400 font-medium">Muestra ponderación global y botón de avance rápido</span>
+          <button id="btnDeselectPipelineStage" onclick="App.filterByPipelineStage(null)" class="hidden text-xs text-blue-600 hover:underline font-semibold flex items-center space-x-1">
+            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+            <span>Ver Todas las Obras Críticas</span>
+          </button>
         </div>
         <div id="criticalListContainer"></div>
       </div>
