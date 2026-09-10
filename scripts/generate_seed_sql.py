@@ -5,20 +5,19 @@ with open('scripts/data_exported.json', 'r', encoding='utf-8') as f:
 
 sql_lines = []
 sql_lines.append("-- ==========================================================")
-sql_lines.append("-- SEED DATA: Obras e Inversiones HIBA")
+sql_lines.append("-- SEED DATA: Obras e Inversiones HIBA (Central, San Justo, Periféricos)")
 sql_lines.append("-- ==========================================================\n")
 
 # Sedes
 sql_lines.append("-- 1. SEDES")
 sql_lines.append("""
 INSERT INTO sedes (nombre, codigo) VALUES 
-('Almagro', 'ALM'),
+('Central', 'CEN'),
 ('San Justo', 'SJU'),
-('Periférico', 'PER')
+('Periféricos', 'PER')
 ON CONFLICT (nombre) DO NOTHING;
 """)
 
-# Map estado names to enum values
 def map_estado(e_name):
     if not e_name:
         return 'factibilidad'
@@ -63,7 +62,12 @@ for item in all_items:
     tipo = "'obra_civil'" if item['tipo'] == 'Obra Civil' else "'infraestructura'"
     partida = sql_str(item.get('partida'))
     nombre = sql_str(item.get('nombre'))
-    sede = sql_str(item.get('sede', 'Almagro'))
+    sede_val = item.get('sede', 'Central')
+    if sede_val == 'Almagro':
+        sede_val = 'Central'
+    elif sede_val == 'Periférico':
+        sede_val = 'Periféricos'
+    sede = sql_str(sede_val)
     estado = f"'{map_estado(item.get('estado'))}'"
     m_obra = item.get('monto_obra_usd', 0) or 0
     m_equip = item.get('monto_equipamiento_usd', 0) or 0
@@ -98,6 +102,7 @@ for item in all_items:
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;"""
     sql_lines.append(stmt)
 

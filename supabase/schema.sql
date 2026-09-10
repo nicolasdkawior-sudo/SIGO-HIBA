@@ -1,9 +1,9 @@
 -- ==============================================================================
 -- SISTEMA INTEGRAL DE GESTIÓN DE OBRAS E INVERSIONES (SIGO - HIBA)
 -- Esquema Supabase PostgreSQL con Control de Vencimientos, Roles y Trazabilidad
+-- Sedes: Central, San Justo, Periféricos | Autenticación Google OAuth (Gmail)
 -- ==============================================================================
 
--- Habilitar extensiones necesarias
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
@@ -35,7 +35,7 @@ DO $$ BEGIN
         'direccion_medica', 
         'licitaciones', 
         'control_gestion', 
-        'auditor'
+        'visualizador'
     );
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
@@ -51,7 +51,7 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
--- 2. TABLA: SEDES
+-- 2. TABLA: SEDES (Central, San Justo, Periféricos)
 CREATE TABLE IF NOT EXISTS sedes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     nombre TEXT NOT NULL UNIQUE,
@@ -59,15 +59,22 @@ CREATE TABLE IF NOT EXISTS sedes (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 3. TABLA: PERFILES DE USUARIOS (Vinculado a auth.users de Supabase)
+-- 3. TABLA: PERFILES DE USUARIOS (Vinculado a auth.users de Supabase / Google OAuth)
 CREATE TABLE IF NOT EXISTS perfiles_usuarios (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     nombre TEXT NOT NULL,
-    email TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
     rol rol_usuario_enum DEFAULT 'pm_obra',
+    sede_asignada TEXT NOT NULL DEFAULT 'Todas', -- 'Central', 'San Justo', 'Periféricos', 'Todas'
     sede_id UUID REFERENCES sedes(id),
-    telefono TEXT,
+    
+    -- Permisos granulares
+    puede_crear_obras BOOLEAN DEFAULT true,
+    puede_avanzar_etapas BOOLEAN DEFAULT true,
+    puede_priorizar_medica BOOLEAN DEFAULT false,
+    solo_lectura BOOLEAN DEFAULT false,
     activo BOOLEAN DEFAULT true,
+    
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -80,7 +87,7 @@ CREATE TABLE IF NOT EXISTS proyectos_obras (
     partida TEXT,
     nombre TEXT NOT NULL,
     sede_id UUID REFERENCES sedes(id),
-    sede_nombre TEXT NOT NULL DEFAULT 'Almagro',
+    sede_nombre TEXT NOT NULL DEFAULT 'Central', -- 'Central', 'San Justo', 'Periféricos'
     estado estado_obra_enum NOT NULL DEFAULT 'factibilidad',
     
     -- Aspectos económicos
@@ -92,8 +99,10 @@ CREATE TABLE IF NOT EXISTS proyectos_obras (
     
     -- Priorización (1.0 a 5.0)
     prioridad_tecnica NUMERIC(3,1) DEFAULT 1.0,
-    prioridad_medica NUMERIC(3,1) DEFAULT 1.0,
+    prioridad_medica NUMERIC(3,1) DEFAULT NULL, -- NULL indica pendiente de revisión médica
     prioridad_final NUMERIC(3,1) DEFAULT 1.0,
+    prioridad_medica_asignada_por UUID REFERENCES perfiles_usuarios(id),
+    prioridad_medica_fecha TIMESTAMPTZ,
     
     -- Actores y asignación
     proveedor TEXT,
@@ -107,10 +116,10 @@ CREATE TABLE IF NOT EXISTS proyectos_obras (
     observaciones TEXT,
     
     -- Cronograma y Semáforo de Vencimiento
-    fecha_inicio_etapa DATE,
+    fecha_inicio_etapa DATE DEFAULT CURRENT_DATE,
     fecha_fin_etapa DATE,       -- Límite estimado para completar la etapa actual
-    fecha_inicio_obra DATE,
     fecha_fin_obra DATE,         -- Límite estimado para finalización total
+    fecha_real_finalizada DATE,
     
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
@@ -170,14 +179,16 @@ SELECT
     CASE 
         WHEN p.fecha_fin_etapa IS NOT NULL THEN (p.fecha_fin_etapa - CURRENT_DATE)
         ELSE NULL 
-    END AS dias_restantes
+    END AS dias_restantes,
+    CASE 
+        WHEN p.prioridad_medica IS NULL OR p.prioridad_medica = 0 THEN true 
+        ELSE false 
+    END AS pendiente_prioridad_medica
 FROM proyectos_obras p;
 
 -- ==============================================================================
 -- TRIGGERS PARA AUDITORÍA Y AUTOMATIZACIÓN
 -- ==============================================================================
-
--- Función para actualizar updated_at
 CREATE OR REPLACE FUNCTION fn_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -237,23 +248,21 @@ ALTER TABLE criterios_tecnicos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE obra_cashflow ENABLE ROW LEVEL SECURITY;
 ALTER TABLE obra_historial_estados ENABLE ROW LEVEL SECURITY;
 
--- Lectura pública o autenticada para sedes
-CREATE POLICY "Permitir lectura de sedes a usuarios autenticados y anon" 
+CREATE POLICY "Lectura sedes pública y autenticada" 
     ON sedes FOR SELECT USING (true);
 
--- Proyectos Obras: Lectura para usuarios autenticados y anónimos (o según rol)
-CREATE POLICY "Lectura de obras a todos los usuarios autenticados" 
+CREATE POLICY "Lectura obras a usuarios autenticados y anónimos" 
     ON proyectos_obras FOR SELECT USING (true);
 
-CREATE POLICY "Inserción de obras a usuarios autenticados" 
-    ON proyectos_obras FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-
-CREATE POLICY "Actualización de obras a usuarios autenticados" 
-    ON proyectos_obras FOR UPDATE USING (auth.role() = 'authenticated');
-
--- Historial: Lectura para todos, inserción controlada
-CREATE POLICY "Lectura historial a usuarios autenticados" 
-    ON obra_historial_estados FOR SELECT USING (true);
-
-CREATE POLICY "Insercion historial a usuarios autenticados" 
-    ON obra_historial_estados FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Inserción y edición según sede de usuario" 
+    ON proyectos_obras FOR ALL 
+    USING (
+        auth.role() = 'authenticated' AND (
+            EXISTS (
+                SELECT 1 FROM perfiles_usuarios u 
+                WHERE u.id = auth.uid() 
+                AND (u.sede_asignada = 'Todas' OR u.sede_asignada = proyectos_obras.sede_nombre)
+                AND u.activo = true
+            )
+        )
+    );

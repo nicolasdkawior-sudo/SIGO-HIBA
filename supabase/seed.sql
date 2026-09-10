@@ -1,13 +1,13 @@
 -- ==========================================================
--- SEED DATA: Obras e Inversiones HIBA
+-- SEED DATA: Obras e Inversiones HIBA (Central, San Justo, Periféricos)
 -- ==========================================================
 
 -- 1. SEDES
 
 INSERT INTO sedes (nombre, codigo) VALUES 
-('Almagro', 'ALM'),
+('Central', 'CEN'),
 ('San Justo', 'SJU'),
-('Periférico', 'PER')
+('Periféricos', 'PER')
 ON CONFLICT (nombre) DO NOTHING;
 
 
@@ -28,6 +28,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -36,7 +37,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-002', 'obra_civil', NULL, 'Sector 27 Maternidad', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'suspendida',
+    'OBRA-002', 'obra_civil', NULL, 'Sector 27 Maternidad', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'suspendida',
     1207000.0, 0, 485.0, 2500.0,
     1.0, 1.0, 1.0,
     NULL, 'Oshiro', 'Mejora general', 'Obra Civil', 'PLAN MAESTRO', 'a espera del master plan',
@@ -45,6 +46,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -53,7 +55,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-003', 'obra_civil', '6180126', 'Salón de Consejo (sala de presidencia???)', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'en_curso',
+    'OBRA-003', 'obra_civil', '6180126', 'Salón de Consejo (sala de presidencia???)', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'en_curso',
     150000.0, 0, 50.0, 3000.0,
     1.0, 1.0, 1.0,
     NULL, 'Pannito', 'Administrativo', 'Obra Civil', 'RESTILING', 'OT 666556',
@@ -62,6 +64,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -70,7 +73,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-004', 'obra_civil', NULL, 'Sector 120 1er piso TESTA', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'anteproyecto',
+    'OBRA-004', 'obra_civil', NULL, 'Sector 120 1er piso TESTA', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'anteproyecto',
     2250000.0, 0, 750.0, 3000.0,
     4.0, 5.0, 5.0,
     NULL, 'Sulpis', 'Mejora general', 'Obra Civil', 'PLAN MAESTRO', 'SIN PARTIDA',
@@ -79,6 +82,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -87,7 +91,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-005', 'obra_civil', NULL, 'UCIC PB + tercer sala de Hemodinamia', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'proyecto',
+    'OBRA-005', 'obra_civil', NULL, 'UCIC PB + tercer sala de Hemodinamia', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'proyecto',
     6942000.0, 2000000.0, 1560.0, 4450.0,
     5.0, 5.0, 5.0,
     '1', 'Sulpis', 'Mejora general', 'Obra Civil', 'PLAN MAESTRO', 'SIN PARTIDA',
@@ -96,6 +100,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -104,7 +109,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-006', 'obra_civil', NULL, 'Anexo Perón 4253 (Plan de Salud)', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'anteproyecto',
+    'OBRA-006', 'obra_civil', NULL, 'Anexo Perón 4253 (Plan de Salud)', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'anteproyecto',
     1495476.0, 0, 600.0, 2500.0,
     1.0, 2.0, 2.0,
     NULL, 'Palmioli', 'Mejora general', 'Obra Civil', 'RESTILING', NULL,
@@ -113,6 +118,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -121,7 +127,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-007', 'obra_civil', NULL, 'Sector 20 Ortopedia', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'suspendida',
+    'OBRA-007', 'obra_civil', NULL, 'Sector 20 Ortopedia', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'suspendida',
     1625000.0, 0, 650.0, 2500.0,
     3.0, 4.0, 4.0,
     NULL, 'Palmioli', 'Mejora general', 'Obra Civil', 'PLAN MAESTRO', NULL,
@@ -130,6 +136,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -138,7 +145,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-008', 'obra_civil', NULL, 'Ampliación sector 19 sobre azotea 20', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'anteproyecto',
+    'OBRA-008', 'obra_civil', NULL, 'Ampliación sector 19 sobre azotea 20', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'anteproyecto',
     2150000.0, 0, 500.0, 4300.0,
     4.0, 5.0, 5.0,
     '1', 'Palmioli', 'Ampliación', 'Obra Civil', 'AUMENTO PRODUCC', NULL,
@@ -147,6 +154,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -155,7 +163,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-009', 'obra_civil', NULL, 'Acceso Resonancia / Playa estacionamiento', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'anteproyecto',
+    'OBRA-009', 'obra_civil', NULL, 'Acceso Resonancia / Playa estacionamiento', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'anteproyecto',
     386400.0, 0, 300.0, 1288.0,
     2.0, 3.0, 3.0,
     NULL, 'Palmioli', 'Mejora general', 'Obra Civil', 'MEJORA FUNCIONAL', NULL,
@@ -164,6 +172,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -172,7 +181,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-010', 'obra_civil', NULL, 'Angiografía (Cambio Angiógrafo)', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'en_curso',
+    'OBRA-010', 'obra_civil', NULL, 'Angiografía (Cambio Angiógrafo)', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'en_curso',
     330000.0, 900000.0, 100.0, 3300.0,
     4.0, 4.0, 4.0,
     NULL, 'Sulpis', 'Instalacion de equipo', 'Equipos c/obra', 'INSTALAC EQUIPO', NULL,
@@ -181,6 +190,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -189,7 +199,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-011', 'obra_civil', NULL, 'Equipo de Rx y Eco Palpa', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'anteproyecto',
+    'OBRA-011', 'obra_civil', NULL, 'Equipo de Rx y Eco Palpa', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'anteproyecto',
     165000.0, 0, 50.0, 3300.0,
     2.0, 2.0, 2.0,
     NULL, 'Sulpis', 'Instalacion de equipo', 'Equipos c/obra', 'INSTALAC EQUIPO', 'Falta definición de Equipo para avanzar con documentación',
@@ -198,6 +208,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -206,7 +217,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-012', 'obra_civil', '6120726', 'Equipo de TC -2 Intervencionismo', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'licitacion',
+    'OBRA-012', 'obra_civil', '6120726', 'Equipo de TC -2 Intervencionismo', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'licitacion',
     266000.0, 15000.0, 70.0, 3800.0,
     3.0, 4.0, 4.0,
     NULL, 'Sulpis', 'Instalacion de equipo', 'Equipos c/obra', 'INSTALAC EQUIPO', 'Falta definición de Equipo para avanzar con documentación',
@@ -215,6 +226,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -223,7 +235,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-013', 'obra_civil', '6022026', 'Nvo Resonador de Rodilla en Ortopedia', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'OBRA-013', 'obra_civil', '6022026', 'Nvo Resonador de Rodilla en Ortopedia', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     175000.0, 0, 50.0, 3500.0,
     3.0, 4.0, 4.0,
     NULL, 'Sulpis', 'Instalacion de equipo', 'Equipos c/obra', NULL, 'OT 675570',
@@ -232,6 +244,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -240,7 +253,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-014', 'obra_civil', NULL, 'Reforma Admisión de pacientes', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'suspendida',
+    'OBRA-014', 'obra_civil', NULL, 'Reforma Admisión de pacientes', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'suspendida',
     400000.0, 0, 200.0, 2000.0,
     2.0, 4.0, 3.0,
     NULL, 'Oshiro', 'Mejora general', 'Obra Civil', 'MEJORA FUNCIONAL', NULL,
@@ -249,6 +262,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -257,7 +271,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-015', 'obra_civil', NULL, 'Farmacia Ambulatoria/ PB Cambio de Lay Out', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'anteproyecto',
+    'OBRA-015', 'obra_civil', NULL, 'Farmacia Ambulatoria/ PB Cambio de Lay Out', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'anteproyecto',
     100000.0, 0, 50.0, 2000.0,
     2.0, 3.0, 3.0,
     NULL, 'Acerbi', 'Nuevo Layout', 'Obra Civil', NULL, NULL,
@@ -266,6 +280,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -274,7 +289,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-016', 'obra_civil', NULL, 'Farmacia Internación / Ampliación Ensayos Clínicos', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'OBRA-016', 'obra_civil', NULL, 'Farmacia Internación / Ampliación Ensayos Clínicos', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     490000.0, 0, 140.0, 3500.0,
     2.0, 4.0, 3.0,
     NULL, 'Palmioli', 'Nuevo Layout', 'Obra Civil', NULL, NULL,
@@ -283,6 +298,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -291,7 +307,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-017', 'obra_civil', NULL, 'Farmacia Internación / Cambio de pisos', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'OBRA-017', 'obra_civil', NULL, 'Farmacia Internación / Cambio de pisos', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     69300.0, 0, 330.0, 210.0,
     1.0, 1.0, 1.0,
     NULL, 'Palmioli', 'Mejora general', 'Terminaciones', NULL, NULL,
@@ -300,6 +316,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -308,7 +325,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-018', 'obra_civil', NULL, 'Sector 75 Inrtermedia  / Cambio de pisos', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'proyecto',
+    'OBRA-018', 'obra_civil', NULL, 'Sector 75 Inrtermedia  / Cambio de pisos', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'proyecto',
     42000.0, 0, 200.0, 210.0,
     4.0, 4.0, 4.0,
     NULL, 'Palmioli', 'Mejora general', 'Terminaciones', NULL, 'Dependemos de la liberación de Habitaciones',
@@ -317,6 +334,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -325,7 +343,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-019', 'obra_civil', NULL, 'UTIA Intensiva  / Cambio de pisos', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'suspendida',
+    'OBRA-019', 'obra_civil', NULL, 'UTIA Intensiva  / Cambio de pisos', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'suspendida',
     142800.0, 0, 680.0, 210.0,
     5.0, 4.0, 5.0,
     NULL, 'Palmioli', 'Mejora general', 'Terminaciones', NULL, 'Dependemos de la liberación de Habitaciones',
@@ -334,6 +352,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -342,7 +361,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-020', 'obra_civil', NULL, 'Partos / Dilatantes/ Cambio de Lay Out', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'OBRA-020', 'obra_civil', NULL, 'Partos / Dilatantes/ Cambio de Lay Out', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     840000.0, 0, 240.0, 3500.0,
     2.0, 4.0, 3.0,
     NULL, 'Cotos/ Palmioli', 'Nuevo Layout', 'Obra Civil', NULL, NULL,
@@ -351,6 +370,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -359,7 +379,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-021', 'obra_civil', '6199826', 'Potosí Amper/ Adecuación Medios de Escape', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'proyecto_licitar',
+    'OBRA-021', 'obra_civil', '6199826', 'Potosí Amper/ Adecuación Medios de Escape', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'proyecto_licitar',
     336000.0, 0, 120.0, 2800.0,
     5.0, 5.0, 5.0,
     '1', 'Acerbi/ Zabala', 'Nuevo Layout', 'Obra Civil', NULL, NULL,
@@ -368,6 +388,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -376,7 +397,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-022', 'obra_civil', '6134426', 'Habitacion Sector 35 - Ex Odontología', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'licitacion',
+    'OBRA-022', 'obra_civil', '6134426', 'Habitacion Sector 35 - Ex Odontología', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'licitacion',
     42000.0, 0, 15.0, 2800.0,
     4.0, 4.0, 4.0,
     NULL, 'Palmioli', 'Nuevo Layout', 'Obra Civil', NULL, NULL,
@@ -385,6 +406,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -393,7 +415,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-023', 'obra_civil', '6128026', 'Med Transfusional =Laboratorio de Terapia Celular', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'proyecto',
+    'OBRA-023', 'obra_civil', '6128026', 'Med Transfusional =Laboratorio de Terapia Celular', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'proyecto',
     700000.0, 0, 50.0, 7000.0,
     5.0, 5.0, 5.0,
     '1', 'Palmioli', 'Nuevo Layout', 'Obra Civil', NULL, NULL,
@@ -402,6 +424,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -410,7 +433,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-024', 'obra_civil', '6128026', 'Med Transfusional =Adecuación Ministerio Salud', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'proyecto_licitar',
+    'OBRA-024', 'obra_civil', '6128026', 'Med Transfusional =Adecuación Ministerio Salud', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'proyecto_licitar',
     35714.29, 0, 25.0, 1500.0,
     5.0, 5.0, 5.0,
     '1', 'Acerbi', 'Nuevo Layout', 'Obra Civil', NULL, NULL,
@@ -419,6 +442,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -427,7 +451,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-025', 'obra_civil', '6126826', 'CCV Pediatrico en Ex Cuidados Paliativos', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'licitacion',
+    'OBRA-025', 'obra_civil', '6126826', 'CCV Pediatrico en Ex Cuidados Paliativos', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'licitacion',
     56000.0, 0, 35.0, 2500.0,
     2.0, 2.0, 2.0,
     NULL, 'Pannitto', 'Nuevas oficinas', 'Obra Civil', NULL, NULL,
@@ -436,6 +460,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -444,7 +469,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-026', 'obra_civil', NULL, 'Gcia Financiera a Cobranzas', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'OBRA-026', 'obra_civil', NULL, 'Gcia Financiera a Cobranzas', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     400000.0, 0, 200.0, 2000.0,
     2.0, 4.0, 3.0,
     NULL, 'Oshiro', 'Nuevas oficinas', 'Obra Civil', NULL, NULL,
@@ -453,6 +478,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -461,7 +487,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-027', 'obra_civil', NULL, 'Adecuación Presidencia', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'OBRA-027', 'obra_civil', NULL, 'Adecuación Presidencia', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     450000.0, 0, 150.0, 3000.0,
     2.0, 2.0, 2.0,
     NULL, 'Palmioli', 'Nuevas oficinas', 'Obra Civil', NULL, NULL,
@@ -470,6 +496,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -478,7 +505,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-028', 'obra_civil', NULL, 'Carro Senda en pisos', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'OBRA-028', 'obra_civil', NULL, 'Carro Senda en pisos', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 200.0, 210.0,
     3.0, 3.0, 3.0,
     NULL, 'Palmioli', 'Mejora general', 'Terminaciones', NULL, NULL,
@@ -487,6 +514,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -495,7 +523,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-029', 'obra_civil', '6164526', 'Nvo Esterilizador a Vapor y Nva Lavadora + Obra', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'OBRA-029', 'obra_civil', '6164526', 'Nvo Esterilizador a Vapor y Nva Lavadora + Obra', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     210000.0, 0, 70.0, 3000.0,
     4.0, 5.0, 5.0,
     NULL, 'Sulpis', 'Instalacion de equipo', 'Equipos c/obra', NULL, NULL,
@@ -504,6 +532,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -512,7 +541,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-030', 'obra_civil', NULL, 'Obra y Ascensor Sector 27 Maternidad', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'licitacion',
+    'OBRA-030', 'obra_civil', NULL, 'Obra y Ascensor Sector 27 Maternidad', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'licitacion',
     250000.0, 0, 100.0, 2500.0,
     4.0, 3.0, 4.0,
     NULL, 'Oshiro', 'Mejora general', 'Instalaciones', 'MEJORA FUNCIONAL', 'Part 6138425',
@@ -521,6 +550,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -529,7 +559,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-031', 'obra_civil', NULL, 'Universidad- Nvas Aulas Pringles', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'en_curso',
+    'OBRA-031', 'obra_civil', NULL, 'Universidad- Nvas Aulas Pringles', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'en_curso',
     57000.0, 0, 0, 0,
     1, 1, 1,
     'AVSA Arquitectura', NULL, NULL, NULL, NULL, 'Se entrego dominio para que tramiten permiso de obra.',
@@ -538,6 +568,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -546,7 +577,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-032', 'obra_civil', '6125126', 'Laboratorio Ctral-  Obra equipos Roche', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'en_curso',
+    'OBRA-032', 'obra_civil', '6125126', 'Laboratorio Ctral-  Obra equipos Roche', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'en_curso',
     100000.0, 0, 0, 0,
     5.0, 5.0, 5.0,
     'Gandulfo', 'Kawior', 'Arreglo de Sala', 'Obra Civil', 'MEJORA INSTALAC', '95% de avance.',
@@ -555,6 +586,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -563,7 +595,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-033', 'obra_civil', NULL, 'Stand UHIBA', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'anteproyecto',
+    'OBRA-033', 'obra_civil', NULL, 'Stand UHIBA', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'anteproyecto',
     0, 0, 0, 0,
     5.0, 1, 5.0,
     NULL, 'Oshiro', 'Mejora general', 'Terminaciones', 'MEJORA FUNCIONAL', NULL,
@@ -572,6 +604,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -580,7 +613,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-034', 'obra_civil', NULL, 'Reforma Estudio de Grabación', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'anteproyecto',
+    'OBRA-034', 'obra_civil', NULL, 'Reforma Estudio de Grabación', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'anteproyecto',
     8100.0, 0, 0, 0,
     3.0, 1, 3.0,
     NULL, NULL, 'Nuevo Layout', NULL, NULL, NULL,
@@ -589,6 +622,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -606,6 +640,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -623,6 +658,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -640,6 +676,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -657,6 +694,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -674,6 +712,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -691,6 +730,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -708,6 +748,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -725,6 +766,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -742,6 +784,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -759,6 +802,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -776,6 +820,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -793,6 +838,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -810,6 +856,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -827,6 +874,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -844,6 +892,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -861,6 +910,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -878,6 +928,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -895,6 +946,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -912,6 +964,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -929,6 +982,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -937,7 +991,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-055', 'obra_civil', NULL, 'Sector 124 Ex Comedor', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'finalizada',
+    'OBRA-055', 'obra_civil', NULL, 'Sector 124 Ex Comedor', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'finalizada',
     0, 403000.0, 0, 0,
     1, 1, 1,
     'Enobra', 'Sulpis', 'Ampliación', 'Obra Civil', 'AUMENTO PRODUCC', NULL,
@@ -946,6 +1000,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -954,7 +1009,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-056', 'obra_civil', '6021826', 'Nvo TC Nivel -2 + Obra', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'en_curso',
+    'OBRA-056', 'obra_civil', '6021826', 'Nvo TC Nivel -2 + Obra', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'en_curso',
     130000.0, 0, 0, 0,
     5.0, 5.0, 5.0,
     'Conyserv', 'Sulpis', 'Instalacion de equipo', 'Equipos c/obra', 'INSTALAC EQUIPO', NULL,
@@ -963,6 +1018,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -980,6 +1036,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -997,6 +1054,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1014,6 +1072,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1031,6 +1090,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1039,7 +1099,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-061', 'obra_civil', NULL, 'Nueva Dirección Ex HSBC', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'en_curso',
+    'OBRA-061', 'obra_civil', NULL, 'Nueva Dirección Ex HSBC', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'en_curso',
     0, 700000.0, 0, 0,
     1, 1, 1,
     'Enobra', 'Pannito', 'Administrativo', 'Obra Civil', 'RESTYLING', NULL,
@@ -1048,6 +1108,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1056,7 +1117,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-062', 'obra_civil', NULL, 'Solado Pasillo SS ingreso a Guardia Ped', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'finalizada',
+    'OBRA-062', 'obra_civil', NULL, 'Solado Pasillo SS ingreso a Guardia Ped', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'finalizada',
     0, 100000.0, 0, 0,
     1, 1, 1,
     'Gandulfo', 'Palmioli', 'Mejora general', 'Terminaciones', 'RESTYLING', NULL,
@@ -1065,6 +1126,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1073,7 +1135,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-063', 'obra_civil', NULL, 'Obra Ampliación Sala UPS Data Center', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'en_curso',
+    'OBRA-063', 'obra_civil', NULL, 'Obra Ampliación Sala UPS Data Center', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'en_curso',
     0, 586850.0, 0, 0,
     1, 1, 1,
     'Mops - schneider', 'Boselli', 'Mejora general/Ampliacion', 'Instalaciones', 'SEGURIDAD INSTAL', NULL,
@@ -1082,6 +1144,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1090,7 +1153,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-064', 'obra_civil', NULL, 'Intercambiador de Placas', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'finalizada',
+    'OBRA-064', 'obra_civil', NULL, 'Intercambiador de Placas', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'finalizada',
     0, 29000.0, 0, 0,
     1, 1, 1,
     'SA Tecno Practica', 'Vasquez', 'Mejora general', 'Instalaciones', 'SEGURIDAD INSTAL', NULL,
@@ -1099,6 +1162,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1107,7 +1171,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-065', 'obra_civil', NULL, 'Medicina del Trabajo – Cambio de AA', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'finalizada',
+    'OBRA-065', 'obra_civil', NULL, 'Medicina del Trabajo – Cambio de AA', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'finalizada',
     0, 62121.94, 0, 0,
     1, 1, 1,
     'LD Ingeniería', 'Sandoval', 'Mejora general', 'Instalaciones', 'SEGURIDAD INSTAL', NULL,
@@ -1116,6 +1180,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1124,7 +1189,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-066', 'obra_civil', NULL, 'Cámara Gamma (Cambio Spect-TC)', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'finalizada',
+    'OBRA-066', 'obra_civil', NULL, 'Cámara Gamma (Cambio Spect-TC)', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'finalizada',
     0, 396000.0, 120.0, 3300.0,
     4.0, 4.0, 4.0,
     'Conyserv', 'Sulpis', 'Instalacion de equipo', 'Equipos c/obra', 'INSTALAC EQUIPO', NULL,
@@ -1133,6 +1198,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1141,7 +1207,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-067', 'obra_civil', NULL, 'Auditorio Traumatología', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'finalizada',
+    'OBRA-067', 'obra_civil', NULL, 'Auditorio Traumatología', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'finalizada',
     0, 0, 161350.0, 0,
     1, 1, 1,
     'varios', 'Palmioli', 'Mejora general', 'Obra Civil', 'RESTILING', NULL,
@@ -1150,6 +1216,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1158,7 +1225,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-068', 'obra_civil', NULL, 'Solados hasta pasillo Gascón', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'finalizada',
+    'OBRA-068', 'obra_civil', NULL, 'Solados hasta pasillo Gascón', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'finalizada',
     0, 0, 62650.0, 0,
     1, 1, 1,
     'Gandulfo', 'Palmioli', 'Mejora general', 'Terminaciones', 'RESTILING', NULL,
@@ -1167,6 +1234,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1175,7 +1243,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-069', 'obra_civil', NULL, 'Hemodinamia', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'finalizada',
+    'OBRA-069', 'obra_civil', NULL, 'Hemodinamia', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'finalizada',
     0, 0, 151799.88, 750000.0,
     1, 1, 1,
     'Coniserv', 'Sulpis', 'Instalacion de equipo', 'Obra Civil', 'INSTALAC EQUIPO', NULL,
@@ -1184,6 +1252,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1192,7 +1261,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-070', 'obra_civil', NULL, 'Mejora Pluvial patio sector 124', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'finalizada',
+    'OBRA-070', 'obra_civil', NULL, 'Mejora Pluvial patio sector 124', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'finalizada',
     0, 0, 123682.52, 0,
     1, 1, 1,
     'Gandulfo', 'Kawior', 'Ampliación', 'Obra Civil', 'MEJORA INSTALAC', NULL,
@@ -1201,6 +1270,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1218,6 +1288,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1235,6 +1306,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1243,7 +1315,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-073', 'obra_civil', NULL, 'Guardia Pediátrica', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'finalizada',
+    'OBRA-073', 'obra_civil', NULL, 'Guardia Pediátrica', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'finalizada',
     0, 0, 201000.0, 0,
     5.0, 5.0, 5.0,
     NULL, 'Pannitto', 'Mejora general', 'Obra Civil', 'MEJORA FUNCIONAL', NULL,
@@ -1252,6 +1324,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1260,7 +1333,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-074', 'obra_civil', NULL, 'Farmacia Ambulatoria/ Instalación de robot Rowa', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'OBRA-074', 'obra_civil', NULL, 'Farmacia Ambulatoria/ Instalación de robot Rowa', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     1, 1, 5.0,
     NULL, NULL, NULL, NULL, NULL, NULL,
@@ -1269,6 +1342,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1277,7 +1351,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-075', 'obra_civil', NULL, 'TESTA nivel  - Solados', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'OBRA-075', 'obra_civil', NULL, 'TESTA nivel  - Solados', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     1, 1, 1,
     NULL, NULL, NULL, NULL, NULL, NULL,
@@ -1286,6 +1360,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1294,7 +1369,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-076', 'obra_civil', NULL, 'Hematologia- Mejoras en Sala de espera', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'OBRA-076', 'obra_civil', NULL, 'Hematologia- Mejoras en Sala de espera', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     1, 1, 3.0,
     NULL, NULL, NULL, NULL, NULL, NULL,
@@ -1303,6 +1378,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1311,7 +1387,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-077', 'obra_civil', NULL, 'Dermatologia- IEP Mejora en los locales', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'OBRA-077', 'obra_civil', NULL, 'Dermatologia- IEP Mejora en los locales', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 2356.0, 0, 0,
     1, 1, 4.0,
     NULL, 'Corbalán', 'Administrativo', 'Terminaciones', 'MEJORA FUNCIONAL', 'Mobiliario',
@@ -1320,6 +1396,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1328,7 +1405,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-078', 'obra_civil', NULL, 'UTIA Sala de Espera', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'OBRA-078', 'obra_civil', NULL, 'UTIA Sala de Espera', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     2.0, 1, 4.0,
     NULL, NULL, NULL, NULL, NULL, NULL,
@@ -1337,6 +1414,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1345,7 +1423,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-079', 'obra_civil', NULL, 'Sector 75- Sala de Espera 4to y 5to piso', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'OBRA-079', 'obra_civil', NULL, 'Sector 75- Sala de Espera 4to y 5to piso', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     2.0, 1, 4.0,
     NULL, NULL, NULL, NULL, NULL, NULL,
@@ -1354,6 +1432,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1362,7 +1441,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-080', 'obra_civil', NULL, 'UTIA - Poliductos exterior Biofilia', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'OBRA-080', 'obra_civil', NULL, 'UTIA - Poliductos exterior Biofilia', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     2.0, 1, 2.0,
     NULL, NULL, NULL, NULL, NULL, NULL,
@@ -1371,6 +1450,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1379,7 +1459,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-081', 'obra_civil', NULL, 'Farmacia Ambulatoria- Robot Rowa', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'OBRA-081', 'obra_civil', NULL, 'Farmacia Ambulatoria- Robot Rowa', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     3.0, 4.0, 5.0,
     NULL, NULL, NULL, NULL, NULL, NULL,
@@ -1388,6 +1468,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1396,7 +1477,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-082', 'obra_civil', NULL, 'Psiquiatria - Solados y pintura', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'OBRA-082', 'obra_civil', NULL, 'Psiquiatria - Solados y pintura', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 1, 4.0,
     NULL, NULL, 'Mejora general', 'Obra Civil', 'SEGURIDAD INSTAL', 'Actualmente Revestimiento vinilico muy deteriorado. Requiere alta coordinación',
@@ -1405,6 +1486,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1413,7 +1495,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-083', 'obra_civil', NULL, 'Sector 26- Mejora Estetica', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'OBRA-083', 'obra_civil', NULL, 'Sector 26- Mejora Estetica', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     3.0, 4.0, 4.0,
     NULL, NULL, NULL, NULL, NULL, NULL,
@@ -1422,6 +1504,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1430,7 +1513,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-084', 'obra_civil', NULL, 'TESTA nivel 4 - Solados 22 Baños', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'OBRA-084', 'obra_civil', NULL, 'TESTA nivel 4 - Solados 22 Baños', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     2.0, 1, 3.0,
     NULL, NULL, 'Mejora general', 'Obra Civil', 'SEGURIDAD INSTAL', 'Revestimiento rugoso, no permite limpieza.',
@@ -1439,6 +1522,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1456,6 +1540,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1464,7 +1549,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-086', 'obra_civil', NULL, 'Sector 75 - Sala de Espera', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'OBRA-086', 'obra_civil', NULL, 'Sector 75 - Sala de Espera', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     1, 1, 1,
     NULL, NULL, NULL, NULL, NULL, NULL,
@@ -1473,6 +1558,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1481,7 +1567,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'OBRA-087', 'obra_civil', NULL, 'Aggiornamento S26 o S27 - 1 Nivel Completo', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'OBRA-087', 'obra_civil', NULL, 'Aggiornamento S26 o S27 - 1 Nivel Completo', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     523000.0, 0, 0, 0,
     2.0, 1, 2.0,
     NULL, NULL, NULL, NULL, NULL, NULL,
@@ -1490,6 +1576,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1498,7 +1585,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-001', 'infraestructura', '6300926', 'AA Reemplazar equipo de aire acondicionado que atiende los pasillos y áreas auxiliares del Quirófano de Ortopedia', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'proyecto',
+    'INFRA-001', 'infraestructura', '6300926', 'AA Reemplazar equipo de aire acondicionado que atiende los pasillos y áreas auxiliares del Quirófano de Ortopedia', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'proyecto',
     65000.0, 0, 0, 0,
     5.0, 5.0, 5.0,
     NULL, 'Kawior', 'N/A', 'Aire acondicionado', 'N/A', NULL,
@@ -1507,6 +1594,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1515,7 +1603,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-002', 'infraestructura', '6300926', 'AA UCA ( Edificio IEP ) nivel 0', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'proyecto',
+    'INFRA-002', 'infraestructura', '6300926', 'AA UCA ( Edificio IEP ) nivel 0', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'proyecto',
     200000.0, 0, 0, 0,
     5.0, 5.0, 5.0,
     NULL, 'Kawior', 'N/A', 'Aire acondicionado', 'N/A', NULL,
@@ -1524,6 +1612,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1532,7 +1621,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-003', 'infraestructura', '6300226', 'AA Mejorar la ventilación de la Cámara de Media Tensión ubicada en el edificio Facultad', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'en_curso',
+    'INFRA-003', 'infraestructura', '6300226', 'AA Mejorar la ventilación de la Cámara de Media Tensión ubicada en el edificio Facultad', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'en_curso',
     15000.0, 0, 0, 0,
     5.0, 5.0, 5.0,
     'HEFESTO', 'Kawior', 'N/A', 'Aire acondicionado', 'N/A', NULL,
@@ -1541,6 +1630,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1549,7 +1639,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-004', 'infraestructura', '6300226', 'AA Provisión e Instalación de AA Split OC abierta para contigencias', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'licitacion',
+    'INFRA-004', 'infraestructura', '6300226', 'AA Provisión e Instalación de AA Split OC abierta para contigencias', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'licitacion',
     150000.0, 0, 0, 0,
     5.0, 5.0, 5.0,
     NULL, 'López', NULL, 'Aire acondicionado', NULL, NULL,
@@ -1558,6 +1648,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1566,7 +1657,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-005', 'infraestructura', '6300326', 'ELEC Reemplazo de monitores de aislamiento (Quirófanos,Diag x Imag, terapias) 35 unidades', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'en_curso',
+    'INFRA-005', 'infraestructura', '6300326', 'ELEC Reemplazo de monitores de aislamiento (Quirófanos,Diag x Imag, terapias) 35 unidades', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'en_curso',
     175000.0, 0, 0, 0,
     5.0, 5.0, 5.0,
     'SOCELEC', 'Kawior', 'N/A', 'Energia Electrica', 'N/A', 'Avance 60%',
@@ -1575,6 +1666,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1583,7 +1675,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-006', 'infraestructura', '6300326', 'ELEC Reemplazo de conmutadora GE ONAN', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'en_curso',
+    'INFRA-006', 'infraestructura', '6300326', 'ELEC Reemplazo de conmutadora GE ONAN', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'en_curso',
     40000.0, 0, 0, 0,
     5.0, 5.0, 5.0,
     'MOPS', 'Boselli', NULL, 'Energia Electrica', NULL, NULL,
@@ -1592,6 +1684,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1600,7 +1693,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-007', 'infraestructura', '6300326', 'ELEC Reemplazo del Tablero Principal de Resonancia Magnética', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'anteproyecto',
+    'INFRA-007', 'infraestructura', '6300326', 'ELEC Reemplazo del Tablero Principal de Resonancia Magnética', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'anteproyecto',
     150000.0, 0, 0, 0,
     5.0, 5.0, 5.0,
     NULL, 'Boselli', NULL, 'Energia Electrica', NULL, NULL,
@@ -1609,6 +1702,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1617,7 +1711,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-008', 'infraestructura', '6300426', 'SANIT Nuevo punto de alimentación planta de tratamiento de agua esterilización', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'licitacion',
+    'INFRA-008', 'infraestructura', '6300426', 'SANIT Nuevo punto de alimentación planta de tratamiento de agua esterilización', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'licitacion',
     50000.0, 0, 0, 0,
     5.0, 5.0, 5.0,
     NULL, 'Kawior', 'N/A', 'Inst Sanit', 'N/A', 'En concurso',
@@ -1626,6 +1720,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1634,7 +1729,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-009', 'infraestructura', '6300526', 'GASES Nuevo compresor Tornillo KAESER En Edificio Ortopedia 25 HP', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'finalizada',
+    'INFRA-009', 'infraestructura', '6300526', 'GASES Nuevo compresor Tornillo KAESER En Edificio Ortopedia 25 HP', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'finalizada',
     40000.0, 0, 0, 0,
     5.0, 5.0, 5.0,
     'SOCELEC', 'Kawior', 'N/A', 'Gases Clínicos', 'N/A', 'Avance 90%',
@@ -1643,6 +1738,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1651,7 +1747,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-010', 'infraestructura', '6300626', 'ASC Reemplazo del Ascensor ubicado en los Consultorios Externos de Pediatría.', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'proyecto',
+    'INFRA-010', 'infraestructura', '6300626', 'ASC Reemplazo del Ascensor ubicado en los Consultorios Externos de Pediatría.', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'proyecto',
     150000.0, 0, 0, 0,
     5.0, 5.0, 5.0,
     NULL, 'Vasquez', NULL, 'Ascensores', NULL, NULL,
@@ -1660,6 +1756,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1668,7 +1765,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-011', 'infraestructura', '6300626', 'ASC Revamping Batería ascensores edificio TESTA 1er etapa 1 ascensor', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'proyecto',
+    'INFRA-011', 'infraestructura', '6300626', 'ASC Revamping Batería ascensores edificio TESTA 1er etapa 1 ascensor', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'proyecto',
     265000.0, 0, 0, 0,
     5.0, 5.0, 5.0,
     NULL, 'Vasquez', NULL, 'Ascensores', NULL, NULL,
@@ -1677,6 +1774,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1694,6 +1792,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1711,6 +1810,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1728,6 +1828,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1745,6 +1846,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1762,6 +1864,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1779,6 +1882,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1796,6 +1900,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1813,6 +1918,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1830,6 +1936,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1847,6 +1954,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1864,6 +1972,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1872,7 +1981,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-023', 'infraestructura', '6300125', 'AA Cambio aire acondicionado NEA nivel -2 ( Diagnostico por Imagenes )', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'en_curso',
+    'INFRA-023', 'infraestructura', '6300125', 'AA Cambio aire acondicionado NEA nivel -2 ( Diagnostico por Imagenes )', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'en_curso',
     300000.0, 0, 0, 0,
     5.0, 5.0, 5.0,
     'CENTRO AIRE', 'Vasquez', NULL, 'Aire acondicionado', NULL, 'Fecha de entrega según orden de compra',
@@ -1881,6 +1990,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1889,7 +1999,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-024', 'infraestructura', '6135126', 'AA Cambio aire acondicionado NEA nivel 4 ( Terapia intensiva )', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'proyecto',
+    'INFRA-024', 'infraestructura', '6135126', 'AA Cambio aire acondicionado NEA nivel 4 ( Terapia intensiva )', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'proyecto',
     400000.0, 0, 0, 0,
     5.0, 5.0, 5.0,
     NULL, 'Ladaga', NULL, 'Aire acondicionado', NULL, NULL,
@@ -1898,6 +2008,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1906,7 +2017,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-025', 'infraestructura', NULL, 'AA Medicina Transfusional ( Edificio IEP ) nivel 3', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-025', 'infraestructura', NULL, 'AA Medicina Transfusional ( Edificio IEP ) nivel 3', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     5.0, 5.0, 5.0,
     NULL, NULL, NULL, 'Aire acondicionado', NULL, NULL,
@@ -1915,6 +2026,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1923,7 +2035,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-026', 'infraestructura', '6198726', 'AA Reemplazo de canerias y valvulas de 3 vias en agua enfriada Edificio NEAD', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'en_curso',
+    'INFRA-026', 'infraestructura', '6198726', 'AA Reemplazo de canerias y valvulas de 3 vias en agua enfriada Edificio NEAD', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'en_curso',
     450000.0, 0, 0, 0,
     5.0, 5.0, 5.0,
     'SANEAS', 'Kawior', 'N/A', 'Aire acondicionado', 'N/A', '12/07 se entrega el primer nivel',
@@ -1932,6 +2044,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1940,7 +2053,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-027', 'infraestructura', NULL, 'AA Reemplazo de canerias de agua enfriada Sector 7', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-027', 'infraestructura', NULL, 'AA Reemplazo de canerias de agua enfriada Sector 7', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     5.0, 5.0, 5.0,
     NULL, NULL, NULL, 'Aire acondicionado', NULL, NULL,
@@ -1949,6 +2062,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1957,7 +2071,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-028', 'infraestructura', NULL, 'AA Instalar UTA en Neonatología', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-028', 'infraestructura', NULL, 'AA Instalar UTA en Neonatología', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     5.0, 5.0, 5.0,
     NULL, NULL, NULL, 'Aire acondicionado', NULL, NULL,
@@ -1966,6 +2080,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1974,7 +2089,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-029', 'infraestructura', NULL, 'AA Con Ozono para Habitaciones de Autologos', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'finalizada',
+    'INFRA-029', 'infraestructura', NULL, 'AA Con Ozono para Habitaciones de Autologos', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'finalizada',
     0, 0, 0, 0,
     5.0, 1, 5.0,
     'ECOVIOX', 'Kawior', 'N/A', 'Aire acondicionado', NULL, NULL,
@@ -1983,6 +2098,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -1991,7 +2107,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-030', 'infraestructura', NULL, 'ELEC Movimientos de grupos electrógenos y redistribución de redes de energía de emergencia.', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-030', 'infraestructura', NULL, 'ELEC Movimientos de grupos electrógenos y redistribución de redes de energía de emergencia.', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     5.0, 5.0, 5.0,
     NULL, NULL, NULL, 'Energia Electrica', NULL, NULL,
@@ -2000,6 +2116,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2008,7 +2125,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-031', 'infraestructura', NULL, 'ELEC Reemplazo del Tablero Principal B (cuadrante Gascón/Potosí)', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-031', 'infraestructura', NULL, 'ELEC Reemplazo del Tablero Principal B (cuadrante Gascón/Potosí)', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     5.0, 5.0, 5.0,
     NULL, NULL, NULL, 'Energia Electrica', NULL, NULL,
@@ -2017,6 +2134,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2025,7 +2143,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-032', 'infraestructura', NULL, 'ELEC Nuevo tablero edificio Testa, pleno técnico 1', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-032', 'infraestructura', NULL, 'ELEC Nuevo tablero edificio Testa, pleno técnico 1', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     5.0, 5.0, 5.0,
     NULL, NULL, NULL, 'Energia Electrica', NULL, NULL,
@@ -2034,6 +2152,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2042,7 +2161,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-033', 'infraestructura', '6300126', 'GAS NATURAL ANEXO POTOSÍ', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'licitacion',
+    'INFRA-033', 'infraestructura', '6300126', 'GAS NATURAL ANEXO POTOSÍ', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'licitacion',
     48000.0, 0, 0, 0,
     5.0, 1, 5.0,
     NULL, 'Vasquez', NULL, 'Inst Sanit', NULL, NULL,
@@ -2051,6 +2170,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2059,7 +2179,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-034', 'infraestructura', '6300726', 'CIVIL Mantenimiento de frentes y fachadas , pintura y reparaciones en altura 6000 Mts/2', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'en_curso',
+    'INFRA-034', 'infraestructura', '6300726', 'CIVIL Mantenimiento de frentes y fachadas , pintura y reparaciones en altura 6000 Mts/2', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'en_curso',
     400000.0, 0, 0, 0,
     5.0, 5.0, 5.0,
     'Mas metros cuadrados', 'Kawior', 'N/A', 'Obra Civil', 'N/A', NULL,
@@ -2068,6 +2188,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2076,7 +2197,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-035', 'infraestructura', '6300125', 'CIVIL Reemplazo de pass through en farmacia Oncologica', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'en_curso',
+    'INFRA-035', 'infraestructura', '6300125', 'CIVIL Reemplazo de pass through en farmacia Oncologica', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'en_curso',
     45000.0, 0, 0, 0,
     5.0, 5.0, 5.0,
     'CUBEN S A', 'Kawior', 'N/A', 'Obra Civil', 'N/A', 'Nueva fecha de entrega',
@@ -2085,6 +2206,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2093,7 +2215,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-036', 'infraestructura', '6134326', 'CIVIL Reemplazo de Puertas y la ejecución de mejoras edilicias en el Sector 18.', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'finalizada',
+    'INFRA-036', 'infraestructura', '6134326', 'CIVIL Reemplazo de Puertas y la ejecución de mejoras edilicias en el Sector 18.', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'finalizada',
     32000.0, 0, 0, 0,
     5.0, 5.0, 5.0,
     'GANDULFO', 'Kawior', 'N/A', 'Obra Civil', 'N/A', NULL,
@@ -2102,6 +2224,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2110,7 +2233,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-037', 'infraestructura', '6300826', 'INC QX Ortopedia - Sistema de detección de Incendio', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'en_curso',
+    'INFRA-037', 'infraestructura', '6300826', 'INC QX Ortopedia - Sistema de detección de Incendio', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'en_curso',
     16927.0, 0, 0, 0,
     5.0, 5.0, 5.0,
     'GB control', 'Zabala', NULL, 'Detección Incendio', NULL, NULL,
@@ -2119,6 +2242,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2127,7 +2251,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-038', 'infraestructura', '6300826', 'INC Laboratorio Central - Sistema de detección de Incendio', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'en_curso',
+    'INFRA-038', 'infraestructura', '6300826', 'INC Laboratorio Central - Sistema de detección de Incendio', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'en_curso',
     29137.0, 0, 0, 0,
     5.0, 5.0, 5.0,
     'GB control', 'Zabala', NULL, 'Detección Incendio', NULL, NULL,
@@ -2136,6 +2260,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2144,7 +2269,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-039', 'infraestructura', '6362026', 'Alimentación- Nvos Tren de lavado- Comedor', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'en_curso',
+    'INFRA-039', 'infraestructura', '6362026', 'Alimentación- Nvos Tren de lavado- Comedor', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'en_curso',
     242574.0, 0, 0, 0,
     5.0, 5.0, 5.0,
     'MESA1', 'Kawior', 'N/A', 'Inst Sanit', NULL, 'Ya han pasado detalle , se inicia concurso de obra.',
@@ -2153,6 +2278,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2170,6 +2296,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2187,6 +2314,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2204,6 +2332,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2221,6 +2350,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2238,6 +2368,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2255,6 +2386,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2272,6 +2404,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2289,6 +2422,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2306,6 +2440,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2314,7 +2449,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-049', 'infraestructura', NULL, 'AA Cambio aire acondicionado NEA nivel -1 ( Guardia Central )', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-049', 'infraestructura', NULL, 'AA Cambio aire acondicionado NEA nivel -1 ( Guardia Central )', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 4.0, 4.0,
     NULL, NULL, NULL, 'Aire acondicionado', NULL, NULL,
@@ -2323,6 +2458,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2331,7 +2467,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-050', 'infraestructura', NULL, 'AA Cambio aire acondicionado NEA nivel -0 (Consultorios Cardiología )', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-050', 'infraestructura', NULL, 'AA Cambio aire acondicionado NEA nivel -0 (Consultorios Cardiología )', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 4.0, 4.0,
     NULL, NULL, NULL, 'Aire acondicionado', NULL, NULL,
@@ -2340,6 +2476,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2348,7 +2485,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-051', 'infraestructura', NULL, 'AA Cambio aire acondicionado NEA nivel 1 ( Consultorios externos)', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-051', 'infraestructura', NULL, 'AA Cambio aire acondicionado NEA nivel 1 ( Consultorios externos)', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 4.0, 4.0,
     NULL, NULL, NULL, 'Aire acondicionado', NULL, NULL,
@@ -2357,6 +2494,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2365,7 +2503,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-052', 'infraestructura', NULL, 'AA Cambio aire acondicionado NEA nivel 2 ( Neumonología y nutrición )', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-052', 'infraestructura', NULL, 'AA Cambio aire acondicionado NEA nivel 2 ( Neumonología y nutrición )', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 3.0, 4.0,
     NULL, NULL, NULL, 'Aire acondicionado', NULL, NULL,
@@ -2374,6 +2512,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2382,7 +2521,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-053', 'infraestructura', NULL, 'AA Cambio aire acondicionado NEA nivel 3  ( Urología y Traumatología )', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-053', 'infraestructura', NULL, 'AA Cambio aire acondicionado NEA nivel 3  ( Urología y Traumatología )', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 3.0, 4.0,
     NULL, NULL, NULL, 'Aire acondicionado', NULL, NULL,
@@ -2391,6 +2530,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2399,7 +2539,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-054', 'infraestructura', NULL, 'AA Cambio equipos aire acondicionado Perón 4253 (3)', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-054', 'infraestructura', NULL, 'AA Cambio equipos aire acondicionado Perón 4253 (3)', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 1, 4.0,
     NULL, NULL, NULL, 'Aire acondicionado', NULL, NULL,
@@ -2408,6 +2548,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2416,7 +2557,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-055', 'infraestructura', NULL, 'AA Reemplazo de cañerías de dos circuitos de agua caliente de calefacción en túnel que van desde la Central Térmica hasta el Edificio Testa y a Terapia Intensiva de Pediatría.', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-055', 'infraestructura', NULL, 'AA Reemplazo de cañerías de dos circuitos de agua caliente de calefacción en túnel que van desde la Central Térmica hasta el Edificio Testa y a Terapia Intensiva de Pediatría.', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 4.0, 4.0,
     NULL, NULL, NULL, 'Aire acondicionado', NULL, NULL,
@@ -2425,6 +2566,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2433,7 +2575,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-056', 'infraestructura', NULL, 'AA Incorporar chiller 120/150 TR al anillo de agua enfriada.', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-056', 'infraestructura', NULL, 'AA Incorporar chiller 120/150 TR al anillo de agua enfriada.', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 1, 4.0,
     NULL, NULL, NULL, 'Aire acondicionado', NULL, NULL,
@@ -2442,6 +2584,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2450,7 +2593,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-057', 'infraestructura', NULL, 'AA Reemplazo de chiller TRANE 240 TR.', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-057', 'infraestructura', NULL, 'AA Reemplazo de chiller TRANE 240 TR.', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 1, 4.0,
     NULL, NULL, NULL, 'Aire acondicionado', NULL, NULL,
@@ -2459,6 +2602,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2467,7 +2611,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-058', 'infraestructura', NULL, 'AA Readecuación del sistema de generación de agua enfriada para el Sector Resonancia Magnética', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-058', 'infraestructura', NULL, 'AA Readecuación del sistema de generación de agua enfriada para el Sector Resonancia Magnética', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 1, 4.0,
     NULL, NULL, NULL, 'Aire acondicionado', NULL, NULL,
@@ -2476,6 +2620,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2484,7 +2629,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-059', 'infraestructura', NULL, 'AA Cambio equipos aire acondicionado Rooftop quimica en Laboratorio central', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-059', 'infraestructura', NULL, 'AA Cambio equipos aire acondicionado Rooftop quimica en Laboratorio central', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 1, 4.0,
     NULL, NULL, NULL, 'Aire acondicionado', NULL, NULL,
@@ -2493,6 +2638,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2501,7 +2647,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-060', 'infraestructura', NULL, 'AA Instalación termomecánica sector 8.', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-060', 'infraestructura', NULL, 'AA Instalación termomecánica sector 8.', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 4.0, 4.0,
     NULL, NULL, NULL, 'Aire acondicionado', NULL, NULL,
@@ -2510,6 +2656,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2518,7 +2665,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-061', 'infraestructura', NULL, 'AA Instalación termomecánica sector 9.', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-061', 'infraestructura', NULL, 'AA Instalación termomecánica sector 9.', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 4.0, 4.0,
     NULL, NULL, NULL, 'Aire acondicionado', NULL, NULL,
@@ -2527,6 +2674,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2535,7 +2683,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-062', 'infraestructura', NULL, 'ELEC Medicion energia /// Reducción Costos EDIFICIO NEQ //AHORRO ENERGÍA', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-062', 'infraestructura', NULL, 'ELEC Medicion energia /// Reducción Costos EDIFICIO NEQ //AHORRO ENERGÍA', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 1, 4.0,
     NULL, NULL, NULL, 'Energia Electrica', NULL, NULL,
@@ -2544,6 +2692,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2552,7 +2701,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-063', 'infraestructura', NULL, 'ELEC Telemetría TKs Agua potable edificio ESTERILIZACIÓN,COMEDOR Y NEAD', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-063', 'infraestructura', NULL, 'ELEC Telemetría TKs Agua potable edificio ESTERILIZACIÓN,COMEDOR Y NEAD', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 1, 4.0,
     NULL, NULL, NULL, 'Energia Electrica', NULL, NULL,
@@ -2561,6 +2710,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2569,7 +2719,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-064', 'infraestructura', NULL, 'ELEC Repotenciación eléctrica de energía normal y de GE en el cuadrante Gascón/Potosí', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-064', 'infraestructura', NULL, 'ELEC Repotenciación eléctrica de energía normal y de GE en el cuadrante Gascón/Potosí', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 1, 4.0,
     NULL, NULL, NULL, 'Energia Electrica', NULL, NULL,
@@ -2578,6 +2728,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2586,7 +2737,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-065', 'infraestructura', '6300125', 'SANIT Nueva alimentación de agua edificio Pringles 431', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'finalizada',
+    'INFRA-065', 'infraestructura', '6300125', 'SANIT Nueva alimentación de agua edificio Pringles 431', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'finalizada',
     50000.0, 0, 0, 0,
     4.0, 1, 4.0,
     'SOCELEC', 'Kawior', 'N/A', 'Inst Sanit', NULL, NULL,
@@ -2595,6 +2746,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2603,7 +2755,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-066', 'infraestructura', '6300526', 'GASES Nuevo colector de distribución de oxígeno en el área de los tanques principales.', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'licitacion',
+    'INFRA-066', 'infraestructura', '6300526', 'GASES Nuevo colector de distribución de oxígeno en el área de los tanques principales.', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'licitacion',
     20000.0, 0, 0, 0,
     5.0, 1, 5.0,
     NULL, 'Vasquez', NULL, 'Gases Clínicos', NULL, NULL,
@@ -2612,6 +2764,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2620,7 +2773,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-067', 'infraestructura', NULL, 'GASES Agiornar rampa de tubos de oxígeno de Rehabilitación Potosí', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-067', 'infraestructura', NULL, 'GASES Agiornar rampa de tubos de oxígeno de Rehabilitación Potosí', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 1, 4.0,
     NULL, NULL, NULL, 'Gases Clínicos', NULL, NULL,
@@ -2629,6 +2782,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2637,7 +2791,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-068', 'infraestructura', NULL, 'GASES Nuevo compresor Tornillo KAESER En Edificio TESTA 25 HP', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-068', 'infraestructura', NULL, 'GASES Nuevo compresor Tornillo KAESER En Edificio TESTA 25 HP', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 1, 4.0,
     NULL, NULL, NULL, 'Gases Clínicos', NULL, NULL,
@@ -2646,6 +2800,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2654,7 +2809,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-069', 'infraestructura', NULL, 'GASES Nuevo compresor Tornillo KAESER En Edificio NEA 10 HP', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-069', 'infraestructura', NULL, 'GASES Nuevo compresor Tornillo KAESER En Edificio NEA 10 HP', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 1, 4.0,
     NULL, NULL, NULL, 'Gases Clínicos', NULL, NULL,
@@ -2663,6 +2818,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2671,7 +2827,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-070', 'infraestructura', NULL, 'GASES Nuevo compresor Tornillo KAESER En Edificio Maternidad 25 HP', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-070', 'infraestructura', NULL, 'GASES Nuevo compresor Tornillo KAESER En Edificio Maternidad 25 HP', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 1, 4.0,
     NULL, NULL, NULL, 'Gases Clínicos', NULL, NULL,
@@ -2680,6 +2836,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2688,7 +2845,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-071', 'infraestructura', NULL, 'GASES Nueva bomba de vacío DOSIVAC en sala de maquinas Ortopedia', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-071', 'infraestructura', NULL, 'GASES Nueva bomba de vacío DOSIVAC en sala de maquinas Ortopedia', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 1, 4.0,
     NULL, NULL, NULL, 'Gases Clínicos', NULL, NULL,
@@ -2697,6 +2854,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2705,7 +2863,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-072', 'infraestructura', NULL, 'GASES Nueva bomba de vacío DOSIVAC en sala de maquinas Maternidad', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-072', 'infraestructura', NULL, 'GASES Nueva bomba de vacío DOSIVAC en sala de maquinas Maternidad', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 1, 4.0,
     NULL, NULL, NULL, 'Gases Clínicos', NULL, NULL,
@@ -2714,6 +2872,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2722,7 +2881,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-073', 'infraestructura', NULL, 'CIVIL Reparación y pintura interior a demanda 15000 Mts/2', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-073', 'infraestructura', NULL, 'CIVIL Reparación y pintura interior a demanda 15000 Mts/2', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 1, 4.0,
     NULL, NULL, NULL, 'Obra Civil', NULL, NULL,
@@ -2731,6 +2890,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2739,7 +2899,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-074', 'infraestructura', NULL, 'CIVIL Cambio 12 puertas quirófano Central Acero inox. (Presíon Positiva)', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-074', 'infraestructura', NULL, 'CIVIL Cambio 12 puertas quirófano Central Acero inox. (Presíon Positiva)', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 1, 4.0,
     NULL, NULL, NULL, 'Obra Civil', NULL, NULL,
@@ -2748,6 +2908,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2756,7 +2917,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-075', 'infraestructura', NULL, 'CIVIL Caminos y sendas de circulación mixta (tecnica/ peatonal)', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-075', 'infraestructura', NULL, 'CIVIL Caminos y sendas de circulación mixta (tecnica/ peatonal)', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 1, 4.0,
     NULL, NULL, NULL, 'Obra Civil', NULL, NULL,
@@ -2765,6 +2926,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2773,7 +2935,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-076', 'infraestructura', NULL, 'CIVIL Solados en Pasillos de circulación en sectores de internación ( Diagnostico x Imagenes, Terapia intensiva , Sector 75 )', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-076', 'infraestructura', NULL, 'CIVIL Solados en Pasillos de circulación en sectores de internación ( Diagnostico x Imagenes, Terapia intensiva , Sector 75 )', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 1, 4.0,
     NULL, NULL, NULL, 'Obra Civil', NULL, NULL,
@@ -2782,6 +2944,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2790,7 +2953,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-077', 'infraestructura', NULL, 'ASC Reemplazo del Ascensor N° 22', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-077', 'infraestructura', NULL, 'ASC Reemplazo del Ascensor N° 22', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     4.0, 1, 4.0,
     NULL, NULL, NULL, 'Ascensores', NULL, NULL,
@@ -2799,6 +2962,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2816,6 +2980,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2833,6 +2998,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2850,6 +3016,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2867,6 +3034,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2884,6 +3052,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2901,6 +3070,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2918,6 +3088,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2935,6 +3106,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2952,6 +3124,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2969,6 +3142,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -2986,6 +3160,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3003,6 +3178,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3020,6 +3196,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3037,6 +3214,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3054,6 +3232,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3071,6 +3250,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3088,6 +3268,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3105,6 +3286,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3113,7 +3295,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-096', 'infraestructura', NULL, 'AA Cambio aire acondicionado  Tecnología', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-096', 'infraestructura', NULL, 'AA Cambio aire acondicionado  Tecnología', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     3.0, 1, 3.0,
     NULL, NULL, NULL, 'Aire acondicionado', NULL, NULL,
@@ -3122,6 +3304,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3130,7 +3313,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-097', 'infraestructura', NULL, 'AA Proveer de aire acondicionado a Economato', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-097', 'infraestructura', NULL, 'AA Proveer de aire acondicionado a Economato', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     3.0, 1, 3.0,
     NULL, NULL, NULL, 'Aire acondicionado', NULL, NULL,
@@ -3139,6 +3322,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3147,7 +3331,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-098', 'infraestructura', NULL, 'AA Finalizar la instalación de aire acondicionado en el Depósito de Farmacia.', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-098', 'infraestructura', NULL, 'AA Finalizar la instalación de aire acondicionado en el Depósito de Farmacia.', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     3.0, 1, 3.0,
     NULL, NULL, NULL, 'Aire acondicionado', NULL, NULL,
@@ -3156,6 +3340,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3164,7 +3349,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-099', 'infraestructura', NULL, 'AA Rehacer la instalación de aire acondicionado del sector jefatura y administración de Oncología', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-099', 'infraestructura', NULL, 'AA Rehacer la instalación de aire acondicionado del sector jefatura y administración de Oncología', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     3.0, 1, 3.0,
     NULL, NULL, NULL, 'Aire acondicionado', NULL, NULL,
@@ -3173,6 +3358,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3181,7 +3367,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-100', 'infraestructura', NULL, 'AA RESONANCIA MAGNETICA', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-100', 'infraestructura', NULL, 'AA RESONANCIA MAGNETICA', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     3.0, 1, 3.0,
     NULL, NULL, NULL, 'Aire acondicionado', NULL, NULL,
@@ -3190,6 +3376,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3198,7 +3385,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-101', 'infraestructura', NULL, 'ELEC BMS//Aire Comprimido // Ahorro de energía', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-101', 'infraestructura', NULL, 'ELEC BMS//Aire Comprimido // Ahorro de energía', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     3.0, 1, 3.0,
     NULL, NULL, NULL, 'Energia Electrica', NULL, NULL,
@@ -3207,6 +3394,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3215,7 +3403,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-102', 'infraestructura', NULL, 'ELEC BMS // Telemetría UPS// Gestión', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-102', 'infraestructura', NULL, 'ELEC BMS // Telemetría UPS// Gestión', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     3.0, 1, 3.0,
     NULL, NULL, NULL, 'Energia Electrica', NULL, NULL,
@@ -3224,6 +3412,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3232,7 +3421,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-103', 'infraestructura', NULL, 'ELEC Reemplazo UPS 2x80 TESTA = NUEVA 100 KVA + Banco de baterías', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-103', 'infraestructura', NULL, 'ELEC Reemplazo UPS 2x80 TESTA = NUEVA 100 KVA + Banco de baterías', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     3.0, 1, 3.0,
     NULL, NULL, NULL, 'Energia Electrica', NULL, NULL,
@@ -3241,6 +3430,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3249,7 +3439,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-104', 'infraestructura', NULL, 'ELEC Reemplazo PLC y magelis transferencia TTA Potosí para integración BMS', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-104', 'infraestructura', NULL, 'ELEC Reemplazo PLC y magelis transferencia TTA Potosí para integración BMS', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     3.0, 1, 3.0,
     NULL, NULL, NULL, 'Energia Electrica', NULL, NULL,
@@ -3258,6 +3448,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3266,7 +3457,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-105', 'infraestructura', NULL, 'ELEC Adecuación sistemas de carga de combustibles de los GE.', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-105', 'infraestructura', NULL, 'ELEC Adecuación sistemas de carga de combustibles de los GE.', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     3.0, 1, 3.0,
     NULL, NULL, NULL, 'Energia Electrica', NULL, NULL,
@@ -3275,6 +3466,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3283,7 +3475,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-106', 'infraestructura', NULL, 'ELEC Eliminar transformador 3x380/220 V.', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-106', 'infraestructura', NULL, 'ELEC Eliminar transformador 3x380/220 V.', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     3.0, 1, 3.0,
     NULL, NULL, NULL, 'Energia Electrica', NULL, NULL,
@@ -3292,6 +3484,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3300,7 +3493,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-107', 'infraestructura', NULL, 'SANIT Cambio planta prezurizadora Potable  Sector 35-36-37-Resonancia', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-107', 'infraestructura', NULL, 'SANIT Cambio planta prezurizadora Potable  Sector 35-36-37-Resonancia', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     3.0, 1, 3.0,
     NULL, NULL, NULL, 'Inst Sanit', NULL, NULL,
@@ -3309,6 +3502,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3317,7 +3511,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-108', 'infraestructura', NULL, 'GASES Implementar medición del consumo de oxígeno.', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-108', 'infraestructura', NULL, 'GASES Implementar medición del consumo de oxígeno.', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     3.0, 1, 3.0,
     NULL, NULL, NULL, 'Gases Clínicos', NULL, NULL,
@@ -3326,6 +3520,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3334,7 +3529,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-109', 'infraestructura', NULL, 'CIVIL Obra Civil Pintura distribucion cañerias -IRAM', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-109', 'infraestructura', NULL, 'CIVIL Obra Civil Pintura distribucion cañerias -IRAM', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     3.0, 1, 3.0,
     NULL, NULL, NULL, 'Obra Civil', NULL, NULL,
@@ -3343,6 +3538,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3351,7 +3547,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-110', 'infraestructura', NULL, 'CIVIL Pasarelas de circulación en azotea de Resonancia', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-110', 'infraestructura', NULL, 'CIVIL Pasarelas de circulación en azotea de Resonancia', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     3.0, 1, 3.0,
     NULL, NULL, NULL, 'Obra Civil', NULL, NULL,
@@ -3360,6 +3556,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3368,7 +3565,7 @@ INSERT INTO proyectos_obras (
     proveedor, responsable, clasificacion, categoria, motivo, observaciones,
     fecha_inicio_etapa, fecha_fin_etapa, fecha_fin_obra
 ) VALUES (
-    'INFRA-111', 'infraestructura', NULL, 'ASC Revamping Batería ascensores Historico 19-21', (SELECT id FROM sedes WHERE nombre = 'Almagro' LIMIT 1), 'Almagro', 'factibilidad',
+    'INFRA-111', 'infraestructura', NULL, 'ASC Revamping Batería ascensores Historico 19-21', (SELECT id FROM sedes WHERE nombre = 'Central' LIMIT 1), 'Central', 'factibilidad',
     0, 0, 0, 0,
     3.0, 1, 3.0,
     NULL, NULL, NULL, 'Ascensores', NULL, NULL,
@@ -3377,6 +3574,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3394,6 +3592,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3411,6 +3610,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3428,6 +3628,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3445,6 +3646,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3462,6 +3664,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3479,6 +3682,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3496,6 +3700,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3513,6 +3718,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3530,6 +3736,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3547,6 +3754,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3564,6 +3772,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3581,6 +3790,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3598,6 +3808,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3615,6 +3826,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3632,6 +3844,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3649,6 +3862,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3666,6 +3880,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3683,6 +3898,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3700,6 +3916,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3717,6 +3934,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3734,6 +3952,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3751,6 +3970,7 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
 INSERT INTO proyectos_obras (
     codigo_interno, tipo, partida, nombre, sede_id, sede_nombre, estado,
@@ -3768,4 +3988,5 @@ INSERT INTO proyectos_obras (
     monto_obra_usd = EXCLUDED.monto_obra_usd,
     monto_equipamiento_usd = EXCLUDED.monto_equipamiento_usd,
     estado = EXCLUDED.estado,
+    sede_nombre = EXCLUDED.sede_nombre,
     fecha_fin_etapa = EXCLUDED.fecha_fin_etapa;
