@@ -397,6 +397,10 @@ const DataStore = {
 
   // ================= CARGA DE FACTIBILIDAD =================
   createFactibilidad(data) {
+    if (!this.currentUser) throw new Error('No hay sesión iniciada');
+    if (this.currentUser.solo_lectura || this.currentUser.rol === 'visualizador' || !this.currentUser.puede_crear) {
+      throw new Error('⛔ Acceso Denegado: Tu perfil no tiene autorización para crear obras ni solicitudes de factibilidad.');
+    }
     const userSede = this.currentUser.sede !== 'Todas' ? this.currentUser.sede : (data.sede || 'Central');
     const newId = `OBRA-${(this.items.length + 1).toString().padStart(3, '0')}`;
     const pTec = parseFloat(data.prioridad_tecnica) || 3;
@@ -447,6 +451,14 @@ const DataStore = {
   asignarPartidaPresupuestaria(itemId, partidaNum) {
     const item = this.getItemById(itemId);
     if (!item) return { success: false, msg: 'Obra no encontrada' };
+
+    if (!this.currentUser) return { success: false, msg: 'No hay usuario autenticado' };
+    if (this.currentUser.solo_lectura || this.currentUser.rol === 'visualizador' || !this.currentUser.puede_asignar_partida) {
+      return { 
+        success: false, 
+        msg: '⛔ Acceso Denegado: No tienes el permiso específico requerido para asignar partida presupuestaria.' 
+      };
+    }
 
     if (!partidaNum || partidaNum.trim() === '') {
       return { success: false, msg: 'Debes ingresar un número de partida válido' };
@@ -530,8 +542,8 @@ const DataStore = {
     if (!this.canUserEditObra(item)) {
       return { success: false, msg: `No tienes permisos para modificar obras de la sede ${item.sede}` };
     }
-    if (this.currentUser.solo_lectura || !this.currentUser.puede_avanzar) {
-      return { success: false, msg: 'Tu rol no tiene permiso para avanzar etapas' };
+    if (this.currentUser.solo_lectura || this.currentUser.rol === 'visualizador' || !this.currentUser.puede_avanzar) {
+      return { success: false, msg: '⛔ Acceso Denegado: Tu rol no tiene permiso para certificar ni avanzar etapas' };
     }
 
     const currentStage = item.estado;
@@ -540,8 +552,15 @@ const DataStore = {
       return { success: false, msg: 'Esta obra ya se encuentra en su etapa final' };
     }
 
-    // VALIDACIÓN CRÍTICA: De Factibilidad a Proyecto se REQUIERE OBLIGATORIAMENTE número de partida presupuestaria
+    // VALIDACIÓN CRÍTICA: De Factibilidad a Proyecto se REQUIERE OBLIGATORIAMENTE permiso específico puede_asignar_partida y número de partida presupuestaria
     if (currentStage === 'Estudio de Factibilidad' && nextStage === 'Proyecto') {
+      if (!this.currentUser.puede_asignar_partida) {
+        return { 
+          success: false, 
+          msg: '⛔ Acceso Denegado: No tienes el permiso específico requerido para asignar partida presupuestaria ni autorizar la salida de Factibilidad hacia Proyecto.',
+          requierePartida: false 
+        };
+      }
       if (!item.partida || item.partida.trim() === '' || item.partida === 'S/D' || item.partida.toUpperCase() === 'PENDIENTE') {
         return { 
           success: false, 
@@ -624,6 +643,7 @@ const DataStore = {
 
   canUserEditObra(item) {
     if (!this.currentUser) return false;
+    if (this.currentUser.solo_lectura || this.currentUser.rol === 'visualizador') return false;
     if (this.currentUser.rol === 'admin') return true;
     if (this.currentUser.sede === 'Todas') return true;
     return (item.sede || '').toLowerCase() === (this.currentUser.sede || '').toLowerCase();
@@ -631,7 +651,7 @@ const DataStore = {
 
   canUserCreateInSede(sede) {
     if (!this.currentUser) return false;
-    if (this.currentUser.solo_lectura || !this.currentUser.puede_crear) return false;
+    if (this.currentUser.solo_lectura || this.currentUser.rol === 'visualizador' || !this.currentUser.puede_crear) return false;
     if (this.currentUser.rol === 'admin' || this.currentUser.sede === 'Todas') return true;
     return (this.currentUser.sede || '').toLowerCase() === (sede || '').toLowerCase();
   },
@@ -802,6 +822,10 @@ const DataStore = {
   setMedicalPriority(itemId, priorityVal, notes) {
     const item = this.getItemById(itemId);
     if (!item) return false;
+    if (!this.currentUser) return false;
+    if (this.currentUser.solo_lectura || this.currentUser.rol === 'visualizador' || !this.currentUser.puede_priorizar_medica) {
+      return false;
+    }
 
     item.prioridad_medica = parseFloat(priorityVal) || 1;
     const pTec = item.prioridad_tecnica || 1;
@@ -1053,6 +1077,10 @@ const DataStore = {
   },
 
   saveItem(item) {
+    if (this.currentUser && !this.canUserEditObra(item)) {
+      (console.warn || console.log)('⛔ Bloqueado: Usuario sin permisos de edición para la obra', item.id);
+      return false;
+    }
     const idx = this.items.findIndex(x => x.id === item.id);
     if (idx >= 0) {
       this.items[idx] = { ...this.items[idx], ...item };

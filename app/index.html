@@ -204,7 +204,7 @@
       </button>
 
       <!-- Botón Gestión de Usuarios (Admin) -->
-      <button onclick="App.openUsersAdminModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-semibold flex items-center space-x-1.5 transition" title="Gestión de Usuarios y Permisos">
+      <button id="btnUsersAdminTop" onclick="App.openUsersAdminModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-semibold flex items-center space-x-1.5 transition" title="Gestión de Usuarios y Permisos">
         <i data-lucide="users" class="w-4 h-4 text-blue-400"></i>
         <span class="hidden md:inline">Usuarios</span>
       </button>
@@ -221,7 +221,7 @@
       </button>
 
       <!-- Botón Configurar Supabase -->
-      <button onclick="App.openSettingsModal()" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition" title="Configuración de Supabase">
+      <button id="btnSettingsTop" onclick="App.openSettingsModal()" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition" title="Configuración de Supabase">
         <i data-lucide="settings" class="w-4 h-4"></i>
       </button>
 
@@ -851,7 +851,7 @@
                 </label>
                 <label class="flex items-center space-x-1.5 cursor-pointer">
                   <input type="checkbox" id="newUserPuedePartida" class="rounded text-blue-600">
-                  <span>Asignar Partida</span>
+                  <span>Asignar Partida (Avanza a Proyecto)</span>
                 </label>
                 <label class="flex items-center space-x-1.5 cursor-pointer">
                   <input type="checkbox" id="newUserSoloLectura" class="rounded text-blue-600">
@@ -969,7 +969,7 @@
             </label>
             <label class="flex items-center space-x-2 cursor-pointer">
               <input type="checkbox" id="editUserPuedePartida" class="rounded text-blue-600">
-              <span>Asignación de Partida Presupuestaria</span>
+              <span>Asignar Partida Presupuestaria y autorizar avance de Factibilidad a Proyecto</span>
             </label>
             <label class="flex items-center space-x-2 cursor-pointer">
               <input type="checkbox" id="editUserSoloLectura" class="rounded text-blue-600">

@@ -256,7 +256,8 @@ const App = {
     if (!banner) return;
 
     const count = DataStore.getPendingMedicalPriorityCount();
-    if (count > 0 && DataStore.currentUser && (DataStore.currentUser.rol === 'direccion_medica' || DataStore.currentUser.rol === 'admin' || DataStore.currentUser.puede_priorizar_medica)) {
+    const u = DataStore.currentUser;
+    if (count > 0 && u && !u.solo_lectura && u.rol !== 'visualizador' && (u.rol === 'direccion_medica' || u.rol === 'admin' || u.puede_priorizar_medica)) {
       banner.classList.remove('hidden');
       if (badge) badge.innerText = count;
       if (badgeText) badgeText.innerText = `${count} obras`;
@@ -466,6 +467,11 @@ const App = {
       const pond = DataStore.getPonderacionGlobal(item);
       const monto = DataStore.formatUSD(item.monto_total_usd || item.monto_obra_usd || 0);
       const nextStage = DataStore.getNextStage(item.estado);
+      const canEdit = DataStore.canUserEditObra(item);
+      const u = DataStore.currentUser;
+      const canAvanzar = canEdit && u && !u.solo_lectura && u.rol !== 'visualizador' && Boolean(u.puede_avanzar);
+      const isFactibilidad = item.estado === 'Estudio de Factibilidad';
+      const canPartida = u && Boolean(u.puede_asignar_partida);
 
       html += `
         <div class="py-3 flex items-center justify-between hover:bg-slate-50 px-2 rounded-lg cursor-pointer transition" onclick="App.openObraModal('${item.id}')">
@@ -496,13 +502,20 @@ const App = {
               <div class="text-sm font-bold text-slate-800">${monto}</div>
               <div class="text-xs text-slate-400">${item.fecha_fin_etapa ? 'Límite: ' + item.fecha_fin_etapa : 'Sin fecha'}</div>
             </div>
-            ${nextStage ? `
-              <button onclick="event.stopPropagation(); App.openTransitionModal('${item.id}')" 
-                      class="bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1">
-                <span>Avanzar</span>
-                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-              </button>
-            ` : ''}
+            ${nextStage && canAvanzar ? (
+              (isFactibilidad && !canPartida) ? `
+                <span class="bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-1 rounded-lg text-xs font-bold flex items-center space-x-1" title="Requiere asignación de partida presupuestaria por usuario autorizado">
+                  <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                  <span>Espera Partida</span>
+                </span>
+              ` : `
+                <button onclick="event.stopPropagation(); App.openTransitionModal('${item.id}')" 
+                        class="bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1">
+                  <span>Avanzar</span>
+                  <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                </button>
+              `
+            ) : ''}
           </div>
         </div>
       `;
@@ -563,6 +576,10 @@ const App = {
           const pond = DataStore.getPonderacionGlobal(item);
           const monto = DataStore.formatUSD(item.monto_total_usd || item.monto_obra_usd || 0);
           const canEdit = DataStore.canUserEditObra(item);
+          const u = DataStore.currentUser;
+          const canAvanzar = canEdit && u && !u.solo_lectura && u.rol !== 'visualizador' && Boolean(u.puede_avanzar);
+          const isFactibilidad = item.estado === 'Estudio de Factibilidad';
+          const canPartida = u && Boolean(u.puede_asignar_partida);
 
           html += `
             <div class="kanban-card bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs cursor-pointer" onclick="App.openObraModal('${item.id}')">
@@ -595,14 +612,21 @@ const App = {
               <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
                 <span class="text-slate-400 truncate max-w-[110px]">👤 ${item.responsable || 'S/D'}</span>
                 
-                ${nextStage && canEdit ? `
-                  <button onclick="event.stopPropagation(); App.openTransitionModal('${item.id}')" 
-                          class="bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white px-2.5 py-1 rounded-md font-bold flex items-center space-x-1 transition shadow-2xs"
-                          title="Finalizar esta etapa y avanzar a ${nextStage}">
-                    <span>Avanzar</span>
-                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
-                  </button>
-                ` : ''}
+                ${nextStage && canAvanzar ? (
+                  (isFactibilidad && !canPartida) ? `
+                    <span class="bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded text-[10px] font-bold inline-flex items-center space-x-1" title="Requiere asignación de partida presupuestaria por usuario autorizado">
+                      <i data-lucide="lock" class="w-2.5 h-2.5"></i>
+                      <span>Espera Partida</span>
+                    </span>
+                  ` : `
+                    <button onclick="event.stopPropagation(); App.openTransitionModal('${item.id}')" 
+                            class="bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white px-2.5 py-1 rounded-md font-bold flex items-center space-x-1 transition shadow-2xs"
+                            title="Finalizar esta etapa y avanzar a ${nextStage}">
+                      <span>Avanzar</span>
+                      <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                    </button>
+                  `
+                ) : ''}
               </div>
             </div>
           `;
@@ -639,6 +663,10 @@ const App = {
       const monto = DataStore.formatUSD(item.monto_total_usd || item.monto_obra_usd || 0);
       const nextStage = DataStore.getNextStage(item.estado);
       const canEdit = DataStore.canUserEditObra(item);
+      const u = DataStore.currentUser;
+      const canAvanzar = canEdit && u && !u.solo_lectura && u.rol !== 'visualizador' && Boolean(u.puede_avanzar);
+      const isFactibilidad = item.estado === 'Estudio de Factibilidad';
+      const canPartida = u && Boolean(u.puede_asignar_partida);
 
       html += `
         <tr class="hover:bg-slate-50/80 transition cursor-pointer border-b border-slate-100" onclick="App.openObraModal('${item.id}')">
@@ -668,14 +696,21 @@ const App = {
           <td class="py-3 px-4 text-xs text-slate-600">${item.responsable || '-'}</td>
           <td class="py-3 px-4 text-xs text-slate-500">${item.fecha_fin_etapa || '-'}</td>
           <td class="py-3 px-4 text-center" onclick="event.stopPropagation()">
-            ${nextStage && canEdit ? `
-              <button onclick="App.openTransitionModal('${item.id}')" 
-                      class="px-2.5 py-1 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 rounded text-xs font-bold flex items-center space-x-1 mx-auto transition" 
-                      title="Finalizar etapa y avanzar a ${nextStage}">
-                <span>Avanzar</span>
-                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
-              </button>
-            ` : `<span class="text-slate-300 text-xs font-mono">-</span>`}
+            ${nextStage && canAvanzar ? (
+              (isFactibilidad && !canPartida) ? `
+                <span class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded text-[10px] font-bold inline-flex items-center space-x-1" title="Requiere asignación de partida presupuestaria por usuario autorizado">
+                  <i data-lucide="lock" class="w-2.5 h-2.5"></i>
+                  <span>Espera Partida</span>
+                </span>
+              ` : `
+                <button onclick="App.openTransitionModal('${item.id}')" 
+                        class="px-2.5 py-1 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 rounded text-xs font-bold flex items-center space-x-1 mx-auto transition" 
+                        title="Finalizar etapa y avanzar a ${nextStage}">
+                  <span>Avanzar</span>
+                  <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                </button>
+              `
+            ) : `<span class="text-slate-300 text-xs font-mono">-</span>`}
           </td>
         </tr>
       `;
@@ -818,7 +853,13 @@ const App = {
 
   // ================= MODAL: NUEVA OBRA / ESTUDIO DE FACTIBILIDAD =================
   openNewObraModal() {
-    const userSede = DataStore.currentUser.sede !== 'Todas' ? DataStore.currentUser.sede : 'Central';
+    const u = DataStore.currentUser;
+    if (!u || u.solo_lectura || u.rol === 'visualizador' || !u.puede_crear) {
+      alert("⛔ Acceso Denegado: Tu perfil es de solo lectura y no tiene autorización para registrar nuevas obras.");
+      return;
+    }
+
+    const userSede = u.sede !== 'Todas' ? u.sede : 'Central';
 
     const form = document.getElementById('formNuevaFactibilidad');
     if (form) form.reset();
@@ -826,11 +867,11 @@ const App = {
     const sedeSelect = document.getElementById('factSede');
     if (sedeSelect) {
       sedeSelect.value = userSede;
-      sedeSelect.disabled = (DataStore.currentUser.sede !== 'Todas');
+      sedeSelect.disabled = (u.sede !== 'Todas');
     }
 
     const respInput = document.getElementById('factResponsable');
-    if (respInput) respInput.value = DataStore.currentUser.nombre;
+    if (respInput) respInput.value = u.nombre;
 
     document.getElementById('modalNuevaFactibilidad').classList.remove('hidden');
     if (window.lucide) lucide.createIcons();
@@ -842,6 +883,12 @@ const App = {
 
   handleCreateFactibilidadSubmit(e) {
     e.preventDefault();
+
+    const u = DataStore.currentUser;
+    if (!u || u.solo_lectura || u.rol === 'visualizador' || !u.puede_crear) {
+      alert("⛔ Acceso Denegado: Tu perfil es de solo lectura y no tiene autorización para registrar nuevas obras.");
+      return;
+    }
 
     const nombre = document.getElementById('factNombre').value.trim();
     const sede = document.getElementById('factSede').value;
@@ -857,26 +904,36 @@ const App = {
       return;
     }
 
-    const newObra = DataStore.createFactibilidad({
-      nombre,
-      sede,
-      sector_solicitante: sector,
-      motivo,
-      requerimiento_minimo: req,
-      monto_estimado: monto,
-      responsable,
-      prioridad_tecnica: prioridad
-    });
+    try {
+      const newObra = DataStore.createFactibilidad({
+        nombre,
+        sede,
+        sector_solicitante: sector,
+        motivo,
+        requerimiento_minimo: req,
+        monto_estimado: monto,
+        responsable,
+        prioridad_tecnica: prioridad
+      });
 
-    this.closeNewObraModal();
-    this.render();
-    this.showToast(`¡Estudio de Factibilidad ${newObra.id} registrado con éxito! Enviado a Dirección.`);
+      this.closeNewObraModal();
+      this.render();
+      this.showToast(`¡Estudio de Factibilidad ${newObra.id} registrado con éxito! Enviado a Dirección.`);
+    } catch (err) {
+      alert(err.message);
+    }
   },
 
   // ================= MODAL ASIGNAR PARTIDA =================
   openAsignarPartidaModal(id) {
     const item = DataStore.getItemById(id);
     if (!item) return;
+
+    const u = DataStore.currentUser;
+    if (!u || u.solo_lectura || u.rol === 'visualizador' || !u.puede_asignar_partida) {
+      alert("⛔ Acceso Denegado: Tu perfil no cuenta con el permiso específico para asignar Partidas Presupuestarias.");
+      return;
+    }
 
     document.getElementById('partidaItemId').value = item.id;
     document.getElementById('partidaItemName').innerText = `${item.id}: ${item.nombre}`;
@@ -909,8 +966,14 @@ const App = {
     const item = DataStore.getItemById(id);
     if (!item) return;
 
+    const u = DataStore.currentUser;
+    if (!u || u.solo_lectura || u.rol === 'visualizador' || !u.puede_avanzar) {
+      alert("⛔ Acceso Denegado: Tu perfil es de solo lectura y no tiene autorización para avanzar etapas.");
+      return;
+    }
+
     if (!DataStore.canUserEditObra(item)) {
-      this.showToast(`Acceso restringido: Solo puedes gestionar obras de sede ${DataStore.currentUser.sede}`);
+      this.showToast(`Acceso restringido: Solo puedes gestionar obras de sede ${u.sede}`);
       return;
     }
 
@@ -919,6 +982,13 @@ const App = {
     if (!nextStage) {
       this.showToast('Esta obra ya se encuentra en su etapa final');
       return;
+    }
+
+    if (currentStage === 'Estudio de Factibilidad' && nextStage === 'Proyecto') {
+      if (!u.puede_asignar_partida) {
+        alert("⛔ Acceso Denegado: Para avanzar de Estudio de Factibilidad a Proyecto se requiere el permiso específico de 'Asignar Partida Presupuestaria'. Tu usuario no cuenta con esta autorización.");
+        return;
+      }
     }
 
     document.getElementById('transItemId').value = item.id;
@@ -961,8 +1031,21 @@ const App = {
     const item = DataStore.getItemById(id);
     if (!item) return;
 
+    const u = DataStore.currentUser;
+    if (!u || u.solo_lectura || u.rol === 'visualizador' || !u.puede_avanzar) {
+      alert("⛔ Acceso Denegado: Tu perfil es de solo lectura y no tiene autorización para avanzar etapas.");
+      return;
+    }
+
     const currentStage = item.estado;
     const nextStage = DataStore.getNextStage(currentStage);
+
+    if (currentStage === 'Estudio de Factibilidad' && nextStage === 'Proyecto') {
+      if (!u.puede_asignar_partida) {
+        alert("⛔ Acceso Denegado: Para avanzar de Estudio de Factibilidad a Proyecto se requiere el permiso específico de 'Asignar Partida Presupuestaria'. Tu usuario no cuenta con esta autorización.");
+        return;
+      }
+    }
 
     const compDate = document.getElementById('transCompletionDate').value;
     const newDeadline = document.getElementById('transNewDeadline').value;
@@ -971,7 +1054,15 @@ const App = {
     const quickPartidaInput = document.getElementById('transQuickPartidaInput');
     const enteredPartida = quickPartidaInput ? quickPartidaInput.value.trim() : '';
     if (enteredPartida) {
-      DataStore.asignarPartidaPresupuestaria(id, enteredPartida);
+      if (!u.puede_asignar_partida) {
+        alert("⛔ Acceso Denegado: No tienes el permiso específico para asignar partida presupuestaria.");
+        return;
+      }
+      const partRes = DataStore.asignarPartidaPresupuestaria(id, enteredPartida);
+      if (!partRes.success) {
+        alert(partRes.msg);
+        return;
+      }
     }
 
     // VALIDACIÓN ESTRICTA: Para avanzar de Estudio de Factibilidad a Proyecto es OBLIGATORIO tener partida presupuestaria
@@ -1004,6 +1095,12 @@ const App = {
 
   // ================= MODAL DIRECCIÓN MÉDICA =================
   openMedicalPriorityModal() {
+    const u = DataStore.currentUser;
+    if (!u || u.solo_lectura || u.rol === 'visualizador' || !u.puede_priorizar_medica) {
+      alert("⛔ Acceso Denegado: No cuentas con la autorización de Dirección Médica para evaluar prioridades.");
+      return;
+    }
+
     const pendingItems = DataStore.getPendingMedicalPriorityItems();
     const container = document.getElementById('medicalPriorityListContainer');
     if (!container) return;
@@ -1057,6 +1154,11 @@ const App = {
   },
 
   rateMedicalPriority(itemId, rating) {
+    const u = DataStore.currentUser;
+    if (!u || u.solo_lectura || u.rol === 'visualizador' || !u.puede_priorizar_medica) {
+      alert("⛔ Acceso Denegado: No cuentas con la autorización de Dirección Médica.");
+      return;
+    }
     DataStore.setMedicalPriority(itemId, rating, 'Evaluación asignada desde Dirección Médica');
     this.openMedicalPriorityModal();
     this.render();
@@ -1069,6 +1171,11 @@ const App = {
 
   // ================= GESTIÓN DE USUARIOS =================
   openUsersAdminModal() {
+    const u = DataStore.currentUser;
+    if (!u || u.rol !== 'admin') {
+      alert("⛔ Acceso Denegado: Solo administradores pueden gestionar usuarios.");
+      return;
+    }
     this.renderUsersList();
     document.getElementById('modalUsersAdmin').classList.remove('hidden');
     if (window.lucide) lucide.createIcons();
@@ -1651,6 +1758,23 @@ const App = {
         sedeSelect.classList.remove('bg-slate-200', 'cursor-not-allowed');
       }
     }
+
+    // Visibilidad de controles según permisos y rol
+    const btnNueva = document.getElementById('btnNuevaObraTop');
+    if (btnNueva) {
+      const canCreate = !u.solo_lectura && u.rol !== 'visualizador' && Boolean(u.puede_crear);
+      btnNueva.classList.toggle('hidden', !canCreate);
+    }
+
+    const btnUsers = document.getElementById('btnUsersAdminTop');
+    if (btnUsers) {
+      btnUsers.classList.toggle('hidden', u.rol !== 'admin');
+    }
+
+    const btnSettings = document.getElementById('btnSettingsTop');
+    if (btnSettings) {
+      btnSettings.classList.toggle('hidden', u.rol !== 'admin');
+    }
   },
 
   // ================= MODAL DETALLE OBRA =================
@@ -1659,6 +1783,8 @@ const App = {
     if (!item) return;
 
     const canEdit = DataStore.canUserEditObra(item);
+    const u = DataStore.currentUser;
+    const isReadOnly = !canEdit || (u && (u.solo_lectura || u.rol === 'visualizador'));
     const pond = DataStore.getPonderacionGlobal(item);
 
     document.getElementById('modalObraId').innerText = item.id;
@@ -1683,19 +1809,43 @@ const App = {
     document.getElementById('modalObraPrioridadFin').value = pond.valor || 1;
     document.getElementById('modalObraObservaciones').value = item.observaciones || '';
 
+    // Deshabilitar todos los inputs/selects si es solo lectura
+    const modalInputs = document.querySelectorAll('#modalObraDetail input, #modalObraDetail select, #modalObraDetail textarea');
+    modalInputs.forEach(el => {
+      el.disabled = isReadOnly;
+      el.classList.toggle('bg-slate-100', isReadOnly);
+    });
+
+    // Control del campo partida: además requiere específicamente u.puede_asignar_partida
+    const inputPartida = document.getElementById('modalObraPartida');
+    if (inputPartida && !isReadOnly) {
+      const canPartida = Boolean(u && u.puede_asignar_partida);
+      inputPartida.disabled = !canPartida;
+      inputPartida.classList.toggle('bg-slate-100', !canPartida);
+    }
+
     const btnAsignarPartida = document.getElementById('btnModalAsignarPartida');
     if (btnAsignarPartida) {
-      btnAsignarPartida.classList.toggle('hidden', !!(item.partida && item.partida.trim() !== ''));
+      const showPartidaBtn = !isReadOnly && Boolean(u && u.puede_asignar_partida) && !(item.partida && item.partida.trim() !== '');
+      btnAsignarPartida.classList.toggle('hidden', !showPartidaBtn);
     }
 
     const btnSave = document.getElementById('btnModalSaveObra');
     const warningRestr = document.getElementById('modalSedeRestrWarning');
     if (btnSave) {
-      btnSave.disabled = !canEdit || DataStore.currentUser.solo_lectura;
-      btnSave.classList.toggle('opacity-50', !canEdit || DataStore.currentUser.solo_lectura);
+      btnSave.disabled = isReadOnly;
+      btnSave.classList.toggle('hidden', isReadOnly);
     }
     if (warningRestr) {
-      warningRestr.classList.toggle('hidden', canEdit);
+      if (u && (u.solo_lectura || u.rol === 'visualizador')) {
+        warningRestr.innerText = '🔒 Modo Solo Lectura: Tu perfil cuenta exclusivamente con permisos de visualización. Todas las acciones de edición están deshabilitadas.';
+        warningRestr.classList.remove('hidden');
+      } else if (!canEdit) {
+        warningRestr.innerText = `🔒 Esta obra pertenece a otra sede (${item.sede}). Tu usuario solo tiene permisos de visualización sobre ella.`;
+        warningRestr.classList.remove('hidden');
+      } else {
+        warningRestr.classList.add('hidden');
+      }
     }
 
     const histContainer = document.getElementById('modalObraHistorial');
@@ -1720,8 +1870,9 @@ const App = {
     const item = DataStore.getItemById(id);
     if (!item) return;
 
-    if (!DataStore.canUserEditObra(item)) {
-      alert("No tienes permiso para editar obras en esta sede.");
+    const u = DataStore.currentUser;
+    if (!u || u.solo_lectura || u.rol === 'visualizador' || !DataStore.canUserEditObra(item)) {
+      alert("⛔ Acceso Denegado: Tu perfil es de solo lectura y no tiene autorización para modificar obras.");
       return;
     }
 
@@ -1731,9 +1882,20 @@ const App = {
 
     // Validar requerimiento obligatorio de partida presupuestaria para salir de Estudio de Factibilidad
     if (currentStage === 'Estudio de Factibilidad' && newEstado !== 'Estudio de Factibilidad' && newEstado !== 'Suspendida') {
+      if (!u.puede_asignar_partida) {
+        alert("⛔ Acceso Denegado: Para avanzar de Estudio de Factibilidad a Proyecto se requiere el permiso específico de 'Asignar Partida Presupuestaria'.");
+        return;
+      }
       if (!newPartida || newPartida === '' || newPartida === 'S/D' || newPartida.toUpperCase() === 'PENDIENTE') {
-        alert("⛔ No es posible avanzar la obra a '" + newEstado + "':\n\nEl sistema requiere obligatoriamente que la obra cuente con un Número de Partida Presupuestaria asignado por la Dirección.");
+        alert("⛔ No es posible avanzar la obra a '" + newEstado + "':\n\nEl sistema requiere obligatoriamente que la obra cuente con un Número de Partida Presupuestaria asignado.");
         document.getElementById('modalObraPartida').focus();
+        return;
+      }
+    }
+
+    if (newPartida !== (item.partida || '')) {
+      if (!u.puede_asignar_partida) {
+        alert("⛔ Acceso Denegado: No cuentas con el permiso específico para asignar o modificar el Número de Partida Presupuestaria.");
         return;
       }
     }
@@ -1773,6 +1935,11 @@ const App = {
   },
 
   openSettingsModal() {
+    const u = DataStore.currentUser;
+    if (!u || u.rol !== 'admin') {
+      alert("⛔ Acceso Denegado: Solo administradores pueden configurar la conexión a la base de datos.");
+      return;
+    }
     const creds = SupabaseManager.getCredentials();
     document.getElementById('inputSupabaseUrl').value = creds.url;
     document.getElementById('inputSupabaseKey').value = creds.key;
