@@ -24,6 +24,45 @@ const DEFAULT_STAGE_DAYS = {
 
 const DEFAULT_USERS = [
   {
+    id: 'usr-admin-nicolas',
+    nombre: 'Nicolas Kawior (Admin)',
+    email: 'nicolasdkawior@gmail.com',
+    sede: 'Todas',
+    rol: 'admin',
+    activo: true,
+    puede_crear: true,
+    puede_avanzar: true,
+    puede_priorizar_medica: true,
+    puede_asignar_partida: true,
+    solo_lectura: false
+  },
+  {
+    id: 'usr-admin-nicolas-dot',
+    nombre: 'Nicolas Kawior (Admin)',
+    email: 'nicolas.kawior@gmail.com',
+    sede: 'Todas',
+    rol: 'admin',
+    activo: true,
+    puede_crear: true,
+    puede_avanzar: true,
+    puede_priorizar_medica: true,
+    puede_asignar_partida: true,
+    solo_lectura: false
+  },
+  {
+    id: 'usr-admin-nicolas-plain',
+    nombre: 'Nicolas Kawior (Admin)',
+    email: 'nicolaskawior@gmail.com',
+    sede: 'Todas',
+    rol: 'admin',
+    activo: true,
+    puede_crear: true,
+    puede_avanzar: true,
+    puede_priorizar_medica: true,
+    puede_asignar_partida: true,
+    solo_lectura: false
+  },
+  {
     id: 'usr-1',
     nombre: 'Dirección General (Admin)',
     email: 'admin.obras@gmail.com',
@@ -192,7 +231,7 @@ const DataStore = {
       }
     });
 
-    console.log(`DataStore v2.1 inicializado: ${this.items.length} proyectos. Usuario activo: ${this.currentUser.nombre}`);
+    console.log(`DataStore v2.1 inicializado: ${this.items.length} proyectos. Usuario activo: ${this.currentUser ? this.currentUser.nombre : 'Ninguno (Requiere Login)'}`);
   },
 
   persist() {

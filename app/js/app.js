@@ -256,7 +256,7 @@ const App = {
     if (!banner) return;
 
     const count = DataStore.getPendingMedicalPriorityCount();
-    if (count > 0 && (DataStore.currentUser.rol === 'direccion_medica' || DataStore.currentUser.rol === 'admin' || DataStore.currentUser.puede_priorizar_medica)) {
+    if (count > 0 && DataStore.currentUser && (DataStore.currentUser.rol === 'direccion_medica' || DataStore.currentUser.rol === 'admin' || DataStore.currentUser.puede_priorizar_medica)) {
       banner.classList.remove('hidden');
       if (badge) badge.innerText = count;
       if (badgeText) badgeText.innerText = `${count} obras`;
