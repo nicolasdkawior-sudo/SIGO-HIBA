@@ -1135,18 +1135,51 @@
           <span id="modalObraId" class="bg-blue-600 text-white text-xs font-mono font-bold px-2 py-0.5 rounded">OBRA-000</span>
           <span class="text-sm font-bold text-slate-200">Ficha de Proyecto e Inversión</span>
         </div>
-        <button onclick="App.closeObraModal()" class="text-slate-400 hover:text-white transition">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
+        <div class="flex items-center space-x-2">
+          <!-- Botón de Editar exclusivo para Admin en Header -->
+          <button type="button" id="btnHeaderAdminEdit" onclick="App.toggleAdminEditMode(true)" 
+                  class="hidden bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs px-3 py-1.5 rounded-lg flex items-center space-x-1.5 shadow transition cursor-pointer">
+            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+            <span>Editar Proyecto (Admin)</span>
+          </button>
+          <button onclick="App.closeObraModal()" class="text-slate-400 hover:text-white transition p-1">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
       </div>
 
       <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
+        <!-- Banner de Modo Edición Administrador (Visible únicamente para el Administrador al activar la edición) -->
+        <div id="modalAdminEditBanner" class="hidden bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-400 text-amber-950 p-3.5 rounded-xl text-xs font-medium flex items-center justify-between shadow-2xs">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-7 h-7 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center font-black">
+              <i data-lucide="shield-check" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <div class="font-bold text-amber-950 text-xs flex items-center space-x-2">
+                <span>Modo Edición Administrador Habilitado</span>
+                <span class="bg-amber-200 text-amber-900 text-[10px] px-2 py-0.2 rounded font-black uppercase tracking-wider">Acceso Exclusivo</span>
+              </div>
+              <p class="text-[11px] text-amber-800 mt-0.5">Puedes modificar libremente la fecha de proyecto, montos, tarea, responsable, proveedor y demás atributos maestros.</p>
+            </div>
+          </div>
+          <button type="button" onclick="App.toggleAdminEditMode(false)" class="text-xs text-amber-800 hover:text-amber-950 underline font-bold px-2 py-1">
+            Cancelar Edición
+          </button>
+        </div>
+
+        <!-- Aviso de Solo Lectura para usuarios generales -->
+        <div id="modalReadOnlyNotice" class="hidden bg-slate-50 border border-slate-200 text-slate-600 p-3 rounded-xl flex items-center space-x-2 text-xs">
+          <i data-lucide="lock" class="w-4 h-4 text-slate-400 shrink-0"></i>
+          <span><strong>Vista de Solo Lectura:</strong> La modificación de datos maestros (fechas de proyecto, montos, tarea y responsable) está reservada exclusivamente para el Administrador.</span>
+        </div>
+
         <div id="modalSedeRestrWarning" class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl font-medium">
           🔒 Esta obra pertenece a otra sede. Tu usuario solo tiene permisos de visualización sobre ella.
         </div>
 
         <div>
-          <label class="block font-semibold text-slate-700 mb-1">Nombre de la Inversión / Obra</label>
+          <label class="block font-semibold text-slate-700 mb-1">Nombre de la Tarea / Inversión / Obra</label>
           <input type="text" id="modalObraTitle" class="w-full text-sm font-semibold border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
         </div>
 
@@ -1240,7 +1273,8 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label class="block font-semibold text-slate-700 mb-1">Jefe de Obra / PM Responsable</label>
-            <input type="text" id="modalObraResponsable" class="w-full border border-slate-300 rounded-lg px-3 py-2">
+            <input type="text" id="modalObraResponsable" list="responsablesDatalist" placeholder="Seleccionar o escribir responsable" class="w-full border border-slate-300 rounded-lg px-3 py-2">
+            <datalist id="responsablesDatalist"></datalist>
           </div>
           <div>
             <label class="block font-semibold text-slate-700 mb-1">Proveedor / Contratista</label>
@@ -1282,9 +1316,27 @@
         </div>
       </div>
 
-      <div class="bg-slate-100 px-6 py-3 border-t border-slate-200 flex items-center justify-end space-x-3">
-        <button onclick="App.closeObraModal()" class="px-4 py-2 border border-slate-300 rounded-lg font-semibold text-slate-700 hover:bg-slate-200 transition">Cerrar</button>
-        <button id="btnModalSaveObra" onclick="App.saveObraModal()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-2xs transition">Guardar Cambios</button>
+      <div class="bg-slate-100 px-6 py-3 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div id="modalObraFooterInfo" class="text-xs text-slate-500 font-medium">
+          <!-- Información dinámica según rol de usuario -->
+        </div>
+        <div class="flex items-center space-x-2">
+          <!-- Botón de Editar exclusivo para Administrador -->
+          <button type="button" id="btnModalAdminEnableEdit" onclick="App.toggleAdminEditMode(true)" 
+                  class="hidden px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold rounded-lg shadow-sm transition flex items-center space-x-1.5 cursor-pointer">
+            <i data-lucide="edit-3" class="w-4 h-4"></i>
+            <span>Modificar Datos (Admin)</span>
+          </button>
+          <button type="button" id="btnModalAdminCancelEdit" onclick="App.toggleAdminEditMode(false)" 
+                  class="hidden px-3.5 py-2 border border-slate-300 text-slate-600 hover:bg-slate-200 font-semibold rounded-lg transition cursor-pointer">
+            Cancelar Edición
+          </button>
+          <button type="button" onclick="App.closeObraModal()" class="px-4 py-2 border border-slate-300 rounded-lg font-semibold text-slate-700 hover:bg-slate-200 transition cursor-pointer">Cerrar</button>
+          <button type="button" id="btnModalSaveObra" onclick="App.saveObraModal()" class="hidden px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-2xs transition flex items-center space-x-1.5 cursor-pointer">
+            <i data-lucide="save" class="w-4 h-4"></i>
+            <span>Guardar Modificaciones</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>

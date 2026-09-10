@@ -14,6 +14,7 @@ const App = {
     filtroFinalizadas: 'todas', // 'todas', 'activas', 'finalizadas', 'suspendidas'
     search: ''
   },
+  adminEditModeActive: false,
   cashflowFilterTipo: 'TODOS', // 'TODOS', 'Obra Civil', 'Infraestructura'
   cashflowFilterPartida: 'todas', // 'todas', 'con_partida', 'sin_partida'
   cashflowSearch: '',
@@ -472,6 +473,7 @@ const App = {
       const nextStage = DataStore.getNextStage(item.estado);
       const canEdit = DataStore.canUserEditObra(item);
       const u = DataStore.currentUser;
+      const isAdmin = DataStore.isAdmin();
       const canAvanzar = canEdit && u && !u.solo_lectura && u.rol !== 'visualizador' && Boolean(u.puede_avanzar);
       const isFactibilidad = item.estado === 'Estudio de Factibilidad';
       const canPartida = u && Boolean(u.puede_asignar_partida);
@@ -500,11 +502,19 @@ const App = {
               </div>
             </div>
           </div>
-          <div class="flex items-center space-x-4">
-            <div class="text-right">
+          <div class="flex items-center space-x-2">
+            <div class="text-right mr-2">
               <div class="text-sm font-bold text-slate-800">${monto}</div>
               <div class="text-xs text-slate-400">${item.fecha_fin_etapa ? 'Límite: ' + item.fecha_fin_etapa : 'Sin fecha'}</div>
             </div>
+            ${isAdmin ? `
+              <button onclick="event.stopPropagation(); App.openObraModal('${item.id}', true)" 
+                      class="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer shadow-2xs" 
+                      title="Editar Proyecto (Solo Administrador)">
+                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                <span>Editar</span>
+              </button>
+            ` : ''}
             ${nextStage && canAvanzar ? (
               (isFactibilidad && !canPartida) ? `
                 <span class="bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-1 rounded-lg text-xs font-bold flex items-center space-x-1" title="Requiere asignación de partida presupuestaria por usuario autorizado">
@@ -513,7 +523,7 @@ const App = {
                 </span>
               ` : `
                 <button onclick="event.stopPropagation(); App.openTransitionModal('${item.id}')" 
-                        class="bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1">
+                        class="bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer">
                   <span>Avanzar</span>
                   <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
                 </button>
@@ -580,6 +590,7 @@ const App = {
           const monto = DataStore.formatUSD(item.monto_total_usd || item.monto_obra_usd || 0);
           const canEdit = DataStore.canUserEditObra(item);
           const u = DataStore.currentUser;
+          const isAdmin = DataStore.isAdmin();
           const canAvanzar = canEdit && u && !u.solo_lectura && u.rol !== 'visualizador' && Boolean(u.puede_avanzar);
           const isFactibilidad = item.estado === 'Estudio de Factibilidad';
           const canPartida = u && Boolean(u.puede_asignar_partida);
@@ -615,21 +626,31 @@ const App = {
               <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
                 <span class="text-slate-400 truncate max-w-[110px]">👤 ${item.responsable || 'S/D'}</span>
                 
-                ${nextStage && canAvanzar ? (
-                  (isFactibilidad && !canPartida) ? `
-                    <span class="bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded text-[10px] font-bold inline-flex items-center space-x-1" title="Requiere asignación de partida presupuestaria por usuario autorizado">
-                      <i data-lucide="lock" class="w-2.5 h-2.5"></i>
-                      <span>Espera Partida</span>
-                    </span>
-                  ` : `
-                    <button onclick="event.stopPropagation(); App.openTransitionModal('${item.id}')" 
-                            class="bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white px-2.5 py-1 rounded-md font-bold flex items-center space-x-1 transition shadow-2xs"
-                            title="Finalizar esta etapa y avanzar a ${nextStage}">
-                      <span>Avanzar</span>
-                      <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                <div class="flex items-center space-x-1.5">
+                  ${isAdmin ? `
+                    <button onclick="event.stopPropagation(); App.openObraModal('${item.id}', true)" 
+                            class="bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-300 px-2 py-1 rounded-md font-bold text-[11px] inline-flex items-center space-x-1 transition shadow-2xs cursor-pointer" 
+                            title="Editar Proyecto (Solo Administrador)">
+                      <i data-lucide="edit-3" class="w-3 h-3"></i>
+                      <span>Editar</span>
                     </button>
-                  `
-                ) : ''}
+                  ` : ''}
+                  ${nextStage && canAvanzar ? (
+                    (isFactibilidad && !canPartida) ? `
+                      <span class="bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded text-[10px] font-bold inline-flex items-center space-x-1" title="Requiere asignación de partida presupuestaria por usuario autorizado">
+                        <i data-lucide="lock" class="w-2.5 h-2.5"></i>
+                        <span>Espera Partida</span>
+                      </span>
+                    ` : `
+                      <button onclick="event.stopPropagation(); App.openTransitionModal('${item.id}')" 
+                              class="bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white px-2.5 py-1 rounded-md font-bold flex items-center space-x-1 transition shadow-2xs cursor-pointer"
+                              title="Finalizar esta etapa y avanzar a ${nextStage}">
+                        <span>Avanzar</span>
+                        <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                      </button>
+                    `
+                  ) : ''}
+                </div>
               </div>
             </div>
           `;
@@ -667,6 +688,7 @@ const App = {
       const nextStage = DataStore.getNextStage(item.estado);
       const canEdit = DataStore.canUserEditObra(item);
       const u = DataStore.currentUser;
+      const isAdmin = DataStore.isAdmin();
       const canAvanzar = canEdit && u && !u.solo_lectura && u.rol !== 'visualizador' && Boolean(u.puede_avanzar);
       const isFactibilidad = item.estado === 'Estudio de Factibilidad';
       const canPartida = u && Boolean(u.puede_asignar_partida);
@@ -699,21 +721,31 @@ const App = {
           <td class="py-3 px-4 text-xs text-slate-600">${item.responsable || '-'}</td>
           <td class="py-3 px-4 text-xs text-slate-500">${item.fecha_fin_etapa || '-'}</td>
           <td class="py-3 px-4 text-center" onclick="event.stopPropagation()">
-            ${nextStage && canAvanzar ? (
-              (isFactibilidad && !canPartida) ? `
-                <span class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded text-[10px] font-bold inline-flex items-center space-x-1" title="Requiere asignación de partida presupuestaria por usuario autorizado">
-                  <i data-lucide="lock" class="w-2.5 h-2.5"></i>
-                  <span>Espera Partida</span>
-                </span>
-              ` : `
-                <button onclick="App.openTransitionModal('${item.id}')" 
-                        class="px-2.5 py-1 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 rounded text-xs font-bold flex items-center space-x-1 mx-auto transition" 
-                        title="Finalizar etapa y avanzar a ${nextStage}">
-                  <span>Avanzar</span>
-                  <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+            <div class="flex items-center justify-center space-x-1.5">
+              ${isAdmin ? `
+                <button onclick="App.openObraModal('${item.id}', true)" 
+                        class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded text-xs font-bold inline-flex items-center space-x-1 transition shadow-2xs cursor-pointer" 
+                        title="Editar Proyecto (Solo Administrador)">
+                  <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                  <span>Editar</span>
                 </button>
-              `
-            ) : `<span class="text-slate-300 text-xs font-mono">-</span>`}
+              ` : ''}
+              ${nextStage && canAvanzar ? (
+                (isFactibilidad && !canPartida) ? `
+                  <span class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded text-[10px] font-bold inline-flex items-center space-x-1" title="Requiere asignación de partida presupuestaria por usuario autorizado">
+                    <i data-lucide="lock" class="w-2.5 h-2.5"></i>
+                    <span>Espera Partida</span>
+                  </span>
+                ` : `
+                  <button onclick="App.openTransitionModal('${item.id}')" 
+                          class="px-2.5 py-1 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 rounded text-xs font-bold flex items-center space-x-1 transition cursor-pointer" 
+                          title="Finalizar etapa y avanzar a ${nextStage}">
+                    <span>Avanzar</span>
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                  </button>
+                `
+              ) : (!isAdmin ? `<span class="text-slate-300 text-xs font-mono">-</span>` : '')}
+            </div>
           </td>
         </tr>
       `;
@@ -1985,20 +2017,14 @@ const App = {
   },
 
   // ================= MODAL DETALLE OBRA =================
-  openObraModal(id) {
-    const item = DataStore.getItemById(id);
-    if (!item) return;
-
-    const canEdit = DataStore.canUserEditObra(item);
-    const u = DataStore.currentUser;
-    const isReadOnly = !canEdit || (u && (u.solo_lectura || u.rol === 'visualizador'));
+  populateObraModalFields(item) {
     const pond = DataStore.getPonderacionGlobal(item);
 
     document.getElementById('modalObraId').innerText = item.id;
-    document.getElementById('modalObraTitle').value = item.nombre;
-    document.getElementById('modalObraSede').value = item.sede;
-    document.getElementById('modalObraTipo').value = item.tipo;
-    document.getElementById('modalObraEstado').value = item.estado;
+    document.getElementById('modalObraTitle').value = item.nombre || '';
+    document.getElementById('modalObraSede').value = item.sede || 'Central';
+    document.getElementById('modalObraTipo').value = item.tipo || 'Obra Civil';
+    document.getElementById('modalObraEstado').value = item.estado || 'Estudio de Factibilidad';
     document.getElementById('modalObraPartida').value = item.partida || '';
     const inputMontoPartidaEl = document.getElementById('modalObraMontoPartida');
     if (inputMontoPartidaEl) {
@@ -2019,64 +2045,180 @@ const App = {
     document.getElementById('modalObraPrioridadMed').value = item.prioridad_medica || '';
     document.getElementById('modalObraPrioridadFin').value = pond.valor || 1;
     document.getElementById('modalObraObservaciones').value = item.observaciones || '';
+  },
 
-    // Deshabilitar todos los inputs/selects si es solo lectura
-    const modalInputs = document.querySelectorAll('#modalObraDetail input, #modalObraDetail select, #modalObraDetail textarea');
-    modalInputs.forEach(el => {
-      el.disabled = isReadOnly;
-      el.classList.toggle('bg-slate-100', isReadOnly);
-    });
+  toggleAdminEditMode(enable) {
+    const isAdmin = DataStore.isAdmin();
+    if (enable && !isAdmin) {
+      alert("⛔ Acceso Denegado: Exclusivo para el Administrador. Solo el perfil Administrador tiene autorización para editar datos maestros del proyecto (tarea, montos, fechas, responsable).");
+      return;
+    }
 
-    // Control de los campos partida y monto partida: además requieren específicamente u.puede_asignar_partida
-    const inputPartida = document.getElementById('modalObraPartida');
-    if (!isReadOnly) {
-      const canPartida = Boolean(u && u.puede_asignar_partida);
-      if (inputPartida) {
-        inputPartida.disabled = !canPartida;
-        inputPartida.classList.toggle('bg-slate-100', !canPartida);
-      }
-      if (inputMontoPartidaEl) {
-        inputMontoPartidaEl.disabled = !canPartida;
-        inputMontoPartidaEl.classList.toggle('bg-slate-100', !canPartida);
+    this.adminEditModeActive = Boolean(enable && isAdmin);
+    const active = this.adminEditModeActive;
+
+    // Header buttons
+    const btnHeaderEdit = document.getElementById('btnHeaderAdminEdit');
+    if (btnHeaderEdit) {
+      btnHeaderEdit.classList.toggle('hidden', !isAdmin || active);
+    }
+
+    // Banners
+    const banner = document.getElementById('modalAdminEditBanner');
+    if (banner) {
+      banner.classList.toggle('hidden', !active);
+    }
+    const readOnlyNotice = document.getElementById('modalReadOnlyNotice');
+    if (readOnlyNotice) {
+      readOnlyNotice.classList.toggle('hidden', isAdmin);
+    }
+
+    // Footer buttons
+    const btnEnable = document.getElementById('btnModalAdminEnableEdit');
+    const btnCancel = document.getElementById('btnModalAdminCancelEdit');
+    const btnSave = document.getElementById('btnModalSaveObra');
+    const footerInfo = document.getElementById('modalObraFooterInfo');
+
+    if (btnEnable) {
+      btnEnable.classList.toggle('hidden', !isAdmin || active);
+    }
+    if (btnCancel) {
+      btnCancel.classList.toggle('hidden', !active);
+    }
+    if (btnSave) {
+      btnSave.classList.toggle('hidden', !active);
+    }
+
+    if (footerInfo) {
+      if (active) {
+        footerInfo.innerHTML = `
+          <span class="inline-flex items-center space-x-1.5 text-amber-900 font-bold bg-amber-100 px-3 py-1 rounded-lg border border-amber-300">
+            <i data-lucide="edit-3" class="w-3.5 h-3.5 text-amber-700"></i>
+            <span>Edición Administrador activa: Modifica tarea, fechas, montos o responsable y pulsa Guardar.</span>
+          </span>
+        `;
+      } else if (isAdmin) {
+        footerInfo.innerHTML = `
+          <span class="inline-flex items-center space-x-1.5 text-slate-700 font-semibold bg-slate-100 px-2.5 py-1 rounded border border-slate-200">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-600"></i>
+            <span>Sesión Administrador: Haz clic en <strong>Modificar Datos</strong> para editar cualquier campo maestro.</span>
+          </span>
+        `;
+      } else {
+        footerInfo.innerHTML = `
+          <span class="text-slate-400 italic">Vista de solo lectura (Edición de datos maestros exclusiva para el Administrador).</span>
+        `;
       }
     }
 
+    // Toggle editable fields
+    const editableFieldIds = [
+      'modalObraTitle',
+      'modalObraSede',
+      'modalObraTipo',
+      'modalObraEstado',
+      'modalObraPartida',
+      'modalObraMontoPartida',
+      'modalObraFechaInicio',
+      'modalObraFechaFin',
+      'modalObraFechaFinGlobal',
+      'modalObraMontoObra',
+      'modalObraMontoEquip',
+      'modalObraM2',
+      'modalObraUsdM2',
+      'modalObraResponsable',
+      'modalObraProveedor',
+      'modalObraCategoria',
+      'modalObraPrioridadTec',
+      'modalObraPrioridadMed',
+      'modalObraObservaciones'
+    ];
+
+    editableFieldIds.forEach(fieldId => {
+      const el = document.getElementById(fieldId);
+      if (el) {
+        el.disabled = !active;
+        el.classList.toggle('bg-slate-100', !active);
+        el.classList.toggle('cursor-not-allowed', !active);
+        el.classList.toggle('bg-white', active);
+        el.classList.toggle('border-amber-400', active);
+      }
+    });
+
+    // If canceling edit mode, restore values from current item
+    if (!enable) {
+      const idEl = document.getElementById('modalObraId');
+      const id = idEl ? idEl.innerText : null;
+      if (id) {
+        const item = DataStore.getItemById(id);
+        if (item) {
+          this.populateObraModalFields(item);
+        }
+      }
+    }
+
+    if (window.lucide) lucide.createIcons();
+  },
+
+  openObraModal(id, startInEditMode = false) {
+    const item = DataStore.getItemById(id);
+    if (!item) return;
+
+    const isAdmin = DataStore.isAdmin();
+    const canEdit = DataStore.canUserEditObra(item);
+    const u = DataStore.currentUser;
+
+    // Poblar datalist de responsables disponibles
+    const datalist = document.getElementById('responsablesDatalist');
+    if (datalist) {
+      const userNames = (DataStore.users || []).map(usr => usr.nombre).filter(Boolean);
+      const existingNames = (DataStore.items || []).map(x => x.responsable).filter(Boolean);
+      const uniqueNames = Array.from(new Set([...userNames, ...existingNames])).sort();
+      datalist.innerHTML = uniqueNames.map(r => `<option value="${r}"></option>`).join('');
+    }
+
+    // Poblar campos del formulario
+    this.populateObraModalFields(item);
+
+    // Botón de asignación directa de partida si tiene permiso específico
     const btnAsignarPartida = document.getElementById('btnModalAsignarPartida');
     if (btnAsignarPartida) {
-      const showPartidaBtn = !isReadOnly && Boolean(u && u.puede_asignar_partida) && !(item.partida && item.partida.trim() !== '');
+      const showPartidaBtn = Boolean(u && u.puede_asignar_partida) && !(item.partida && item.partida.trim() !== '');
       btnAsignarPartida.classList.toggle('hidden', !showPartidaBtn);
     }
 
-    const btnSave = document.getElementById('btnModalSaveObra');
+    // Advertencia de restricción de sede si aplica
     const warningRestr = document.getElementById('modalSedeRestrWarning');
-    if (btnSave) {
-      btnSave.disabled = isReadOnly;
-      btnSave.classList.toggle('hidden', isReadOnly);
-    }
     if (warningRestr) {
-      if (u && (u.solo_lectura || u.rol === 'visualizador')) {
-        warningRestr.innerText = '🔒 Modo Solo Lectura: Tu perfil cuenta exclusivamente con permisos de visualización. Todas las acciones de edición están deshabilitadas.';
+      if (isAdmin) {
+        warningRestr.classList.add('hidden');
+      } else if (u && (u.solo_lectura || u.rol === 'visualizador')) {
+        warningRestr.innerText = '🔒 Perfil de Solo Lectura: Tu usuario cuenta exclusivamente con permisos de visualización.';
         warningRestr.classList.remove('hidden');
       } else if (!canEdit) {
-        warningRestr.innerText = `🔒 Esta obra pertenece a otra sede (${item.sede}). Tu usuario solo tiene permisos de visualización sobre ella.`;
+        warningRestr.innerText = `🔒 Esta obra pertenece a otra sede (${item.sede}). Tu usuario solo tiene permisos sobre su sede asignada.`;
         warningRestr.classList.remove('hidden');
       } else {
         warningRestr.classList.add('hidden');
       }
     }
 
+    // Renderizar historial
     const histContainer = document.getElementById('modalObraHistorial');
     if (histContainer) {
       const historial = item.historial || [];
-      histContainer.innerHTML = historial.map(h => `
+      histContainer.innerHTML = historial.length ? historial.map(h => `
         <div class="relative pl-6 pb-4 border-l-2 border-slate-200 last:border-none">
           <div class="absolute -left-1.5 top-0.5 w-3 h-3 rounded-full bg-blue-600"></div>
           <div class="text-xs font-semibold text-slate-700">${h.fecha} • ${h.usuario}</div>
           <div class="text-xs text-blue-600 font-medium">Fase: ${h.estado_nuevo} ${h.estado_anterior ? '(antes: ' + h.estado_anterior + ')' : ''}</div>
           <div class="text-xs text-slate-500 mt-1">${h.observaciones || 'Sin notas'}</div>
         </div>
-      `).join('');
+      `).join('') : '<div class="text-xs text-slate-400 italic">Sin registros en el historial</div>';
     }
+
+    // Configurar estado de edición (bloqueado o activo)
+    this.toggleAdminEditMode(Boolean(isAdmin && startInEditMode));
 
     document.getElementById('modalObraDetail').classList.remove('hidden');
     if (window.lucide) lucide.createIcons();
@@ -2087,82 +2229,111 @@ const App = {
     const item = DataStore.getItemById(id);
     if (!item) return;
 
-    const u = DataStore.currentUser;
-    if (!u || u.solo_lectura || u.rol === 'visualizador' || !DataStore.canUserEditObra(item)) {
-      alert("⛔ Acceso Denegado: Tu perfil es de solo lectura y no tiene autorización para modificar obras.");
+    if (!DataStore.isAdmin()) {
+      alert("⛔ Acceso Denegado: Exclusivo para el Administrador. No tienes autorización para modificar los datos maestros de proyectos.");
       return;
     }
 
-    const currentStage = item.estado;
+    const u = DataStore.currentUser;
+    const oldNombre = item.nombre;
+    const oldMontoTotal = item.monto_total_usd;
+    const oldResponsable = item.responsable;
+    const oldFechaFin = item.fecha_fin_etapa;
+    const oldEstado = item.estado;
+
+    const newTitle = document.getElementById('modalObraTitle').value.trim();
+    if (!newTitle) {
+      alert("⚠️ El nombre de la tarea / obra no puede quedar vacío.");
+      document.getElementById('modalObraTitle').focus();
+      return;
+    }
+
+    const newSede = document.getElementById('modalObraSede').value;
+    const newTipo = document.getElementById('modalObraTipo').value;
     const newEstado = document.getElementById('modalObraEstado').value;
     const newPartida = document.getElementById('modalObraPartida').value.trim();
     const modalObraMontoPartida = document.getElementById('modalObraMontoPartida');
     const newMontoPartida = modalObraMontoPartida ? parseFloat(modalObraMontoPartida.value) || 0 : 0;
+    const newMontoObra = parseFloat(document.getElementById('modalObraMontoObra').value) || 0;
+    const newMontoEquip = parseFloat(document.getElementById('modalObraMontoEquip').value) || 0;
+    const newMontoTotal = newMontoObra + newMontoEquip;
+    const newResponsable = document.getElementById('modalObraResponsable').value.trim();
+    const newProveedor = document.getElementById('modalObraProveedor').value.trim();
+    const newFechaInicio = document.getElementById('modalObraFechaInicio').value;
+    const newFechaFin = document.getElementById('modalObraFechaFin').value;
+    const newFechaFinGlobal = document.getElementById('modalObraFechaFinGlobal').value;
 
-    // Validar requerimiento obligatorio de partida presupuestaria para salir de Estudio de Factibilidad
-    if (currentStage === 'Estudio de Factibilidad' && newEstado !== 'Estudio de Factibilidad' && newEstado !== 'Suspendida') {
-      if (!u.puede_asignar_partida) {
-        alert("⛔ Acceso Denegado: Para avanzar de Estudio de Factibilidad a Proyecto se requiere el permiso específico de 'Asignar Partida Presupuestaria'.");
-        return;
-      }
-      if (!newPartida || newPartida === '' || newPartida === 'S/D' || newPartida.toUpperCase() === 'PENDIENTE') {
-        alert("⛔ No es posible avanzar la obra a '" + newEstado + "':\n\nEl sistema requiere obligatoriamente que la obra cuente con un Número de Partida Presupuestaria asignado.");
-        document.getElementById('modalObraPartida').focus();
-        return;
-      }
-      const finalMontoPart = newMontoPartida || item.monto_partida_usd || item.monto_total_usd || item.monto_obra_usd || 0;
-      if (finalMontoPart <= 0) {
-        alert("⛔ No es posible avanzar la obra a '" + newEstado + "':\n\nEl sistema requiere obligatoriamente indicar el Monto Asignado a la Partida Presupuestaria (USD).");
-        if (modalObraMontoPartida) modalObraMontoPartida.focus();
-        return;
-      }
-    }
+    // Resumen de modificaciones para auditoría
+    const changes = [];
+    if (oldNombre !== newTitle) changes.push(`Tarea: "${oldNombre}" ➔ "${newTitle}"`);
+    if (oldMontoTotal !== newMontoTotal) changes.push(`Monto: USD ${DataStore.formatUSD(oldMontoTotal)} ➔ USD ${DataStore.formatUSD(newMontoTotal)}`);
+    if ((oldResponsable || '') !== newResponsable) changes.push(`Responsable: "${oldResponsable || 'Sin asignar'}" ➔ "${newResponsable || 'Sin asignar'}"`);
+    if ((oldFechaFin || '') !== newFechaFin) changes.push(`Fecha Fin: "${oldFechaFin || 'S/D'}" ➔ "${newFechaFin || 'S/D'}"`);
+    if (oldEstado !== newEstado) changes.push(`Estado: "${oldEstado}" ➔ "${newEstado}"`);
+    if ((item.partida || '') !== newPartida) changes.push(`Partida: "${item.partida || 'Pendiente'}" ➔ "${newPartida || 'Pendiente'}"`);
 
-    if (newPartida !== (item.partida || '')) {
-      if (!u.puede_asignar_partida) {
-        alert("⛔ Acceso Denegado: No cuentas con el permiso específico para asignar o modificar el Número de Partida Presupuestaria.");
-        return;
-      }
-    }
-
-    item.nombre = document.getElementById('modalObraTitle').value;
-    item.sede = document.getElementById('modalObraSede').value;
-    item.tipo = document.getElementById('modalObraTipo').value;
+    item.nombre = newTitle;
+    item.sede = newSede;
+    item.tipo = newTipo;
     item.estado = newEstado;
     item.partida = newPartida;
     if (newPartida) {
       if (newMontoPartida > 0) {
         item.monto_partida_usd = newMontoPartida;
       } else if (!item.monto_partida_usd) {
-        item.monto_partida_usd = item.monto_total_usd || item.monto_obra_usd || 0;
+        item.monto_partida_usd = newMontoTotal;
       }
+    } else {
+      item.monto_partida_usd = newMontoPartida > 0 ? newMontoPartida : 0;
     }
+
     item.categoria = document.getElementById('modalObraCategoria').value;
     item.clasificacion = document.getElementById('modalObraClasificacion').value;
-    item.monto_obra_usd = parseFloat(document.getElementById('modalObraMontoObra').value) || 0;
-    item.monto_equipamiento_usd = parseFloat(document.getElementById('modalObraMontoEquip').value) || 0;
-    item.monto_total_usd = item.monto_obra_usd + item.monto_equipamiento_usd;
+    item.monto_obra_usd = newMontoObra;
+    item.monto_equipamiento_usd = newMontoEquip;
+    item.monto_total_usd = newMontoTotal;
     item.superficie_m2 = parseFloat(document.getElementById('modalObraM2').value) || 0;
     item.costo_usd_m2 = parseFloat(document.getElementById('modalObraUsdM2').value) || 0;
-    item.responsable = document.getElementById('modalObraResponsable').value;
-    item.proveedor = document.getElementById('modalObraProveedor').value;
-    item.fecha_inicio_etapa = document.getElementById('modalObraFechaInicio').value;
-    item.fecha_fin_etapa = document.getElementById('modalObraFechaFin').value;
-    item.fecha_fin_obra = document.getElementById('modalObraFechaFinGlobal').value;
+    item.responsable = newResponsable;
+    item.proveedor = newProveedor;
+    item.fecha_inicio_etapa = newFechaInicio;
+    item.fecha_fin_etapa = newFechaFin;
+    item.fecha_fin_obra = newFechaFinGlobal;
     item.prioridad_tecnica = parseFloat(document.getElementById('modalObraPrioridadTec').value) || 1;
     item.prioridad_medica = parseFloat(document.getElementById('modalObraPrioridadMed').value) || null;
-    
+
     const pond = DataStore.getPonderacionGlobal(item);
     item.prioridad_final = pond.valor;
     item.observaciones = document.getElementById('modalObraObservaciones').value;
 
+    // Sincronizar estructura de cashflow si existe
+    if (item.cashflow && typeof item.cashflow === 'object') {
+      item.cashflow.monto_total = newMontoTotal;
+      const sumYears = (item.cashflow.cashflow_2026 || 0) + (item.cashflow.cashflow_2027 || 0) + (item.cashflow.cashflow_2028 || 0) + (item.cashflow.cashflow_2029 || 0);
+      if (sumYears === 0 || (item.cashflow.cashflow_2027 === 0 && item.cashflow.cashflow_2028 === 0 && item.cashflow.cashflow_2029 === 0)) {
+        item.cashflow.cashflow_2026 = newMontoTotal;
+      }
+    }
+
+    if (!item.historial) item.historial = [];
+    const changeSummary = changes.length > 0 ? changes.join(' | ') : 'Edición general de campos maestros';
+    item.historial.unshift({
+      fecha: new Date().toLocaleDateString('es-AR') + ' ' + new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }),
+      usuario: `${u.nombre} (Administrador)`,
+      estado_anterior: oldEstado,
+      estado_nuevo: item.estado,
+      observaciones: `✏️ Modificación Administrativa: ${changeSummary}`
+    });
+
     DataStore.saveItem(item);
+    this.toggleAdminEditMode(false);
     this.closeObraModal();
     this.render();
-    this.showToast('Obra guardada exitosamente');
+    this.showToast(`✅ Obra "${item.id}" actualizada exitosamente por Administrador`);
   },
 
   closeObraModal() {
+    this.adminEditModeActive = false;
     document.getElementById('modalObraDetail').classList.add('hidden');
   },
 

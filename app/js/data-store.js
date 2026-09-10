@@ -734,6 +734,14 @@ const DataStore = {
     }
   },
 
+  isAdmin() {
+    return Boolean(this.currentUser && this.currentUser.rol === 'admin');
+  },
+
+  canEditObraMasterData() {
+    return this.isAdmin();
+  },
+
   canUserEditObra(item) {
     if (!this.currentUser) return false;
     if (this.currentUser.solo_lectura || this.currentUser.rol === 'visualizador') return false;
