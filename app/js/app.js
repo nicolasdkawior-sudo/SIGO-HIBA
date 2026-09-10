@@ -1064,8 +1064,12 @@ const App = {
       html += `
         <tr class="border-b border-slate-100 hover:bg-slate-50 text-xs">
           <td class="py-2.5 px-3">
+            <div class="font-bold text-slate-800 font-mono text-blue-700">${u.username || 'sin_usuario'}</div>
+            ${u.debe_cambiar_clave ? '<span class="text-[9px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold">Clave Temporal</span>' : ''}
+          </td>
+          <td class="py-2.5 px-3">
             <div class="font-bold text-slate-800">${u.nombre} ${isCurrent ? '<span class="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded ml-1 font-semibold">TÚ</span>' : ''}</div>
-            <div class="text-[11px] text-slate-400">${u.email}</div>
+            <div class="text-[11px] text-slate-400">${u.email || ''}</div>
           </td>
           <td class="py-2.5 px-3">
             <span class="px-2 py-0.5 rounded font-semibold text-[11px] ${
@@ -1080,15 +1084,21 @@ const App = {
               ${u.activo ? 'Activo' : 'Inactivo'}
             </span>
           </td>
-          <td class="py-2.5 px-3 text-right space-x-1">
-            <button onclick="App.switchUserAccount('${u.id}')" class="px-2 py-1 bg-slate-100 hover:bg-blue-100 text-slate-700 hover:text-blue-800 rounded font-medium text-[11px] transition">
+          <td class="py-2.5 px-3 text-right space-x-1 whitespace-nowrap">
+            <button type="button" onclick="App.switchUserAccount('${u.id}')" class="px-2 py-1 bg-slate-100 hover:bg-blue-100 text-slate-700 hover:text-blue-800 rounded font-medium text-[11px] transition cursor-pointer">
               Simular
             </button>
+            <button type="button" onclick="App.handleResetUserPassword('${u.id}')" title="Resetear contraseña a clave temporal" class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded font-medium text-[11px] transition cursor-pointer">
+              Reset Clave
+            </button>
             ${!isCurrent ? `
-              <button onclick="App.toggleUserActive('${u.id}')" class="px-2 py-1 rounded text-[11px] font-medium transition ${
-                u.activo ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+              <button type="button" onclick="App.toggleUserActive('${u.id}')" class="px-2 py-1 rounded text-[11px] font-medium transition cursor-pointer ${
+                u.activo ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
               }">
-                ${u.activo ? 'Dar de Baja' : 'Reactivar'}
+                ${u.activo ? 'Desactivar' : 'Activar'}
+              </button>
+              <button type="button" onclick="App.handleDeleteUser('${u.id}')" title="Eliminar usuario permanentemente" class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded font-medium text-[11px] transition cursor-pointer">
+                Eliminar
               </button>
             ` : ''}
           </td>
@@ -1100,42 +1110,91 @@ const App = {
 
   handleCreateUser(e) {
     e.preventDefault();
-    const nombre = document.getElementById('newUserName').value.trim();
-    const email = document.getElementById('newUserEmail').value.trim();
-    const sede = document.getElementById('newUserSede').value;
-    const rol = document.getElementById('newUserRol').value;
-    const puedeCrear = document.getElementById('newUserPuedeCrear').checked;
-    const puedeAvanzar = document.getElementById('newUserPuedeAvanzar').checked;
-    const puedeMedica = document.getElementById('newUserPuedeMedica').checked;
-    const puedePartida = document.getElementById('newUserPuedePartida').checked;
-    const soloLectura = document.getElementById('newUserSoloLectura').checked;
+    const nombre = document.getElementById('newUserName')?.value.trim();
+    const username = document.getElementById('newUserUsername')?.value.trim();
+    const email = document.getElementById('newUserEmail')?.value.trim();
+    const sede = document.getElementById('newUserSede')?.value;
+    const rol = document.getElementById('newUserRol')?.value;
+    const tempPassword = document.getElementById('newUserTempPassword')?.value.trim() || 'Hiba2025!';
+    const puedeCrear = document.getElementById('newUserPuedeCrear')?.checked ?? true;
+    const puedeAvanzar = document.getElementById('newUserPuedeAvanzar')?.checked ?? true;
+    const puedeMedica = document.getElementById('newUserPuedeMedica')?.checked ?? false;
+    const puedePartida = document.getElementById('newUserPuedePartida')?.checked ?? false;
+    const soloLectura = document.getElementById('newUserSoloLectura')?.checked ?? false;
 
-    if (!nombre || !email) {
-      alert("Por favor completa nombre y correo Gmail");
+    if (!nombre || !username) {
+      alert("Por favor completa al menos el Nombre y el Usuario (Login).");
       return;
     }
 
-    DataStore.addUser({
-      nombre,
-      email,
-      sede,
-      rol,
-      puede_crear: puedeCrear,
-      puede_avanzar: puedeAvanzar,
-      puede_priorizar_medica: puedeMedica,
-      puede_asignar_partida: puedePartida,
-      solo_lectura: soloLectura
-    });
+    try {
+      const result = DataStore.addUser({
+        nombre,
+        username,
+        email,
+        sede,
+        rol,
+        tempPassword,
+        puede_crear: puedeCrear,
+        puede_avanzar: puedeAvanzar,
+        puede_priorizar_medica: puedeMedica,
+        puede_asignar_partida: puedePartida,
+        solo_lectura: soloLectura
+      });
 
-    document.getElementById('newUserName').value = '';
-    document.getElementById('newUserEmail').value = '';
-    this.renderUsersList();
-    this.showToast(`Usuario ${nombre} registrado con éxito 🎉`);
+      document.getElementById('newUserName').value = '';
+      document.getElementById('newUserUsername').value = '';
+      document.getElementById('newUserEmail').value = '';
+      this.generateRandomTempPassword();
+
+      this.renderUsersList();
+      this.renderLoginScreenProfiles();
+      this.showToast(`Usuario "${username}" creado. Clave temporal: ${result.tempPassword}`);
+      alert(`✅ Usuario "${result.user.nombre}" creado con éxito.\n\n• Usuario: ${result.user.username}\n• Clave temporal: ${result.tempPassword}\n\nEn su primer inicio de sesión, el sistema le solicitará cambiar la contraseña.`);
+    } catch (err) {
+      alert("Error al dar de alta usuario: " + err.message);
+    }
+  },
+
+  handleDeleteUser(userId) {
+    const user = DataStore.users.find(x => x.id === userId);
+    if (!user) return;
+
+    if (confirm(`¿Estás seguro de ELIMINAR PERMANENTEMENTE al usuario "${user.nombre}" (@${user.username})?\n\nEsta acción borrará definitivamente su registro del sistema.`)) {
+      const res = DataStore.deleteUser(userId);
+      if (res.success) {
+        this.renderUsersList();
+        this.renderLoginScreenProfiles();
+        this.showToast(res.msg);
+      } else {
+        alert(res.msg);
+      }
+    }
+  },
+
+  handleResetUserPassword(userId) {
+    const user = DataStore.users.find(x => x.id === userId);
+    if (!user) return;
+
+    const res = DataStore.resetUserPassword(userId);
+    if (res.success) {
+      this.renderUsersList();
+      alert(`🔑 Contraseña restablecida para ${user.nombre} (@${user.username}):\n\n• Nueva Clave Temporal: ${res.tempPassword}\n\nEl usuario deberá ingresar con esta clave temporal y se le solicitará actualizarla.`);
+      this.showToast(`Clave temporal generada: ${res.tempPassword}`);
+    }
+  },
+
+  generateRandomTempPassword() {
+    const pwd = 'Hiba' + Math.floor(1000 + Math.random() * 9000) + '!';
+    const input = document.getElementById('newUserTempPassword');
+    if (input) input.value = pwd;
+    return pwd;
   },
 
   toggleUserActive(userId) {
     const activo = DataStore.toggleUserStatus(userId);
     this.renderUsersList();
+    this.renderLoginScreenProfiles();
     this.showToast(activo ? "Usuario reactivado" : "Usuario dado de baja");
   },
 
@@ -1184,102 +1243,77 @@ const App = {
   },
 
   renderLoginScreenProfiles() {
-    const container = document.getElementById('loginScreenDemoUsers');
     const select = document.getElementById('selectAuthorizedAccount');
+    if (!select) return;
+
     const users = DataStore.users || [];
+    select.innerHTML = '<option value="">-- Seleccionar cuenta para autocompletar --</option>' +
+      users.map(u => `<option value="${u.username}">${u.nombre} (Usuario: ${u.username}) - Rol: ${u.rol.toUpperCase()}</option>`).join('');
+  },
 
-    if (select) {
-      select.innerHTML = '<option value="">-- Selecciona una cuenta autorizada del desplegable --</option>' +
-        users.map(u => `<option value="${u.email}">${u.nombre} (${u.email}) - Rol: ${u.rol.toUpperCase()}</option>`).join('');
-    }
-
-    if (container) {
-      container.innerHTML = users.map(u => `
-        <button type="button" onclick="App.quickSelectUser('${u.email}')" 
-                class="text-[11px] bg-slate-100 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 text-slate-700 p-2.5 rounded-xl border border-slate-200 transition text-left flex flex-col space-y-0.5 w-full cursor-pointer">
-          <div class="flex items-center space-x-1.5">
-            <span class="w-2 h-2 rounded-full shrink-0 ${u.rol === 'admin' ? 'bg-red-500' : (u.rol === 'direccion_medica' ? 'bg-purple-500' : 'bg-blue-500')}"></span>
-            <span class="font-bold text-slate-800 text-xs">${u.nombre}</span>
-            <span class="text-[10px] text-slate-400">(${u.rol})</span>
-          </div>
-          <div class="text-[11px] text-blue-600 font-mono pl-3.5">${u.email}</div>
-        </button>
-      `).join('');
+  handleQuickSelectAccount(username) {
+    if (!username) return;
+    const uInput = document.getElementById('inputLoginUsername');
+    const pInput = document.getElementById('inputLoginPassword');
+    if (uInput) uInput.value = username;
+    if (pInput) {
+      pInput.value = 'Admin2025!';
+      if (typeof pInput.focus === 'function') pInput.focus();
     }
   },
 
-  handleSelectAuthorizedAccount(email) {
-    if (!email) return;
-    const input = document.getElementById('inputLoginScreenEmail');
-    if (input) input.value = email;
-    this.login(email);
-  },
-
-  quickSelectUser(email) {
-    const input = document.getElementById('inputLoginScreenEmail');
-    if (input) input.value = email;
-    this.login(email);
-  },
-
-  openRegisterAdminModal() {
-    const modal = document.getElementById('modalRegisterAdmin');
-    if (modal) {
-      modal.style.setProperty('display', 'flex', 'important');
-      modal.classList.remove('hidden');
-    }
-    if (window.lucide) lucide.createIcons();
-  },
-
-  closeRegisterAdminModal() {
-    const modal = document.getElementById('modalRegisterAdmin');
-    if (modal) {
-      modal.style.setProperty('display', 'none', 'important');
-      modal.classList.add('hidden');
+  quickFillAdminLogin() {
+    const uInput = document.getElementById('inputLoginUsername');
+    const pInput = document.getElementById('inputLoginPassword');
+    if (uInput) uInput.value = 'admin';
+    if (pInput) {
+      pInput.value = 'Admin2025!';
+      if (typeof pInput.focus === 'function') pInput.focus();
     }
   },
 
-  handleRegisterAdminSubmit() {
-    const name = document.getElementById('inputRegisterAdminName')?.value.trim();
-    const email = document.getElementById('inputRegisterAdminEmail')?.value.trim();
+  togglePasswordVisibility(inputId) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    input.type = input.type === 'password' ? 'text' : 'password';
+  },
 
-    if (!name || !email || !email.includes('@')) {
-      alert('Por favor ingresa tu nombre y un correo de Gmail válido.');
+  handleLoginSubmit() {
+    const uInput = document.getElementById('inputLoginUsername');
+    const pInput = document.getElementById('inputLoginPassword');
+    const errBox = document.getElementById('loginErrorMessage');
+    const errText = document.getElementById('loginErrorText');
+
+    if (errBox) errBox.classList.add('hidden');
+
+    const username = uInput?.value.trim();
+    const password = pInput?.value;
+
+    if (!username || !password) {
+      if (errBox && errText) {
+        errText.innerText = 'Por favor ingresa usuario y contraseña.';
+        errBox.classList.remove('hidden');
+      }
       return;
     }
 
-    const newAdmin = DataStore.addUser({
-      nombre: name,
-      email: email,
-      sede: 'Todas',
-      rol: 'admin',
-      activo: true,
-      puede_crear: true,
-      puede_avanzar: true,
-      puede_priorizar_medica: true,
-      puede_asignar_partida: true,
-      solo_lectura: false
-    });
-
-    this.closeRegisterAdminModal();
-    this.login(email);
-    this.showToast(`¡Cuenta ${email} registrada y autenticada como Administrador!`);
-  },
-
-  login(email) {
-    const errBox = document.getElementById('loginErrorMessage');
-    const errText = document.getElementById('loginErrorText');
-    if (errBox) errBox.classList.add('hidden');
-
-    const res = DataStore.loginWithGoogle(email);
+    const res = DataStore.authenticate(username, password);
     if (res.success) {
-      if (DataStore.currentUser && DataStore.currentUser.sede !== 'Todas') {
-        this.filters.sede = DataStore.currentUser.sede;
+      if (errBox) errBox.classList.add('hidden');
+
+      if (res.mustChangePassword) {
+        // Obligar cambio de contraseña temporal
+        this.openChangePasswordModal();
+      } else {
+        if (DataStore.currentUser && DataStore.currentUser.sede !== 'Todas') {
+          this.filters.sede = DataStore.currentUser.sede;
+        }
+        this.checkAuth();
+        this.updateUserUI();
+        this.render();
+        this.showToast(`¡Bienvenido/a ${res.user.nombre}!`);
+        if (window.lucide) lucide.createIcons();
       }
-      this.checkAuth();
-      this.updateUserUI();
-      this.render();
-      this.showToast(`¡Bienvenido/a ${res.user.nombre}!`);
-      if (window.lucide) lucide.createIcons();
     } else {
       if (errBox && errText) {
         errText.innerText = res.msg;
@@ -1291,18 +1325,75 @@ const App = {
     }
   },
 
-  loginWithGooglePrompt() {
-    if (typeof SupabaseManager !== 'undefined' && SupabaseManager.isConfigured) {
-      SupabaseManager.signInWithGoogle();
-    } else {
-      this.openGoogleLoginModal();
+  openChangePasswordModal() {
+    const modal = document.getElementById('modalChangePassword');
+    const err = document.getElementById('modalChangePasswordError');
+    if (err) err.classList.add('hidden');
+    if (modal) {
+      modal.style.setProperty('display', 'flex', 'important');
+      modal.classList.remove('hidden');
+    }
+    if (window.lucide) lucide.createIcons();
+  },
+
+  closeChangePasswordModal() {
+    const modal = document.getElementById('modalChangePassword');
+    if (modal) {
+      modal.style.setProperty('display', 'none', 'important');
+      modal.classList.add('hidden');
     }
   },
 
-  handleLoginEmailSubmit() {
-    const input = document.getElementById('inputLoginScreenEmail');
-    if (!input || !input.value.trim()) return;
-    this.login(input.value.trim());
+  handleChangePasswordSubmit() {
+    const newPwd = document.getElementById('inputNewPassword')?.value;
+    const confirmPwd = document.getElementById('inputConfirmNewPassword')?.value;
+    const errBox = document.getElementById('modalChangePasswordError');
+    const errText = document.getElementById('modalChangePasswordErrorText');
+
+    if (errBox) errBox.classList.add('hidden');
+
+    if (!newPwd || newPwd.length < 6) {
+      if (errBox && errText) {
+        errText.innerText = 'La contraseña debe tener al menos 6 caracteres.';
+        errBox.classList.remove('hidden');
+      }
+      return;
+    }
+
+    if (newPwd !== confirmPwd) {
+      if (errBox && errText) {
+        errText.innerText = 'Las contraseñas no coinciden. Verifica nuevamente.';
+        errBox.classList.remove('hidden');
+      }
+      return;
+    }
+
+    if (!DataStore.currentUser) {
+      alert('Error de sesión. Vuelve a iniciar sesión.');
+      this.closeChangePasswordModal();
+      this.checkAuth();
+      return;
+    }
+
+    const res = DataStore.changePassword(DataStore.currentUser.id, newPwd);
+    if (res.success) {
+      this.closeChangePasswordModal();
+      if (DataStore.currentUser && DataStore.currentUser.sede !== 'Todas') {
+        this.filters.sede = DataStore.currentUser.sede;
+      }
+      this.checkAuth();
+      this.updateUserUI();
+      this.render();
+      this.showToast('¡Contraseña actualizada exitosamente! Bienvenido/a.');
+      if (window.lucide) lucide.createIcons();
+    } else {
+      if (errBox && errText) {
+        errText.innerText = res.msg;
+        errBox.classList.remove('hidden');
+      } else {
+        alert(res.msg);
+      }
+    }
   },
 
   logout() {
@@ -1310,74 +1401,6 @@ const App = {
     this.checkAuth();
     this.showToast('Has cerrado sesión correctamente.');
     if (window.lucide) lucide.createIcons();
-  },
-
-  openGoogleLoginModal() {
-    const err = document.getElementById('modalGoogleLoginError');
-    if (err) err.classList.add('hidden');
-    const modal = document.getElementById('modalGoogleLogin');
-    if (modal) {
-      modal.style.setProperty('display', 'flex', 'important');
-      modal.classList.remove('hidden');
-    }
-    if (window.lucide) lucide.createIcons();
-  },
-
-  closeGoogleLoginModal() {
-    const modal = document.getElementById('modalGoogleLogin');
-    if (modal) {
-      modal.style.setProperty('display', 'none', 'important');
-      modal.classList.add('hidden');
-    }
-  },
-
-  handleGoogleLoginSubmit() {
-    const email = document.getElementById('inputGoogleEmail')?.value.trim();
-    const pwd = document.getElementById('inputGooglePassword')?.value.trim() || '';
-    const errBox = document.getElementById('modalGoogleLoginError');
-    const errText = document.getElementById('modalGoogleLoginErrorText');
-
-    if (!email || !email.includes('@')) {
-      if (errBox && errText) {
-        errText.innerText = 'Por favor ingresa un correo de Gmail válido';
-        errBox.classList.remove('hidden');
-      } else {
-        alert('Por favor ingresa un correo de Gmail válido');
-      }
-      return;
-    }
-
-    if (!pwd) {
-      if (errBox && errText) {
-        errText.innerText = 'Por favor ingresa la contraseña de tu cuenta de Google';
-        errBox.classList.remove('hidden');
-      } else {
-        alert('Por favor ingresa la contraseña de tu cuenta de Google');
-      }
-      return;
-    }
-
-    const res = DataStore.loginWithGoogle(email);
-    if (res.success) {
-      if (errBox) errBox.classList.add('hidden');
-      if (DataStore.currentUser && DataStore.currentUser.sede !== 'Todas') {
-        this.filters.sede = DataStore.currentUser.sede;
-      }
-      this.closeGoogleLoginModal();
-      this.checkAuth();
-      this.updateUserUI();
-      this.render();
-      this.showToast(`¡Autenticación con Google exitosa! Bienvenido/a ${res.user.nombre}`);
-      if (window.lucide) lucide.createIcons();
-    } else {
-      if (errBox && errText) {
-        errText.innerText = res.msg;
-        errBox.classList.remove('hidden');
-      } else {
-        alert(res.msg);
-      }
-      if (window.lucide) lucide.createIcons();
-    }
   },
 
   updateUserUI() {

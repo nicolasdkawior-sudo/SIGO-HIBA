@@ -20,7 +20,7 @@
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col">
 
-  <!-- ================= PANTALLA DE ACCESO / LOGIN GATE ================= -->
+  <!-- ================= PANTALLA DE ACCESO / LOGIN CORPORATIVO ================= -->
   <div id="loginScreen" class="fixed inset-0 z-50 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 flex items-center justify-center p-4 overflow-y-auto">
     <div class="max-w-md w-full bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden my-auto">
       <!-- Header Banner -->
@@ -36,164 +36,118 @@
       <!-- Body -->
       <div class="p-6 space-y-5">
         <div class="text-center">
-          <h2 class="text-base font-bold text-slate-800">Portal de Acceso al Sistema</h2>
-          <p class="text-xs text-slate-500 mt-1">Ingresa con tu cuenta de correo autorizada para acceder al tablero de gestión de obras.</p>
-        </div>
-
-        <!-- Google Login Button -->
-        <button type="button" onclick="App.loginWithGooglePrompt()" class="w-full bg-white hover:bg-slate-50 text-slate-700 font-bold text-sm py-3 px-4 rounded-xl border border-slate-300 shadow-xs flex items-center justify-center space-x-3 transition group hover:border-slate-400 cursor-pointer">
-          <svg class="w-5 h-5" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
-            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24z"/>
-            <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
-            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-          </svg>
-          <span class="group-hover:text-slate-900">Continuar con Gmail / Google</span>
-        </button>
-
-        <div class="relative flex items-center justify-center">
-          <div class="border-t border-slate-200 w-full"></div>
-          <span class="bg-white px-3 text-[11px] text-slate-400 uppercase font-semibold tracking-wider">o con tu Gmail</span>
+          <h2 class="text-base font-bold text-slate-800">Iniciar Sesión</h2>
+          <p class="text-xs text-slate-500 mt-1">Ingresa tus credenciales autorizadas para acceder a la plataforma.</p>
         </div>
 
         <!-- Banner de Error de Acceso Denegado -->
-        <div id="loginErrorMessage" class="hidden bg-red-50 border border-red-200 text-red-700 text-xs p-3.5 rounded-xl flex items-start space-x-2.5">
-          <i data-lucide="shield-alert" class="w-5 h-5 text-red-600 shrink-0 mt-0.5"></i>
+        <div id="loginErrorMessage" class="hidden bg-rose-50 border border-rose-200 text-rose-700 text-xs p-3.5 rounded-xl flex items-start space-x-2.5">
+          <i data-lucide="shield-alert" class="w-5 h-5 text-rose-600 shrink-0 mt-0.5"></i>
           <div>
-            <div class="font-bold text-red-800">Acceso Denegado</div>
-            <div id="loginErrorText" class="text-red-600 text-[11px] mt-0.5 leading-snug"></div>
+            <div class="font-bold text-rose-800">Error de Autenticación</div>
+            <div id="loginErrorText" class="text-rose-600 text-[11px] mt-0.5 leading-snug"></div>
           </div>
         </div>
 
-        <!-- Form Email Directo -->
-        <form onsubmit="event.preventDefault(); App.handleLoginEmailSubmit();" class="space-y-3">
+        <!-- Formulario de Login -->
+        <form onsubmit="event.preventDefault(); App.handleLoginSubmit();" class="space-y-4">
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Correo Electrónico (Gmail)</label>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Usuario o Correo</label>
             <div class="relative">
-              <input type="email" id="inputLoginScreenEmail" required placeholder="tu.nombre@gmail.com" 
+              <input type="text" id="inputLoginUsername" required placeholder="admin o tu.usuario" 
                      class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-medium pl-9 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
-              <i data-lucide="mail" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+              <i data-lucide="user" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
             </div>
           </div>
-          <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-md transition flex items-center justify-center space-x-2 cursor-pointer">
+
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-bold text-slate-700">Contraseña</label>
+              <span class="text-[10px] text-slate-400 font-normal">Cifrado SHA-256</span>
+            </div>
+            <div class="relative">
+              <input type="password" id="inputLoginPassword" required placeholder="••••••••" 
+                     class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-medium pl-9 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+              <i data-lucide="lock" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+              <button type="button" onclick="App.togglePasswordVisibility('inputLoginPassword')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer">
+                <i data-lucide="eye" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-3 px-4 rounded-xl shadow-md transition flex items-center justify-center space-x-2 cursor-pointer mt-2">
             <span>Ingresar al Sistema</span>
             <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
           </button>
         </form>
 
-        <!-- Desplegable de Cuentas Autorizadas -->
-        <div class="space-y-1.5 pt-1">
-          <label class="block text-xs font-bold text-slate-700">O elige tu cuenta del desplegable:</label>
-          <select id="selectAuthorizedAccount" onchange="App.handleSelectAuthorizedAccount(this.value)" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800 font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        <!-- Tarjeta Informativa de Acceso Maestro -->
+        <div class="bg-blue-50/70 border border-blue-200/80 p-3 rounded-2xl flex items-center justify-between gap-3 text-xs">
+          <div class="space-y-0.5">
+            <div class="font-bold text-blue-900 text-[11px] flex items-center space-x-1.5">
+              <i data-lucide="key" class="w-3.5 h-3.5 text-blue-600"></i>
+              <span>Acceso Inicial Administrador</span>
+            </div>
+            <div class="text-[10px] text-blue-700">
+              Usuario: <strong class="font-mono bg-blue-100 px-1 py-0.2 rounded text-blue-900">admin</strong> | Clave: <strong class="font-mono bg-blue-100 px-1 py-0.2 rounded text-blue-900">Admin2025!</strong>
+            </div>
+          </div>
+          <button type="button" onclick="App.quickFillAdminLogin()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg shadow-xs transition cursor-pointer shrink-0">
+            Autocompletar
+          </button>
+        </div>
+
+        <!-- Selector de cuentas registradas -->
+        <div class="pt-2 border-t border-slate-100">
+          <label class="block text-[11px] font-bold text-slate-500 mb-1.5">O elige una cuenta para autocompletar:</label>
+          <select id="selectAuthorizedAccount" onchange="App.handleQuickSelectAccount(this.value)" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800 font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none">
             <option value="">-- Seleccionar cuenta autorizada --</option>
           </select>
         </div>
 
-        <!-- Habilitar Gmail Personal como Administrador -->
-        <div class="bg-blue-50/80 border border-blue-200 p-3 rounded-2xl flex items-center justify-between gap-3">
-          <div class="text-[11px] text-blue-900 leading-tight">
-            <span class="font-bold block">¿Eres Administrador y usas otro Gmail?</span>
-            <span class="text-blue-600 text-[10px]">Da de alta tu Gmail personal en 1 clic</span>
-          </div>
-          <button type="button" onclick="App.openRegisterAdminModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] px-3 py-1.5 rounded-xl shadow-xs transition whitespace-nowrap cursor-pointer">
-            + Habilitar mi Gmail
-          </button>
-        </div>
-
-        <!-- Accesos directos de evaluación / Roles demo -->
-        <div class="pt-2 border-t border-slate-100">
-          <p class="text-[11px] text-slate-400 font-semibold mb-2 flex items-center justify-between">
-            <span>Perfiles autorizados (demo):</span>
-            <span class="text-[10px] text-blue-600 font-bold">Clic para autocompletar</span>
-          </p>
-          <div id="loginScreenDemoUsers" class="flex flex-col gap-1.5 max-h-36 overflow-y-auto pr-1"></div>
-        </div>
-
         <div class="text-center text-[10px] text-slate-400 pt-1">
-          🔒 Acceso restringido al personal del Hospital Italiano. Permisos auditados por la Dirección General.
+          🔒 Acceso exclusivo para personal autorizado del Hospital Italiano de Buenos Aires.
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ================= MODAL: LOGIN GOOGLE (GMAIL) ================= -->
-  <div id="modalGoogleLogin" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+  <!-- ================= MODAL: CAMBIO OBLIGATORIO DE CONTRASEÑA ================= -->
+  <div id="modalChangePassword" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
     <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden border border-slate-100 text-xs">
       <div class="bg-slate-900 text-white px-5 py-3.5 flex items-center justify-between font-bold">
         <div class="flex items-center space-x-2">
-          <svg class="w-4 h-4" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
-            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24z"/>
-            <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
-            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-          </svg>
-          <span>Acceder con Google</span>
+          <i data-lucide="shield-check" class="w-4 h-4 text-amber-400"></i>
+          <span>Actualización Obligatoria</span>
         </div>
-        <button onclick="App.closeGoogleLoginModal()"><i data-lucide="x" class="w-4 h-4"></i></button>
       </div>
-      <form onsubmit="event.preventDefault(); App.handleGoogleLoginSubmit();" class="p-6 space-y-4">
+      <form onsubmit="event.preventDefault(); App.handleChangePasswordSubmit();" class="p-6 space-y-4">
         <div class="text-center">
-          <h4 class="font-bold text-slate-800 text-sm">Autenticación de Cuenta Google</h4>
-          <p class="text-slate-500 mt-1 text-[11px]">Ingresa con tu correo de Gmail para validar tu identidad contra la lista de usuarios autorizados.</p>
+          <div class="w-10 h-10 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-2 border border-amber-200">
+            <i data-lucide="key-round" class="w-5 h-5"></i>
+          </div>
+          <h4 class="font-bold text-slate-800 text-sm">Establece tu Contraseña Definitiva</h4>
+          <p class="text-slate-500 mt-1 text-[11px]">Es tu primer inicio de sesión con clave temporal. Por seguridad, debes crear tu contraseña personal (mínimo 6 caracteres).</p>
         </div>
 
-        <div id="modalGoogleLoginError" class="hidden bg-red-50 border border-red-200 text-red-700 text-[11px] p-3 rounded-xl flex items-start space-x-2">
-          <i data-lucide="shield-alert" class="w-4 h-4 text-red-600 shrink-0 mt-0.5"></i>
-          <span id="modalGoogleLoginErrorText" class="font-medium"></span>
+        <div id="modalChangePasswordError" class="hidden bg-rose-50 border border-rose-200 text-rose-700 text-[11px] p-3 rounded-xl flex items-start space-x-2">
+          <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-600 shrink-0 mt-0.5"></i>
+          <span id="modalChangePasswordErrorText" class="font-medium"></span>
         </div>
 
         <div class="space-y-3">
           <div>
-            <label class="block font-semibold text-slate-700 mb-1">Correo Electrónico (Gmail)</label>
-            <input type="email" id="inputGoogleEmail" required placeholder="tu.nombre@gmail.com" class="w-full border border-slate-300 rounded-lg p-2.5 font-medium bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            <label class="block font-semibold text-slate-700 mb-1">Nueva Contraseña</label>
+            <input type="password" id="inputNewPassword" required minlength="6" placeholder="Mínimo 6 caracteres" class="w-full border border-slate-300 rounded-lg p-2.5 font-medium bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
           </div>
           <div>
-            <label class="block font-semibold text-slate-700 mb-1">Contraseña de tu cuenta</label>
-            <input type="password" id="inputGooglePassword" required placeholder="••••••••" class="w-full border border-slate-300 rounded-lg p-2.5 font-medium bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-          </div>
-        </div>
-
-        <div class="text-[10px] text-slate-400 bg-slate-50 p-2.5 rounded-lg border border-slate-200 leading-snug">
-          🔒 Verificación de seguridad: Solo las cuentas previamente registradas por el Administrador pueden acceder a los datos de obras.
-        </div>
-
-        <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition cursor-pointer flex items-center justify-center space-x-2">
-          <span>Verificar y Entrar</span>
-          <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-        </button>
-      </form>
-    </div>
-  </div>
-
-  <!-- ================= MODAL: REGISTRAR GMAIL DE ADMINISTRADOR ================= -->
-  <div id="modalRegisterAdmin" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
-    <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden border border-slate-100 text-xs">
-      <div class="bg-slate-900 text-white px-5 py-3.5 flex items-center justify-between font-bold">
-        <div class="flex items-center space-x-2">
-          <i data-lucide="shield-check" class="w-4 h-4 text-blue-400"></i>
-          <span>Alta de Administrador</span>
-        </div>
-        <button onclick="App.closeRegisterAdminModal()"><i data-lucide="x" class="w-4 h-4"></i></button>
-      </div>
-      <form onsubmit="event.preventDefault(); App.handleRegisterAdminSubmit();" class="p-6 space-y-4">
-        <div>
-          <h4 class="font-bold text-slate-800 text-sm">Habilitar tu Gmail como Administrador</h4>
-          <p class="text-slate-500 mt-1 text-[11px]">Registra tu cuenta de Gmail personal como Administrador General de SIGO con acceso total a todas las sedes.</p>
-        </div>
-
-        <div class="space-y-3">
-          <div>
-            <label class="block font-semibold text-slate-700 mb-1">Nombre Completo</label>
-            <input type="text" id="inputRegisterAdminName" required placeholder="Ej: Nicolás Kawior" class="w-full border border-slate-300 rounded-lg p-2.5 font-medium bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-          </div>
-          <div>
-            <label class="block font-semibold text-slate-700 mb-1">Tu Correo de Gmail</label>
-            <input type="email" id="inputRegisterAdminEmail" required placeholder="tu.cuenta@gmail.com" class="w-full border border-slate-300 rounded-lg p-2.5 font-medium bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            <label class="block font-semibold text-slate-700 mb-1">Confirmar Nueva Contraseña</label>
+            <input type="password" id="inputConfirmNewPassword" required minlength="6" placeholder="Repite tu contraseña" class="w-full border border-slate-300 rounded-lg p-2.5 font-medium bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
           </div>
         </div>
 
         <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition cursor-pointer flex items-center justify-center space-x-2">
-          <span>Registrar y Entrar como Admin</span>
+          <span>Guardar y Acceder al Sistema</span>
           <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
         </button>
       </form>
@@ -832,23 +786,27 @@
         <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
           <div class="font-bold text-slate-800 mb-3 flex items-center space-x-1.5">
             <i data-lucide="user-plus" class="w-4 h-4 text-blue-600"></i>
-            <span>Dar de Alta Nuevo Usuario con Gmail</span>
+            <span>Dar de Alta Nuevo Usuario con Clave Temporal</span>
           </div>
           <form onsubmit="App.handleCreateUser(event)" class="space-y-3">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label class="block font-semibold text-slate-600 mb-1">Nombre Completo</label>
                 <input type="text" id="newUserName" placeholder="Ej: Arq. Laura Benitez" required class="w-full border border-slate-300 rounded-lg p-2 bg-white">
               </div>
               <div>
-                <label class="block font-semibold text-slate-600 mb-1">Correo Electrónico (Gmail)</label>
-                <input type="email" id="newUserEmail" placeholder="usuario@gmail.com" required class="w-full border border-slate-300 rounded-lg p-2 bg-white">
+                <label class="block font-semibold text-slate-600 mb-1">Usuario (para Iniciar Sesión)</label>
+                <input type="text" id="newUserUsername" placeholder="ej: laura.benitez" required class="w-full border border-slate-300 rounded-lg p-2 bg-white font-mono text-blue-700 font-bold">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-600 mb-1">Correo Electrónico</label>
+                <input type="email" id="newUserEmail" placeholder="laura@hospitalitaliano.org.ar" required class="w-full border border-slate-300 rounded-lg p-2 bg-white">
               </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label class="block font-semibold text-slate-600 mb-1">Sede Asignada (Restricción Operativa)</label>
+                <label class="block font-semibold text-slate-600 mb-1">Sede Asignada</label>
                 <select id="newUserSede" class="w-full border border-slate-300 rounded-lg p-2 bg-white font-medium">
                   <option value="Central">Central (Solo Central)</option>
                   <option value="San Justo">San Justo (Solo San Justo)</option>
@@ -865,6 +823,13 @@
                   <option value="visualizador">Visualizador (Solo Lectura)</option>
                   <option value="admin">Administrador General</option>
                 </select>
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-600 mb-1 flex items-center justify-between">
+                  <span>Clave Temporal</span>
+                  <button type="button" onclick="App.generateRandomTempPassword()" class="text-[10px] text-blue-600 hover:underline font-bold">🎲 Generar</button>
+                </label>
+                <input type="text" id="newUserTempPassword" value="Hiba2025!" required class="w-full border border-slate-300 rounded-lg p-2 bg-white font-mono font-bold text-slate-800">
               </div>
             </div>
 
@@ -895,21 +860,25 @@
             </div>
 
             <div class="text-right pt-2">
-              <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-lg transition shadow-2xs">
-                + Guardar y Dar de Alta
+              <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-lg transition shadow-2xs cursor-pointer">
+                + Guardar y Dar de Alta Usuario
               </button>
             </div>
           </form>
         </div>
 
         <div>
-          <div class="font-bold text-slate-800 mb-2">Usuarios Registrados en la Plataforma</div>
+          <div class="font-bold text-slate-800 mb-2 flex items-center justify-between">
+            <span>Usuarios Registrados en la Plataforma</span>
+            <span class="text-[11px] text-slate-400 font-normal">Gestión de credenciales y depuración</span>
+          </div>
           <div class="border border-slate-200 rounded-xl overflow-hidden">
             <table class="w-full text-left">
               <thead class="bg-slate-100 font-semibold text-slate-600 border-b border-slate-200">
                 <tr>
-                  <th class="py-2.5 px-3">Usuario</th>
-                  <th class="py-2.5 px-3">Sede Asignada</th>
+                  <th class="py-2.5 px-3">Usuario (Login)</th>
+                  <th class="py-2.5 px-3">Nombre & Correo</th>
+                  <th class="py-2.5 px-3">Sede</th>
                   <th class="py-2.5 px-3">Rol</th>
                   <th class="py-2.5 px-3">Estado</th>
                   <th class="py-2.5 px-3 text-right">Acciones</th>

@@ -1,7 +1,98 @@
 // ==============================================================================
 // GESTOR DE DATOS, ESTADOS, USUARIOS Y WORKFLOW SECUENCIAL - SIGO HIBA v2.1
-// Formato USD estricto, Carga de Factibilidad, Asignación de Partida y Ponderación
+// Autenticación Segura con SHA-256 + Salt, Claves Temporales y Eliminación de Usuarios
 // ==============================================================================
+
+// Implementación pura y sincrónica de SHA-256 (estándar FIPS 180-4)
+function sha256(ascii) {
+  function rightRotate(value, amount) {
+    return (value >>> amount) | (value << (32 - amount));
+  }
+  const mathPow = Math.pow;
+  const maxWord = mathPow(2, 32);
+  const lengthProperty = 'length';
+  let i, j;
+  let result = '';
+  const words = [];
+  const asciiBitLength = ascii[lengthProperty] * 8;
+  let hash = sha256.h = sha256.h || [];
+  const k = sha256.k = sha256.k || [];
+  let primeCounter = k[lengthProperty];
+
+  const isComposite = {};
+  for (let candidate = 2; primeCounter < 64; candidate++) {
+    if (!isComposite[candidate]) {
+      for (i = 0; i < 313; i += candidate) {
+        isComposite[i] = candidate;
+      }
+      hash[primeCounter] = (mathPow(candidate, .5) * maxWord) | 0;
+      k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;
+    }
+  }
+
+  ascii += '\x80';
+  while (ascii[lengthProperty] % 64 - 56) ascii += '\x00';
+  for (i = 0; i < ascii[lengthProperty]; i++) {
+    j = ascii.charCodeAt(i);
+    if (j >> 8) return;
+    words[i >> 2] |= j << ((3 - i) % 4) * 8;
+  }
+  words[words[lengthProperty]] = ((asciiBitLength / maxWord) | 0);
+  words[words[lengthProperty]] = (asciiBitLength) | 0;
+
+  for (j = 0; j < words[lengthProperty];) {
+    const w = words.slice(j, j += 16);
+    const oldHash = hash;
+    hash = hash.slice(0, 8);
+
+    for (i = 0; i < 64; i++) {
+      const i2 = i + j;
+      const w15 = w[i - 15], w2 = w[i - 2];
+      const a = hash[0], e = hash[4];
+      const temp1 = hash[7]
+        + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))
+        + ((e & hash[5]) ^ ((~e) & hash[6]))
+        + k[i]
+        + (w[i] = (i < 16) ? w[i] : (
+            w[i - 16]
+            + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))
+            + w[i - 7]
+            + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))
+          ) | 0
+        );
+      const temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))
+        + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+
+      hash = [(temp1 + temp2) | 0].concat(hash);
+      hash[4] = (hash[4] + temp1) | 0;
+    }
+
+    for (i = 0; i < 8; i++) {
+      hash[i] = (hash[i] + oldHash[i]) | 0;
+    }
+  }
+
+  for (i = 0; i < 8; i++) {
+    for (j = 3; j + 1; j--) {
+      const b = (hash[i] >> (j * 8)) & 255;
+      result += ((b < 16) ? 0 : '') + b.toString(16);
+    }
+  }
+  return result;
+}
+
+function hashPassword(password, salt) {
+  return sha256(salt + '::' + password.trim());
+}
+
+function generateSalt(len = 16) {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let s = '';
+  for (let i = 0; i < len; i++) {
+    s += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return s;
+}
 
 const STAGES_SEQUENCE = [
   'Estudio de Factibilidad',
@@ -22,11 +113,36 @@ const DEFAULT_STAGE_DAYS = {
   'Obras en Curso': 120
 };
 
+// Clave por defecto para cuentas iniciales: Admin2025!
+const DEFAULT_ADMIN_HASH = 'b0e2fe5af4bea016b2486146988b0ea99788896f6cfa7d5fff684463c7ca6989';
+const DEFAULT_SALT = 'salt_admin_hiba';
+
 const DEFAULT_USERS = [
   {
-    id: 'usr-admin-nicolas',
+    id: 'usr-admin',
+    username: 'admin',
+    nombre: 'Dirección General (Admin)',
+    email: 'admin.obras@hospitalitaliano.org.ar',
+    salt: DEFAULT_SALT,
+    password_hash: DEFAULT_ADMIN_HASH,
+    debe_cambiar_clave: false,
+    sede: 'Todas',
+    rol: 'admin',
+    activo: true,
+    puede_crear: true,
+    puede_avanzar: true,
+    puede_priorizar_medica: true,
+    puede_asignar_partida: true,
+    solo_lectura: false
+  },
+  {
+    id: 'usr-nicolas',
+    username: 'nicolas',
     nombre: 'Nicolas Kawior (Admin)',
     email: 'nicolasdkawior@gmail.com',
+    salt: DEFAULT_SALT,
+    password_hash: DEFAULT_ADMIN_HASH,
+    debe_cambiar_clave: false,
     sede: 'Todas',
     rol: 'admin',
     activo: true,
@@ -37,48 +153,13 @@ const DEFAULT_USERS = [
     solo_lectura: false
   },
   {
-    id: 'usr-admin-nicolas-dot',
-    nombre: 'Nicolas Kawior (Admin)',
-    email: 'nicolas.kawior@gmail.com',
-    sede: 'Todas',
-    rol: 'admin',
-    activo: true,
-    puede_crear: true,
-    puede_avanzar: true,
-    puede_priorizar_medica: true,
-    puede_asignar_partida: true,
-    solo_lectura: false
-  },
-  {
-    id: 'usr-admin-nicolas-plain',
-    nombre: 'Nicolas Kawior (Admin)',
-    email: 'nicolaskawior@gmail.com',
-    sede: 'Todas',
-    rol: 'admin',
-    activo: true,
-    puede_crear: true,
-    puede_avanzar: true,
-    puede_priorizar_medica: true,
-    puede_asignar_partida: true,
-    solo_lectura: false
-  },
-  {
-    id: 'usr-1',
-    nombre: 'Dirección General (Admin)',
-    email: 'admin.obras@gmail.com',
-    sede: 'Todas',
-    rol: 'admin',
-    activo: true,
-    puede_crear: true,
-    puede_avanzar: true,
-    puede_priorizar_medica: true,
-    puede_asignar_partida: true,
-    solo_lectura: false
-  },
-  {
-    id: 'usr-2',
+    id: 'usr-dir-medica',
+    username: 'direccion.medica',
     nombre: 'Dirección Médica HIBA',
-    email: 'direccion.medica@gmail.com',
+    email: 'direccion.medica@hospitalitaliano.org.ar',
+    salt: DEFAULT_SALT,
+    password_hash: DEFAULT_ADMIN_HASH,
+    debe_cambiar_clave: false,
     sede: 'Todas',
     rol: 'direccion_medica',
     activo: true,
@@ -89,9 +170,13 @@ const DEFAULT_USERS = [
     solo_lectura: false
   },
   {
-    id: 'usr-3',
+    id: 'usr-palmioli',
+    username: 'palmioli',
     nombre: 'Arq. Palmioli (PM Central)',
-    email: 'palmioli.central@gmail.com',
+    email: 'palmioli.central@hospitalitaliano.org.ar',
+    salt: DEFAULT_SALT,
+    password_hash: DEFAULT_ADMIN_HASH,
+    debe_cambiar_clave: false,
     sede: 'Central',
     rol: 'pm_obra',
     activo: true,
@@ -102,9 +187,13 @@ const DEFAULT_USERS = [
     solo_lectura: false
   },
   {
-    id: 'usr-4',
+    id: 'usr-waldemar',
+    username: 'waldemar',
     nombre: 'Ing. Waldemar (PM San Justo)',
-    email: 'waldemar.sanjusto@gmail.com',
+    email: 'waldemar.sanjusto@hospitalitaliano.org.ar',
+    salt: DEFAULT_SALT,
+    password_hash: DEFAULT_ADMIN_HASH,
+    debe_cambiar_clave: false,
     sede: 'San Justo',
     rol: 'pm_obra',
     activo: true,
@@ -115,9 +204,13 @@ const DEFAULT_USERS = [
     solo_lectura: false
   },
   {
-    id: 'usr-5',
+    id: 'usr-cossano',
+    username: 'cossano',
     nombre: 'Arq. Cossano (PM Periféricos)',
-    email: 'cossano.perifericos@gmail.com',
+    email: 'cossano.perifericos@hospitalitaliano.org.ar',
+    salt: DEFAULT_SALT,
+    password_hash: DEFAULT_ADMIN_HASH,
+    debe_cambiar_clave: false,
     sede: 'Periféricos',
     rol: 'pm_obra',
     activo: true,
@@ -128,9 +221,13 @@ const DEFAULT_USERS = [
     solo_lectura: false
   },
   {
-    id: 'usr-6',
+    id: 'usr-licitaciones',
+    username: 'licitaciones',
     nombre: 'Compras & Licitaciones',
-    email: 'licitaciones.hiba@gmail.com',
+    email: 'licitaciones@hospitalitaliano.org.ar',
+    salt: DEFAULT_SALT,
+    password_hash: DEFAULT_ADMIN_HASH,
+    debe_cambiar_clave: false,
     sede: 'Todas',
     rol: 'licitaciones',
     activo: true,
@@ -141,9 +238,13 @@ const DEFAULT_USERS = [
     solo_lectura: false
   },
   {
-    id: 'usr-7',
+    id: 'usr-auditor',
+    username: 'auditor',
     nombre: 'Auditoría y Control',
-    email: 'auditor.externo@gmail.com',
+    email: 'auditor@hospitalitaliano.org.ar',
+    salt: DEFAULT_SALT,
+    password_hash: DEFAULT_ADMIN_HASH,
+    debe_cambiar_clave: false,
     sede: 'Todas',
     rol: 'visualizador',
     activo: true,
@@ -166,9 +267,20 @@ const DataStore = {
     if (localUsers) {
       try {
         this.users = JSON.parse(localUsers);
+        // Garantizar que los usuarios maestros obligatorios siempre existan
         DEFAULT_USERS.forEach(defU => {
-          if (!this.users.some(u => (u.email || '').toLowerCase() === defU.email.toLowerCase())) {
+          const existing = this.users.find(u => 
+            (u.username && u.username.toLowerCase() === defU.username.toLowerCase()) ||
+            (u.email && u.email.toLowerCase() === defU.email.toLowerCase())
+          );
+          if (!existing) {
             this.users.push({ ...defU });
+          } else {
+            // Actualizar campos de autenticación si faltaban
+            if (!existing.username) existing.username = defU.username;
+            if (!existing.salt) existing.salt = defU.salt;
+            if (!existing.password_hash) existing.password_hash = defU.password_hash;
+            if (existing.debe_cambiar_clave === undefined) existing.debe_cambiar_clave = defU.debe_cambiar_clave;
           }
         });
       } catch (e) {
@@ -176,8 +288,16 @@ const DataStore = {
       }
     } else {
       this.users = [...DEFAULT_USERS];
-      this.persistUsers();
     }
+
+    // Asegurar que ningún usuario de la lista quede sin hash ni username
+    this.users.forEach(u => {
+      if (!u.username) u.username = (u.email ? u.email.split('@')[0] : `user_${u.id}`).toLowerCase();
+      if (!u.salt) u.salt = generateSalt();
+      if (!u.password_hash) u.password_hash = hashPassword('Admin2025!', u.salt);
+      if (u.debe_cambiar_clave === undefined) u.debe_cambiar_clave = false;
+    });
+    this.persistUsers();
 
     const activeUsrId = localStorage.getItem('sigo_active_user_id');
     this.currentUser = activeUsrId ? (this.users.find(u => u.id === activeUsrId && u.activo) || null) : null;
@@ -678,12 +798,25 @@ const DataStore = {
     return true;
   },
 
-  // ================= USUARIOS =================
+  // ================= USUARIOS & AUTENTICACIÓN SEGURA =================
   addUser(userData) {
+    const salt = generateSalt();
+    const tempPassword = (userData.tempPassword || 'Hiba2025!').trim();
+    const username = (userData.username || (userData.email ? userData.email.split('@')[0] : `user_${Date.now()}`)).trim().toLowerCase();
+
+    // Validar nombre de usuario duplicado
+    if (this.users.some(u => (u.username || '').toLowerCase() === username)) {
+      throw new Error(`El usuario "${username}" ya se encuentra registrado. Elige otro nombre de usuario.`);
+    }
+
     const newUser = {
       id: `usr-${Date.now()}`,
-      nombre: userData.nombre,
-      email: userData.email,
+      username: username,
+      nombre: userData.nombre.trim(),
+      email: (userData.email || `${username}@hospitalitaliano.org.ar`).trim().toLowerCase(),
+      salt: salt,
+      password_hash: hashPassword(tempPassword, salt),
+      debe_cambiar_clave: true, // Forzar cambio en el primer login
       sede: userData.sede || 'Central',
       rol: userData.rol || 'pm_obra',
       activo: true,
@@ -693,9 +826,54 @@ const DataStore = {
       puede_asignar_partida: userData.puede_asignar_partida ?? false,
       solo_lectura: userData.solo_lectura ?? false
     };
+
     this.users.push(newUser);
     this.persistUsers();
-    return newUser;
+    return { user: newUser, tempPassword: tempPassword };
+  },
+
+  deleteUser(userId) {
+    if (this.currentUser && this.currentUser.id === userId) {
+      return { success: false, msg: 'No puedes eliminar tu propia cuenta en sesión activa.' };
+    }
+    const idx = this.users.findIndex(x => x.id === userId);
+    if (idx === -1) {
+      return { success: false, msg: 'Usuario no encontrado.' };
+    }
+    const deleted = this.users.splice(idx, 1)[0];
+    this.persistUsers();
+    return { success: true, msg: `Usuario "${deleted.nombre}" (${deleted.username}) eliminado permanentemente.` };
+  },
+
+  resetUserPassword(userId, newTempPassword = 'Hiba' + Math.floor(1000 + Math.random() * 9000) + '!') {
+    const user = this.users.find(u => u.id === userId);
+    if (!user) return { success: false, msg: 'Usuario no encontrado.' };
+
+    const salt = generateSalt();
+    user.salt = salt;
+    user.password_hash = hashPassword(newTempPassword, salt);
+    user.debe_cambiar_clave = true;
+    this.persistUsers();
+    return { success: true, tempPassword: newTempPassword };
+  },
+
+  changePassword(userId, newPassword) {
+    if (!newPassword || newPassword.trim().length < 6) {
+      return { success: false, msg: 'La nueva contraseña debe tener al menos 6 caracteres.' };
+    }
+    const user = this.users.find(u => u.id === userId);
+    if (!user) return { success: false, msg: 'Usuario no encontrado en la base de datos.' };
+
+    const salt = generateSalt();
+    user.salt = salt;
+    user.password_hash = hashPassword(newPassword.trim(), salt);
+    user.debe_cambiar_clave = false;
+    this.persistUsers();
+
+    if (this.currentUser && this.currentUser.id === userId) {
+      this.currentUser = user;
+    }
+    return { success: true, msg: 'Contraseña actualizada con éxito.' };
   },
 
   toggleUserStatus(userId) {
@@ -723,29 +901,53 @@ const DataStore = {
     localStorage.removeItem('sigo_active_user_id');
   },
 
-  loginWithGoogle(email) {
-    if (!email || !email.trim()) {
-      return { success: false, msg: 'Por favor ingresa tu correo de Gmail.' };
+  authenticate(usernameOrEmail, password) {
+    if (!usernameOrEmail || !usernameOrEmail.trim()) {
+      return { success: false, msg: 'Por favor ingresa tu usuario o correo electrónico.' };
     }
-    const cleanEmail = email.trim().toLowerCase();
-    const existing = this.users.find(u => (u.email || '').toLowerCase() === cleanEmail);
-    if (existing) {
-      if (!existing.activo) {
-        return { 
-          success: false, 
-          msg: `⛔ Acceso Denegado: Tu cuenta (${existing.nombre}) fue desactivada por el Administrador. Solicita la reactivación a la Dirección.` 
-        };
-      }
-      this.currentUser = existing;
-      localStorage.setItem('sigo_active_user_id', existing.id);
-      return { success: true, user: existing };
+    if (!password || !password.trim()) {
+      return { success: false, msg: 'Por favor ingresa tu contraseña.' };
     }
 
-    // BLOQUEO ESTRICTO: NO SE PERMITE EL ACCESO A CORREOS NO DADOS DE ALTA
+    const cleanInput = usernameOrEmail.trim().toLowerCase();
+    const user = this.users.find(u => 
+      (u.username && u.username.toLowerCase() === cleanInput) ||
+      (u.email && u.email.toLowerCase() === cleanInput)
+    );
+
+    if (!user) {
+      return { success: false, msg: '⛔ Usuario o contraseña incorrectos. Verifica tus datos de ingreso.' };
+    }
+
+    if (!user.activo) {
+      return { 
+        success: false, 
+        msg: `⛔ Acceso Denegado: La cuenta de "${user.nombre}" fue desactivada por la Dirección.` 
+      };
+    }
+
+    const salt = user.salt || DEFAULT_SALT;
+    const computedHash = hashPassword(password, salt);
+
+    // Comparar hash criptográfico
+    if (computedHash !== user.password_hash) {
+      return { success: false, msg: '⛔ Usuario o contraseña incorrectos. Verifica tus datos de ingreso.' };
+    }
+
+    // Autenticación correcta
+    this.currentUser = user;
+    localStorage.setItem('sigo_active_user_id', user.id);
+
     return { 
-      success: false, 
-      msg: `⛔ Acceso Denegado: La cuenta "${cleanEmail}" no está autorizada en el sistema. El Administrador debe darte de alta previamente en el panel de usuarios para que puedas ingresar.` 
+      success: true, 
+      user: user,
+      mustChangePassword: Boolean(user.debe_cambiar_clave)
     };
+  },
+
+  loginWithGoogle(email) {
+    // Compatibilidad retroactiva
+    return this.authenticate(email, 'Admin2025!');
   },
 
   getItemById(id) {
