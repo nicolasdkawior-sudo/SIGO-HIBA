@@ -1288,6 +1288,96 @@ const App = {
         alert(res.msg);
       }
       if (window.lucide) lucide.createIcons();
+    }
+  },
+
+  loginWithGooglePrompt() {
+    if (typeof SupabaseManager !== 'undefined' && SupabaseManager.isConfigured) {
+      SupabaseManager.signInWithGoogle();
+    } else {
+      this.openGoogleLoginModal();
+    }
+  },
+
+  handleLoginEmailSubmit() {
+    const input = document.getElementById('inputLoginScreenEmail');
+    if (!input || !input.value.trim()) return;
+    this.login(input.value.trim());
+  },
+
+  logout() {
+    DataStore.logout();
+    this.checkAuth();
+    this.showToast('Has cerrado sesión correctamente.');
+    if (window.lucide) lucide.createIcons();
+  },
+
+  openGoogleLoginModal() {
+    const err = document.getElementById('modalGoogleLoginError');
+    if (err) err.classList.add('hidden');
+    const modal = document.getElementById('modalGoogleLogin');
+    if (modal) {
+      modal.style.setProperty('display', 'flex', 'important');
+      modal.classList.remove('hidden');
+    }
+    if (window.lucide) lucide.createIcons();
+  },
+
+  closeGoogleLoginModal() {
+    const modal = document.getElementById('modalGoogleLogin');
+    if (modal) {
+      modal.style.setProperty('display', 'none', 'important');
+      modal.classList.add('hidden');
+    }
+  },
+
+  handleGoogleLoginSubmit() {
+    const email = document.getElementById('inputGoogleEmail')?.value.trim();
+    const pwd = document.getElementById('inputGooglePassword')?.value.trim() || '';
+    const errBox = document.getElementById('modalGoogleLoginError');
+    const errText = document.getElementById('modalGoogleLoginErrorText');
+
+    if (!email || !email.includes('@')) {
+      if (errBox && errText) {
+        errText.innerText = 'Por favor ingresa un correo de Gmail válido';
+        errBox.classList.remove('hidden');
+      } else {
+        alert('Por favor ingresa un correo de Gmail válido');
+      }
+      return;
+    }
+
+    if (!pwd) {
+      if (errBox && errText) {
+        errText.innerText = 'Por favor ingresa la contraseña de tu cuenta de Google';
+        errBox.classList.remove('hidden');
+      } else {
+        alert('Por favor ingresa la contraseña de tu cuenta de Google');
+      }
+      return;
+    }
+
+    const res = DataStore.loginWithGoogle(email);
+    if (res.success) {
+      if (errBox) errBox.classList.add('hidden');
+      if (DataStore.currentUser && DataStore.currentUser.sede !== 'Todas') {
+        this.filters.sede = DataStore.currentUser.sede;
+      }
+      this.closeGoogleLoginModal();
+      this.checkAuth();
+      this.updateUserUI();
+      this.render();
+      this.showToast(`¡Autenticación con Google exitosa! Bienvenido/a ${res.user.nombre}`);
+      if (window.lucide) lucide.createIcons();
+    } else {
+      if (errBox && errText) {
+        errText.innerText = res.msg;
+        errBox.classList.remove('hidden');
+      } else {
+        alert(res.msg);
+      }
+      if (window.lucide) lucide.createIcons();
+    }
   },
 
   updateUserUI() {
