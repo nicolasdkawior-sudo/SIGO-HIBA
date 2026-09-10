@@ -378,7 +378,48 @@ const DataStore = {
       }
     });
 
-    console.log(`DataStore v2.1 inicializado: ${this.items.length} proyectos. Usuario activo: ${this.currentUser ? this.currentUser.nombre : 'Ninguno (Requiere Login)'}`);
+    // Sincronizar cashflow multianual y montos de partidas desde INITIAL_DATA si falta en storage existente
+    if (window.INITIAL_DATA) {
+      const initialMap = {};
+      [...(window.INITIAL_DATA.obras || []), ...(window.INITIAL_DATA.infraestructura || [])].forEach(x => {
+        initialMap[x.id] = x;
+      });
+
+      let updatedAny = false;
+      this.items.forEach(item => {
+        const initItem = initialMap[item.id];
+        if (initItem) {
+          // Si no tiene cashflow o está vacío y el item inicial sí lo tiene
+          const hasCf = item.cashflow && (item.cashflow.monto_total || item.cashflow.cashflow_2026 || item.cashflow.cashflow_2027);
+          const initHasCf = initItem.cashflow && (initItem.cashflow.monto_total || initItem.cashflow.cashflow_2026 || initItem.cashflow.cashflow_2027);
+          if (!hasCf && initHasCf) {
+            item.cashflow = JSON.parse(JSON.stringify(initItem.cashflow));
+            if (!item.monto_total_usd && initItem.cashflow.monto_total) {
+              item.monto_total_usd = initItem.cashflow.monto_total;
+              item.monto_obra_usd = initItem.cashflow.monto_total;
+            }
+            updatedAny = true;
+          }
+          // Sincronizar partida si existía en la planilla maestra
+          if ((!item.partida || item.partida === 'S/D' || item.partida === 'PENDIENTE') && initItem.partida && initItem.partida !== 'S/D' && initItem.partida !== 'PENDIENTE') {
+            item.partida = initItem.partida;
+            updatedAny = true;
+          }
+          // Si tiene partida válida pero falta monto_partida_usd
+          if (item.partida && item.partida.trim() !== '' && item.partida !== 'S/D' && item.partida.toUpperCase() !== 'PENDIENTE') {
+            if (!item.monto_partida_usd || item.monto_partida_usd <= 0) {
+              item.monto_partida_usd = item.monto_total_usd || item.monto_obra_usd || (item.cashflow ? item.cashflow.monto_total : 0) || 0;
+              updatedAny = true;
+            }
+          }
+        }
+      });
+      if (updatedAny) {
+        this.persist();
+      }
+    }
+
+    console.log(`DataStore v2.2 inicializado: ${this.items.length} proyectos. Usuario activo: ${this.currentUser ? this.currentUser.nombre : 'Ninguno (Requiere Login)'}`);
   },
 
   persist() {
@@ -428,6 +469,15 @@ const DataStore = {
       observaciones: `Sector: ${data.sector_solicitante || 'S/D'} | Motivo: ${data.motivo || 'S/D'}`,
       fecha_inicio_etapa: new Date().toISOString().split('T')[0],
       fecha_fin_etapa: this.getDefaultDeadlineForStage('Estudio de Factibilidad'),
+      cashflow: {
+        monto_total: monto,
+        fecha_inicio: '',
+        fecha_fin: '',
+        cashflow_2026: monto,
+        cashflow_2027: 0,
+        cashflow_2028: 0,
+        cashflow_2029: 0
+      },
       historial: [{
         fecha: new Date().toISOString().split('T')[0],
         usuario: this.currentUser.nombre,
@@ -448,7 +498,7 @@ const DataStore = {
   },
 
   // ================= ASIGNACIÓN DE PARTIDA PRESUPUESTARIA =================
-  asignarPartidaPresupuestaria(itemId, partidaNum) {
+  asignarPartidaPresupuestaria(itemId, partidaNum, montoPartida) {
     const item = this.getItemById(itemId);
     if (!item) return { success: false, msg: 'Obra no encontrada' };
 
@@ -464,17 +514,52 @@ const DataStore = {
       return { success: false, msg: 'Debes ingresar un número de partida válido' };
     }
 
+    const montoVal = parseFloat(montoPartida);
+    if (isNaN(montoVal) || montoVal <= 0) {
+      return { success: false, msg: 'Debes ingresar un monto válido y mayor a 0 para la partida presupuestaria (USD).' };
+    }
+
     item.partida = partidaNum.trim();
+    item.monto_partida_usd = montoVal;
+
+    // Actualizar montos de obra si eran 0 o para mantener consistencia
+    if (!item.monto_total_usd || item.monto_total_usd === 0) {
+      item.monto_total_usd = montoVal;
+      item.monto_obra_usd = montoVal;
+    }
+
+    // Asegurar estructura de cashflow
+    if (!item.cashflow || typeof item.cashflow !== 'object') {
+      item.cashflow = {
+        monto_total: montoVal,
+        fecha_inicio: '',
+        fecha_fin: '',
+        cashflow_2026: montoVal,
+        cashflow_2027: 0,
+        cashflow_2028: 0,
+        cashflow_2029: 0
+      };
+    } else {
+      if (!item.cashflow.monto_total || item.cashflow.monto_total === 0) {
+        item.cashflow.monto_total = montoVal;
+      }
+      const sumYears = (item.cashflow.cashflow_2026 || 0) + (item.cashflow.cashflow_2027 || 0) + (item.cashflow.cashflow_2028 || 0) + (item.cashflow.cashflow_2029 || 0);
+      if (sumYears === 0) {
+        item.cashflow.cashflow_2026 = montoVal;
+      }
+    }
+
+    if (!item.historial) item.historial = [];
     item.historial.unshift({
       fecha: new Date().toISOString().split('T')[0],
       usuario: this.currentUser.nombre,
       estado_anterior: item.estado,
       estado_nuevo: item.estado,
-      observaciones: `Partida presupuestaria N° ${item.partida} asignada por ${this.currentUser.nombre}. Habilita avance a etapa de Proyecto.`
+      observaciones: `Partida presupuestaria N° ${item.partida} asignada por ${this.formatUSD(montoVal)} por ${this.currentUser.nombre}. Habilita avance a etapa de Proyecto.`
     });
 
     this.saveItem(item);
-    return { success: true, partida: item.partida };
+    return { success: true, partida: item.partida, monto_partida_usd: item.monto_partida_usd };
   },
 
   // ================= PONDERACIÓN GLOBAL Y ESCALA DE COLORES =================
@@ -565,6 +650,14 @@ const DataStore = {
         return { 
           success: false, 
           msg: '⛔ Bloqueado: Para avanzar a la etapa de "Proyecto" es OBLIGATORIO contar con un Número de Partida Presupuestaria asignado. Si no existe número de partida, el sistema no permite avanzar.',
+          requierePartida: true 
+        };
+      }
+      const montoPart = item.monto_partida_usd || item.monto_total_usd || item.monto_obra_usd || 0;
+      if (montoPart <= 0) {
+        return { 
+          success: false, 
+          msg: '⛔ Bloqueado: Para avanzar a la etapa de "Proyecto" es OBLIGATORIO contar con el Monto Asignado de la Partida Presupuestaria (USD).',
           requierePartida: true 
         };
       }
@@ -804,6 +897,138 @@ const DataStore = {
       porcentajeEnPlazo,
       estadosCount,
       sedesCount
+    };
+  },
+
+  // ================= CASHFLOW MULTIANUAL & PARTIDAS PRESUPUESTARIAS =================
+  hasValidPartida(item) {
+    if (!item || !item.partida) return false;
+    const p = String(item.partida).trim();
+    return p !== '' && p !== 'S/D' && p.toUpperCase() !== 'PENDIENTE' && p.toUpperCase() !== 'NONE';
+  },
+
+  getItemMontoPartida(item) {
+    if (!item) return 0;
+    if (item.monto_partida_usd && item.monto_partida_usd > 0) {
+      return item.monto_partida_usd;
+    }
+    if (this.hasValidPartida(item)) {
+      return item.monto_total_usd || item.monto_obra_usd || (item.cashflow ? item.cashflow.monto_total : 0) || 0;
+    }
+    return 0;
+  },
+
+  getCashflowSummary(tipoFilter = 'TODOS', partidaFilter = 'todas', searchQuery = '') {
+    // 1. Filtrar lista base según usuario y tipo
+    let list = this.getFilteredItems({ tipo: tipoFilter });
+
+    // 2. Filtrar proyectos relevantes para el Cashflow (con cashflow o con partida/monto)
+    let cfList = list.filter(x => {
+      const hasCF = x.cashflow && (x.cashflow.monto_total > 0 || x.cashflow.cashflow_2026 > 0 || x.cashflow.cashflow_2027 > 0 || x.cashflow.cashflow_2028 > 0 || x.cashflow.cashflow_2029 > 0);
+      const hasPartida = this.hasValidPartida(x);
+      const hasMonto = (x.monto_total_usd > 0 || x.monto_obra_usd > 0);
+      return hasCF || hasPartida || hasMonto;
+    });
+
+    // 3. Totales globales de la cartera seleccionada (independiente del filtro secundario de partida)
+    let totalCarteraUSD = 0;
+    let totalAsignadoPartidasUSD = 0;
+    let countConPartida = 0;
+    let countSinPartida = 0;
+    let totalSinPartidaUSD = 0;
+    let tot2026Global = 0, tot2027Global = 0, tot2028Global = 0, tot2029Global = 0;
+
+    cfList.forEach(x => {
+      const mTotal = (x.cashflow && x.cashflow.monto_total > 0) 
+        ? x.cashflow.monto_total 
+        : (x.monto_total_usd || x.monto_obra_usd || 0);
+
+      totalCarteraUSD += mTotal;
+
+      if (x.cashflow) {
+        tot2026Global += x.cashflow.cashflow_2026 || 0;
+        tot2027Global += x.cashflow.cashflow_2027 || 0;
+        tot2028Global += x.cashflow.cashflow_2028 || 0;
+        tot2029Global += x.cashflow.cashflow_2029 || 0;
+      } else {
+        tot2026Global += mTotal;
+      }
+
+      if (this.hasValidPartida(x)) {
+        countConPartida++;
+        const mPart = this.getItemMontoPartida(x);
+        totalAsignadoPartidasUSD += mPart;
+      } else {
+        countSinPartida++;
+        totalSinPartidaUSD += mTotal;
+      }
+    });
+
+    // 4. Aplicar filtro secundario de partida (todas, con_partida, sin_partida)
+    let displayList = cfList;
+    if (partidaFilter === 'con_partida') {
+      displayList = cfList.filter(x => this.hasValidPartida(x));
+    } else if (partidaFilter === 'sin_partida') {
+      displayList = cfList.filter(x => !this.hasValidPartida(x));
+    }
+
+    // 5. Aplicar búsqueda de texto si se proporcionó
+    if (searchQuery && searchQuery.trim() !== '') {
+      const q = searchQuery.toLowerCase().trim();
+      displayList = displayList.filter(x => 
+        (x.id || '').toLowerCase().includes(q) ||
+        (x.nombre || '').toLowerCase().includes(q) ||
+        (x.partida || '').toLowerCase().includes(q) ||
+        (x.sede || '').toLowerCase().includes(q) ||
+        (x.tipo || '').toLowerCase().includes(q)
+      );
+    }
+
+    // 6. Subtotales específicos de los elementos mostrados en pantalla
+    let displayTotGral = 0;
+    let displayTot2026 = 0, displayTot2027 = 0, displayTot2028 = 0, displayTot2029 = 0;
+    let displayTotPartidas = 0;
+
+    displayList.forEach(x => {
+      const mTotal = (x.cashflow && x.cashflow.monto_total > 0) 
+        ? x.cashflow.monto_total 
+        : (x.monto_total_usd || x.monto_obra_usd || 0);
+      displayTotGral += mTotal;
+
+      if (x.cashflow) {
+        displayTot2026 += x.cashflow.cashflow_2026 || 0;
+        displayTot2027 += x.cashflow.cashflow_2027 || 0;
+        displayTot2028 += x.cashflow.cashflow_2028 || 0;
+        displayTot2029 += x.cashflow.cashflow_2029 || 0;
+      } else {
+        displayTot2026 += mTotal;
+      }
+
+      if (this.hasValidPartida(x)) {
+        displayTotPartidas += this.getItemMontoPartida(x);
+      }
+    });
+
+    return {
+      displayList,
+      totalCarteraUSD,
+      totalAsignadoPartidasUSD,
+      countConPartida,
+      countSinPartida,
+      totalSinPartidaUSD,
+      tot2026Global,
+      tot2027Global,
+      tot2028Global,
+      tot2029Global,
+      totalObras: cfList.length,
+      displayTotGral,
+      displayTot2026,
+      displayTot2027,
+      displayTot2028,
+      displayTot2029,
+      displayTotPartidas,
+      tipoFilter,
+      partidaFilter
     };
   },
 

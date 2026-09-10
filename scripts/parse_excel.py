@@ -218,10 +218,32 @@ with zipfile.ZipFile(excel_path, 'r') as z:
         })
         item_id += 1
 
-    # 4. Listado General Infraestructura
+    # 4. Cashflow Infraestructura map
+    cf_infra_raw = get_sheet_data('Cashflow Infraestructura')
+    cf_infra_entries = []
+    for r in cf_infra_raw[1:]:
+        s = clean_str(r.get('A', ''))
+        n = clean_str(r.get('B', ''))
+        if n and n.lower() != 'nombre de la obra':
+            cf_infra_entries.append({
+                "sede": s,
+                "nombre": n,
+                "monto_total": clean_float(r.get('D', 0)),
+                "fecha_inicio": excel_date_to_iso(r.get('E', '')),
+                "fecha_fin": excel_date_to_iso(r.get('F', '')),
+                "cashflow_2026": clean_float(r.get('G', 0)),
+                "cashflow_2027": clean_float(r.get('H', 0)),
+                "cashflow_2028": clean_float(r.get('I', 0)),
+                "cashflow_2029": clean_float(r.get('J', 0)),
+                "words": set(re.findall(r'[a-z0-9]{3,}', re.sub(r'^[a-z]{2,6}\s+', '', n.lower())))
+            })
+
+    # 5. Listado General Infraestructura
     infra_raw = get_sheet_data('Listado Gral Infraestructura')
     infra_list = []
     infra_id = 1
+    used_cf_infra = set()
+
     for r in infra_raw[1:]:
         nombre = clean_str(r.get('D', ''))
         if not nombre:
@@ -241,6 +263,42 @@ with zipfile.ZipFile(excel_path, 'r') as z:
         motivo = clean_str(r.get('N', ''))
         responsable = clean_str(r.get('O', 'Infraestructura'))
         obs = clean_str(r.get('P', ''))
+
+        l_words = set(re.findall(r'[a-z0-9]{3,}', re.sub(r'^[a-z]{2,6}\s+', '', nombre.lower())))
+        best_ci = -1
+        best_score = 0
+        for ci, cr in enumerate(cf_infra_entries):
+            if ci in used_cf_infra: continue
+            common = l_words.intersection(cr['words'])
+            if not common: continue
+            score = len(common) / len(l_words.union(cr['words']))
+            if sede.lower() in cr['sede'].lower() or cr['sede'].lower() in sede.lower():
+                score += 0.2
+            if monto_obra > 0 and abs(monto_obra - cr['monto_total']) < 1.0:
+                score += 0.4
+            if score > best_score and score >= 0.25:
+                best_score = score
+                best_ci = ci
+
+        cf = {}
+        if best_ci != -1:
+            used_cf_infra.add(best_ci)
+            matched_cr = cf_infra_entries[best_ci]
+            cf = {
+                "monto_total": matched_cr['monto_total'],
+                "fecha_inicio": matched_cr['fecha_inicio'],
+                "fecha_fin": matched_cr['fecha_fin'],
+                "cashflow_2026": matched_cr['cashflow_2026'],
+                "cashflow_2027": matched_cr['cashflow_2027'],
+                "cashflow_2028": matched_cr['cashflow_2028'],
+                "cashflow_2029": matched_cr['cashflow_2029']
+            }
+            if not fecha_fin and matched_cr['fecha_fin']:
+                fecha_fin = matched_cr['fecha_fin']
+            if not fecha_tarea and matched_cr['fecha_inicio']:
+                fecha_tarea = matched_cr['fecha_inicio']
+            if monto_obra == 0 and matched_cr['monto_total'] > 0:
+                monto_obra = matched_cr['monto_total']
 
         infra_list.append({
             "id": f"INFRA-{infra_id:03d}",
@@ -267,7 +325,7 @@ with zipfile.ZipFile(excel_path, 'r') as z:
             "superficie_m2": 0.0,
             "costo_usd_m2": 0.0,
             "criterios_tecnicos": {},
-            "cashflow": {}
+            "cashflow": cf
         })
         infra_id += 1
 
@@ -285,7 +343,15 @@ with zipfile.ZipFile(excel_path, 'r') as z:
     with open('scripts/data_exported.json', 'w', encoding='utf-8') as f:
         json.dump(all_data, f, ensure_ascii=False, indent=2)
 
+    js_content = "window.INITIAL_DATA = " + json.dumps(all_data, ensure_ascii=False, indent=2) + ";\n"
+    with open('js/initial-data.js', 'w', encoding='utf-8') as f:
+        f.write(js_content)
+
+    with open('app/js/initial-data.js', 'w', encoding='utf-8') as f:
+        f.write(js_content)
+
     print(f"Export successful!")
     print(f"Obras procesadas: {len(obras_list)}")
     print(f"Infraestructura procesada: {len(infra_list)}")
-    print(f"Archivo guardado en scripts/data_exported.json")
+    print(f"Infraestructura con cashflow asignado: {len(used_cf_infra)} / {len(cf_infra_entries)}")
+    print(f"Archivos guardados en scripts/data_exported.json, js/initial-data.js y app/js/initial-data.js")

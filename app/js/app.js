@@ -14,6 +14,9 @@ const App = {
     filtroFinalizadas: 'todas', // 'todas', 'activas', 'finalizadas', 'suspendidas'
     search: ''
   },
+  cashflowFilterTipo: 'TODOS', // 'TODOS', 'Obra Civil', 'Infraestructura'
+  cashflowFilterPartida: 'todas', // 'todas', 'con_partida', 'sin_partida'
+  cashflowSearch: '',
   pipelineSelectedStage: null, // Etapa seleccionada al hacer clic en el gráfico
   charts: {},
 
@@ -784,50 +787,217 @@ const App = {
     ganttContainer.innerHTML = html;
   },
 
+  setCashflowTipo(tipo) {
+    this.cashflowFilterTipo = tipo;
+    this.renderCashflow();
+  },
+
+  setCashflowPartidaFilter(filtro) {
+    this.cashflowFilterPartida = filtro;
+    this.renderCashflow();
+  },
+
+  handleCashflowSearch(query) {
+    this.cashflowSearch = query;
+    this.renderCashflow();
+  },
+
   renderCashflow() {
     const cashflowContainer = document.getElementById('cashflowContainer');
     if (!cashflowContainer) return;
 
-    const items = DataStore.getFilteredItems(this.filters)
-      .filter(x => x.cashflow && (x.cashflow.cashflow_2026 || x.cashflow.monto_total));
+    // 1. Actualizar estilos activos de los botones de Segmentación de Tipo
+    const btnTodo = document.getElementById('btnCfTipoTodo');
+    const btnObras = document.getElementById('btnCfTipoObras');
+    const btnInfra = document.getElementById('btnCfTipoInfra');
 
-    let tot2026 = 0, tot2027 = 0, tot2028 = 0, tot2029 = 0, totGral = 0;
+    if (btnTodo && btnObras && btnInfra) {
+      const activeClass = 'bg-white text-blue-700 shadow-xs border border-slate-200 font-bold';
+      const inactiveClass = 'text-slate-600 hover:text-blue-700 font-semibold';
+      
+      btnTodo.className = `px-3 py-1.5 rounded-lg transition flex items-center space-x-1.5 cursor-pointer ${this.cashflowFilterTipo === 'TODOS' ? activeClass : inactiveClass}`;
+      btnObras.className = `px-3 py-1.5 rounded-lg transition flex items-center space-x-1.5 cursor-pointer ${this.cashflowFilterTipo === 'Obra Civil' ? activeClass : inactiveClass}`;
+      btnInfra.className = `px-3 py-1.5 rounded-lg transition flex items-center space-x-1.5 cursor-pointer ${this.cashflowFilterTipo === 'Infraestructura' ? activeClass : inactiveClass}`;
+    }
 
-    items.forEach(x => {
-      tot2026 += x.cashflow.cashflow_2026 || 0;
-      tot2027 += x.cashflow.cashflow_2027 || 0;
-      tot2028 += x.cashflow.cashflow_2028 || 0;
-      tot2029 += x.cashflow.cashflow_2029 || 0;
-      totGral += x.cashflow.monto_total || 0;
-    });
+    // 2. Actualizar estilos activos de los botones de Partida
+    const btnPartTodas = document.getElementById('btnCfPartidaTodas');
+    const btnPartCon = document.getElementById('btnCfPartidaCon');
+    const btnPartSin = document.getElementById('btnCfPartidaSin');
+
+    if (btnPartTodas && btnPartCon && btnPartSin) {
+      const partActiveClass = 'bg-white shadow-xs font-bold text-slate-900 border border-slate-200';
+      const partInactiveClass = 'text-slate-600 hover:text-slate-900 font-semibold';
+
+      btnPartTodas.className = `px-2.5 py-1.5 rounded-lg transition cursor-pointer ${this.cashflowFilterPartida === 'todas' ? partActiveClass : partInactiveClass}`;
+      btnPartCon.className = `px-2.5 py-1.5 rounded-lg transition flex items-center space-x-1 cursor-pointer ${this.cashflowFilterPartida === 'con_partida' ? 'bg-white shadow-xs font-bold text-emerald-700 border border-slate-200' : 'text-emerald-700 hover:text-emerald-900 font-semibold'}`;
+      btnPartSin.className = `px-2.5 py-1.5 rounded-lg transition cursor-pointer ${this.cashflowFilterPartida === 'sin_partida' ? 'bg-white shadow-xs font-bold text-amber-800 border border-slate-200' : 'text-amber-700 hover:text-amber-900 font-semibold'}`;
+    }
+
+    // 3. Obtener métricas y datos calculados desde DataStore
+    const summary = DataStore.getCashflowSummary(this.cashflowFilterTipo, this.cashflowFilterPartida, this.cashflowSearch);
+
+    // 4. Renderizar Tarjetas de Resumen KPI
+    const kpiContainer = document.getElementById('cashflowKpiCards');
+    if (kpiContainer) {
+      const pctCob = summary.totalCarteraUSD > 0 
+        ? Math.round((summary.totalAsignadoPartidasUSD / summary.totalCarteraUSD) * 100) 
+        : 0;
+
+      kpiContainer.innerHTML = `
+        <!-- KPI 1: TOTAL ASIGNADO EN DINERO (PARTIDAS) -->
+        <div class="bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-4 rounded-xl border border-emerald-200 shadow-2xs">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-emerald-800 uppercase tracking-wider flex items-center space-x-1">
+              <i data-lucide="badge-dollar-sign" class="w-3.5 h-3.5 text-emerald-600"></i>
+              <span>Total Asignado en Partidas</span>
+            </span>
+            <span class="text-[10px] font-black bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-full">
+              ${summary.countConPartida} obras
+            </span>
+          </div>
+          <div class="text-xl sm:text-2xl font-black text-emerald-950 mt-1.5">
+            ${DataStore.formatUSD(summary.totalAsignadoPartidasUSD)}
+          </div>
+          <div class="text-[11px] text-emerald-700 font-semibold mt-1 flex items-center space-x-1">
+            <i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-600"></i>
+            <span>Suma total de partidas asignadas (${pctCob}% de cartera)</span>
+          </div>
+        </div>
+
+        <!-- KPI 2: TOTAL CARTERA PROYECTADA -->
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-2xs">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center space-x-1">
+              <i data-lucide="layers" class="w-3.5 h-3.5 text-blue-600"></i>
+              <span>Presupuesto Cartera Proyectada</span>
+            </span>
+            <span class="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+              ${summary.totalObras} proyectos
+            </span>
+          </div>
+          <div class="text-xl sm:text-2xl font-black text-slate-900 mt-1.5">
+            ${DataStore.formatUSD(summary.totalCarteraUSD)}
+          </div>
+          <div class="text-[11px] text-slate-500 font-medium mt-1">
+            Segmento: <strong>${this.cashflowFilterTipo === 'TODOS' ? 'Todo el Cashflow (Consolidado)' : this.cashflowFilterTipo}</strong>
+          </div>
+        </div>
+
+        <!-- KPI 3: DESEMBOLSOS MULTIANUALES -->
+        <div class="bg-blue-50/60 p-4 rounded-xl border border-blue-100 shadow-2xs">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-blue-800 uppercase tracking-wider flex items-center space-x-1">
+              <i data-lucide="calendar" class="w-3.5 h-3.5 text-blue-600"></i>
+              <span>Desembolso 2026 - 2027</span>
+            </span>
+            <span class="text-[10px] font-bold bg-blue-200/80 text-blue-900 px-2 py-0.5 rounded-full">
+              Bienio Inmediato
+            </span>
+          </div>
+          <div class="text-xl sm:text-2xl font-black text-blue-950 mt-1.5">
+            ${DataStore.formatUSD(summary.tot2026Global + summary.tot2027Global)}
+          </div>
+          <div class="text-[10px] text-blue-800/80 font-semibold mt-1 flex items-center justify-between">
+            <span>2026: <strong>${DataStore.formatUSD(summary.tot2026Global)}</strong></span>
+            <span>2027: <strong>${DataStore.formatUSD(summary.tot2027Global)}</strong></span>
+          </div>
+        </div>
+
+        <!-- KPI 4: PENDIENTE DE ASIGNACIÓN -->
+        <div class="bg-amber-50/60 p-4 rounded-xl border border-amber-200 shadow-2xs">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-amber-800 uppercase tracking-wider flex items-center space-x-1">
+              <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-600"></i>
+              <span>Pendiente de Asignar Partida</span>
+            </span>
+            <span class="text-[10px] font-bold bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full">
+              ${summary.countSinPartida} obras
+            </span>
+          </div>
+          <div class="text-xl sm:text-2xl font-black text-amber-950 mt-1.5">
+            ${DataStore.formatUSD(summary.totalSinPartidaUSD)}
+          </div>
+          <div class="text-[11px] text-amber-700 font-semibold mt-1">
+            En Factibilidad o sin asignación presupuestaria formal
+          </div>
+        </div>
+      `;
+    }
+
+    // 5. Renderizar Tabla de Cashflow
+    if (summary.displayList.length === 0) {
+      cashflowContainer.innerHTML = `
+        <div class="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+          <i data-lucide="folder-search" class="w-10 h-10 text-slate-300 mx-auto mb-2"></i>
+          <p class="text-sm font-bold text-slate-600">No se encontraron obras para los filtros seleccionados</p>
+          <p class="text-xs text-slate-400 mt-1">Prueba cambiando el tipo de obra o el filtro de partida presupuestaria.</p>
+        </div>
+      `;
+      if (window.lucide) lucide.createIcons();
+      return;
+    }
 
     let html = `
       <div class="overflow-x-auto">
         <table class="w-full text-left text-xs border-collapse">
           <thead>
             <tr class="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200">
-              <th class="py-3 px-4">Sede</th>
-              <th class="py-3 px-4">Obra / Proyecto</th>
-              <th class="py-3 px-4 text-right">Monto Total</th>
-              <th class="py-3 px-4 text-right">2026</th>
-              <th class="py-3 px-4 text-right">2027</th>
-              <th class="py-3 px-4 text-right">2028</th>
-              <th class="py-3 px-4 text-right">2029</th>
+              <th class="py-3 px-3">Sede</th>
+              <th class="py-3 px-3">Módulo</th>
+              <th class="py-3 px-3">Proyecto / Obra</th>
+              <th class="py-3 px-3">Partida Presupuestaria</th>
+              <th class="py-3 px-3 text-right">Monto Total USD</th>
+              <th class="py-3 px-3 text-right">2026</th>
+              <th class="py-3 px-3 text-right">2027</th>
+              <th class="py-3 px-3 text-right">2028</th>
+              <th class="py-3 px-3 text-right">2029</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
     `;
 
-    items.forEach(x => {
+    summary.displayList.forEach(x => {
+      const isInfra = (x.tipo === 'Infraestructura');
+      const tipoBadge = isInfra 
+        ? `<span class="bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-md font-bold text-[10px]">⚡ Infraestructura</span>`
+        : `<span class="bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-md font-bold text-[10px]">🏗️ Obra Civil</span>`;
+
+      const hasPart = DataStore.hasValidPartida(x);
+      const montoPartida = DataStore.getItemMontoPartida(x);
+
+      const partidaBadge = hasPart
+        ? `<div class="flex flex-col">
+             <span class="inline-flex items-center space-x-1 font-mono font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded text-[11px] w-fit">
+               <i data-lucide="check" class="w-3 h-3 text-emerald-600"></i>
+               <span>N° ${x.partida}</span>
+             </span>
+             <span class="text-[10px] text-emerald-700 font-bold mt-0.5">${DataStore.formatUSD(montoPartida)}</span>
+           </div>`
+        : `<span class="text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded font-medium text-[10px]">
+             Sin Partida
+           </span>`;
+
+      const mTotal = (x.cashflow && x.cashflow.monto_total > 0) ? x.cashflow.monto_total : (x.monto_total_usd || x.monto_obra_usd || 0);
+      const c2026 = (x.cashflow && x.cashflow.cashflow_2026) || (!x.cashflow ? mTotal : 0);
+      const c2027 = (x.cashflow && x.cashflow.cashflow_2027) || 0;
+      const c2028 = (x.cashflow && x.cashflow.cashflow_2028) || 0;
+      const c2029 = (x.cashflow && x.cashflow.cashflow_2029) || 0;
+
       html += `
-        <tr class="hover:bg-slate-50 cursor-pointer" onclick="App.openObraModal('${x.id}')">
-          <td class="py-2.5 px-4 font-semibold text-slate-600">${x.sede}</td>
-          <td class="py-2.5 px-4 font-bold text-slate-800">${x.nombre}</td>
-          <td class="py-2.5 px-4 text-right font-black text-slate-900">${DataStore.formatUSD(x.cashflow.monto_total || 0)}</td>
-          <td class="py-2.5 px-4 text-right text-slate-700">${DataStore.formatUSD(x.cashflow.cashflow_2026 || 0)}</td>
-          <td class="py-2.5 px-4 text-right text-slate-700">${DataStore.formatUSD(x.cashflow.cashflow_2027 || 0)}</td>
-          <td class="py-2.5 px-4 text-right text-slate-700">${DataStore.formatUSD(x.cashflow.cashflow_2028 || 0)}</td>
-          <td class="py-2.5 px-4 text-right text-slate-700">${DataStore.formatUSD(x.cashflow.cashflow_2029 || 0)}</td>
+        <tr class="hover:bg-slate-50 cursor-pointer transition" onclick="App.openObraModal('${x.id}')">
+          <td class="py-2.5 px-3 font-semibold text-slate-600 whitespace-nowrap">${x.sede}</td>
+          <td class="py-2.5 px-3 whitespace-nowrap">${tipoBadge}</td>
+          <td class="py-2.5 px-3">
+            <div class="font-bold text-slate-800 text-xs">${x.nombre}</div>
+            <div class="text-[10px] text-slate-400 font-mono">${x.id} • ${x.estado || 'Estudio'}</div>
+          </td>
+          <td class="py-2.5 px-3 whitespace-nowrap">${partidaBadge}</td>
+          <td class="py-2.5 px-3 text-right font-black text-slate-900">${DataStore.formatUSD(mTotal)}</td>
+          <td class="py-2.5 px-3 text-right text-slate-700 font-medium">${DataStore.formatUSD(c2026)}</td>
+          <td class="py-2.5 px-3 text-right text-slate-700 font-medium">${DataStore.formatUSD(c2027)}</td>
+          <td class="py-2.5 px-3 text-right text-slate-700 font-medium">${DataStore.formatUSD(c2028)}</td>
+          <td class="py-2.5 px-3 text-right text-slate-700 font-medium">${DataStore.formatUSD(c2029)}</td>
         </tr>
       `;
     });
@@ -835,13 +1005,19 @@ const App = {
     html += `
           </tbody>
           <tfoot>
-            <tr class="bg-slate-200/80 font-bold text-slate-900 border-t-2 border-slate-300">
-              <td colspan="2" class="py-3 px-4 text-sm">TOTALES CONSOLIDADOS (USD)</td>
-              <td class="py-3 px-4 text-right text-sm font-black">${DataStore.formatUSD(totGral)}</td>
-              <td class="py-3 px-4 text-right font-bold">${DataStore.formatUSD(tot2026)}</td>
-              <td class="py-3 px-4 text-right font-bold">${DataStore.formatUSD(tot2027)}</td>
-              <td class="py-3 px-4 text-right font-bold">${DataStore.formatUSD(tot2028)}</td>
-              <td class="py-3 px-4 text-right font-bold">${DataStore.formatUSD(tot2029)}</td>
+            <tr class="bg-slate-200/90 font-bold text-slate-900 border-t-2 border-slate-300">
+              <td colspan="3" class="py-3 px-3 text-xs uppercase tracking-wider font-extrabold">
+                TOTALES MOSTRADOS (${summary.displayList.length} obras)
+              </td>
+              <td class="py-3 px-3 text-xs font-black text-emerald-800">
+                <span class="text-[10px] text-emerald-700 block font-normal uppercase">Asignado Partidas:</span>
+                ${DataStore.formatUSD(summary.displayTotPartidas)}
+              </td>
+              <td class="py-3 px-3 text-right text-sm font-black text-slate-900">${DataStore.formatUSD(summary.displayTotGral)}</td>
+              <td class="py-3 px-3 text-right font-bold text-slate-800">${DataStore.formatUSD(summary.displayTot2026)}</td>
+              <td class="py-3 px-3 text-right font-bold text-slate-800">${DataStore.formatUSD(summary.displayTot2027)}</td>
+              <td class="py-3 px-3 text-right font-bold text-slate-800">${DataStore.formatUSD(summary.displayTot2028)}</td>
+              <td class="py-3 px-3 text-right font-bold text-slate-800">${DataStore.formatUSD(summary.displayTot2029)}</td>
             </tr>
           </tfoot>
         </table>
@@ -849,6 +1025,7 @@ const App = {
     `;
 
     cashflowContainer.innerHTML = html;
+    if (window.lucide) lucide.createIcons();
   },
 
   // ================= MODAL: NUEVA OBRA / ESTUDIO DE FACTIBILIDAD =================
@@ -937,9 +1114,15 @@ const App = {
 
     document.getElementById('partidaItemId').value = item.id;
     document.getElementById('partidaItemName').innerText = `${item.id}: ${item.nombre}`;
+    const partidaSedeEl = document.getElementById('partidaItemSede');
+    if (partidaSedeEl) partidaSedeEl.innerText = `Sede: ${item.sede} • Módulo: ${item.tipo}`;
+    
     document.getElementById('inputNumeroPartida').value = item.partida || '';
+    const defMonto = item.monto_partida_usd || item.monto_total_usd || item.monto_obra_usd || (item.cashflow ? item.cashflow.monto_total : '') || '';
+    document.getElementById('inputMontoPartida').value = (defMonto > 0) ? defMonto : '';
 
     document.getElementById('modalAsignarPartida').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
   },
 
   closeAsignarPartidaModal() {
@@ -950,12 +1133,18 @@ const App = {
     e.preventDefault();
     const id = document.getElementById('partidaItemId').value;
     const num = document.getElementById('inputNumeroPartida').value.trim();
+    const monto = document.getElementById('inputMontoPartida').value.trim();
 
-    const res = DataStore.asignarPartidaPresupuestaria(id, num);
+    if (!monto || parseFloat(monto) <= 0) {
+      alert("Debes indicar un monto válido mayor a 0 para la partida presupuestaria (USD).");
+      return;
+    }
+
+    const res = DataStore.asignarPartidaPresupuestaria(id, num, monto);
     if (res.success) {
       this.closeAsignarPartidaModal();
       this.render();
-      this.showToast(`Partida Presupuestaria N° ${res.partida} asignada. Proceso formal habilitado.`);
+      this.showToast(`Partida N° ${res.partida} asignada por ${DataStore.formatUSD(res.monto_partida_usd)}. Habilitada para Proyecto.`);
     } else {
       alert(res.msg);
     }
@@ -1004,10 +1193,14 @@ const App = {
     const warnSinPartida = document.getElementById('transSinPartidaNotice');
     const inputQuickPartida = document.getElementById('transQuickPartidaContainer');
     const quickPartidaInput = document.getElementById('transQuickPartidaInput');
+    const quickMontoInput = document.getElementById('transQuickMontoPartidaInput');
+
     if (quickPartidaInput) quickPartidaInput.value = item.partida || '';
+    const defMonto = item.monto_partida_usd || item.monto_total_usd || item.monto_obra_usd || (item.cashflow ? item.cashflow.monto_total : '') || '';
+    if (quickMontoInput) quickMontoInput.value = (defMonto > 0) ? defMonto : '';
 
     const requierePartida = (currentStage === 'Estudio de Factibilidad' && nextStage === 'Proyecto');
-    const tienePartida = item.partida && item.partida.trim() !== '' && item.partida !== 'S/D' && item.partida.toUpperCase() !== 'PENDIENTE';
+    const tienePartida = DataStore.hasValidPartida(item) && (item.monto_partida_usd > 0 || item.monto_total_usd > 0);
 
     if (requierePartida && !tienePartida) {
       if (warnSinPartida) warnSinPartida.classList.remove('hidden');
@@ -1052,28 +1245,42 @@ const App = {
     const notes = document.getElementById('transNotes').value;
 
     const quickPartidaInput = document.getElementById('transQuickPartidaInput');
+    const quickMontoInput = document.getElementById('transQuickMontoPartidaInput');
     const enteredPartida = quickPartidaInput ? quickPartidaInput.value.trim() : '';
+    const enteredMonto = quickMontoInput ? quickMontoInput.value.trim() : '';
+
     if (enteredPartida) {
       if (!u.puede_asignar_partida) {
         alert("⛔ Acceso Denegado: No tienes el permiso específico para asignar partida presupuestaria.");
         return;
       }
-      const partRes = DataStore.asignarPartidaPresupuestaria(id, enteredPartida);
+      const montoToAssign = enteredMonto || item.monto_partida_usd || item.monto_total_usd || item.monto_obra_usd;
+      const partRes = DataStore.asignarPartidaPresupuestaria(id, enteredPartida, montoToAssign);
       if (!partRes.success) {
         alert(partRes.msg);
         return;
       }
     }
 
-    // VALIDACIÓN ESTRICTA: Para avanzar de Estudio de Factibilidad a Proyecto es OBLIGATORIO tener partida presupuestaria
+    // VALIDACIÓN ESTRICTA: Para avanzar de Estudio de Factibilidad a Proyecto es OBLIGATORIO tener partida presupuestaria y monto
     if (currentStage === 'Estudio de Factibilidad' && nextStage === 'Proyecto') {
       const finalPartida = (item.partida || enteredPartida).trim();
+      const finalMonto = item.monto_partida_usd || parseFloat(enteredMonto) || item.monto_total_usd || 0;
       if (!finalPartida || finalPartida === '' || finalPartida === 'S/D' || finalPartida.toUpperCase() === 'PENDIENTE') {
         alert("⛔ No es posible avanzar a la etapa de Proyecto:\n\nEl sistema requiere obligatoriamente que la obra cuente con un Número de Partida Presupuestaria asignado por la Dirección.\n\nSi no existe número de partida, el sistema no te permitirá avanzar.");
         if (quickPartidaInput) {
           document.getElementById('transQuickPartidaContainer')?.classList.remove('hidden');
           document.getElementById('transSinPartidaNotice')?.classList.remove('hidden');
           quickPartidaInput.focus();
+        }
+        return;
+      }
+      if (!finalMonto || finalMonto <= 0) {
+        alert("⛔ No es posible avanzar a la etapa de Proyecto:\n\nDebes indicar el monto oficial asignado a la partida presupuestaria (USD).");
+        if (quickMontoInput) {
+          document.getElementById('transQuickPartidaContainer')?.classList.remove('hidden');
+          document.getElementById('transSinPartidaNotice')?.classList.remove('hidden');
+          quickMontoInput.focus();
         }
         return;
       }
@@ -1793,6 +2000,10 @@ const App = {
     document.getElementById('modalObraTipo').value = item.tipo;
     document.getElementById('modalObraEstado').value = item.estado;
     document.getElementById('modalObraPartida').value = item.partida || '';
+    const inputMontoPartidaEl = document.getElementById('modalObraMontoPartida');
+    if (inputMontoPartidaEl) {
+      inputMontoPartidaEl.value = item.monto_partida_usd || (item.partida ? item.monto_total_usd : '') || '';
+    }
     document.getElementById('modalObraCategoria').value = item.categoria || 'Obra Civil';
     document.getElementById('modalObraClasificacion').value = item.clasificacion || '';
     document.getElementById('modalObraMontoObra').value = item.monto_obra_usd || 0;
@@ -1816,12 +2027,18 @@ const App = {
       el.classList.toggle('bg-slate-100', isReadOnly);
     });
 
-    // Control del campo partida: además requiere específicamente u.puede_asignar_partida
+    // Control de los campos partida y monto partida: además requieren específicamente u.puede_asignar_partida
     const inputPartida = document.getElementById('modalObraPartida');
-    if (inputPartida && !isReadOnly) {
+    if (!isReadOnly) {
       const canPartida = Boolean(u && u.puede_asignar_partida);
-      inputPartida.disabled = !canPartida;
-      inputPartida.classList.toggle('bg-slate-100', !canPartida);
+      if (inputPartida) {
+        inputPartida.disabled = !canPartida;
+        inputPartida.classList.toggle('bg-slate-100', !canPartida);
+      }
+      if (inputMontoPartidaEl) {
+        inputMontoPartidaEl.disabled = !canPartida;
+        inputMontoPartidaEl.classList.toggle('bg-slate-100', !canPartida);
+      }
     }
 
     const btnAsignarPartida = document.getElementById('btnModalAsignarPartida');
@@ -1879,6 +2096,8 @@ const App = {
     const currentStage = item.estado;
     const newEstado = document.getElementById('modalObraEstado').value;
     const newPartida = document.getElementById('modalObraPartida').value.trim();
+    const modalObraMontoPartida = document.getElementById('modalObraMontoPartida');
+    const newMontoPartida = modalObraMontoPartida ? parseFloat(modalObraMontoPartida.value) || 0 : 0;
 
     // Validar requerimiento obligatorio de partida presupuestaria para salir de Estudio de Factibilidad
     if (currentStage === 'Estudio de Factibilidad' && newEstado !== 'Estudio de Factibilidad' && newEstado !== 'Suspendida') {
@@ -1889,6 +2108,12 @@ const App = {
       if (!newPartida || newPartida === '' || newPartida === 'S/D' || newPartida.toUpperCase() === 'PENDIENTE') {
         alert("⛔ No es posible avanzar la obra a '" + newEstado + "':\n\nEl sistema requiere obligatoriamente que la obra cuente con un Número de Partida Presupuestaria asignado.");
         document.getElementById('modalObraPartida').focus();
+        return;
+      }
+      const finalMontoPart = newMontoPartida || item.monto_partida_usd || item.monto_total_usd || item.monto_obra_usd || 0;
+      if (finalMontoPart <= 0) {
+        alert("⛔ No es posible avanzar la obra a '" + newEstado + "':\n\nEl sistema requiere obligatoriamente indicar el Monto Asignado a la Partida Presupuestaria (USD).");
+        if (modalObraMontoPartida) modalObraMontoPartida.focus();
         return;
       }
     }
@@ -1905,6 +2130,13 @@ const App = {
     item.tipo = document.getElementById('modalObraTipo').value;
     item.estado = newEstado;
     item.partida = newPartida;
+    if (newPartida) {
+      if (newMontoPartida > 0) {
+        item.monto_partida_usd = newMontoPartida;
+      } else if (!item.monto_partida_usd) {
+        item.monto_partida_usd = item.monto_total_usd || item.monto_obra_usd || 0;
+      }
+    }
     item.categoria = document.getElementById('modalObraCategoria').value;
     item.clasificacion = document.getElementById('modalObraClasificacion').value;
     item.monto_obra_usd = parseFloat(document.getElementById('modalObraMontoObra').value) || 0;
