@@ -96,3 +96,8 @@ body {
   border-bottom: 2px solid #2563eb;
   font-weight: 600;
 }
+
+/* Forzar display none para elementos con clase hidden */
+.hidden {
+  display: none !important;
+}

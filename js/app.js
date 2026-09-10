@@ -1160,29 +1160,109 @@ const App = {
     const appContainer = document.getElementById('appContainer');
 
     if (!DataStore.currentUser) {
-      if (loginScreen) loginScreen.classList.remove('hidden');
-      if (appContainer) appContainer.classList.add('hidden');
+      if (loginScreen) {
+        loginScreen.style.setProperty('display', 'flex', 'important');
+        loginScreen.classList.remove('hidden');
+      }
+      if (appContainer) {
+        appContainer.style.setProperty('display', 'none', 'important');
+        appContainer.classList.add('hidden');
+      }
       this.renderLoginScreenProfiles();
       return false;
     } else {
-      if (loginScreen) loginScreen.classList.add('hidden');
-      if (appContainer) appContainer.classList.remove('hidden');
+      if (loginScreen) {
+        loginScreen.style.setProperty('display', 'none', 'important');
+        loginScreen.classList.add('hidden');
+      }
+      if (appContainer) {
+        appContainer.style.setProperty('display', 'flex', 'important');
+        appContainer.classList.remove('hidden');
+      }
       return true;
     }
   },
 
   renderLoginScreenProfiles() {
     const container = document.getElementById('loginScreenDemoUsers');
-    if (!container) return;
+    const select = document.getElementById('selectAuthorizedAccount');
     const users = DataStore.users || [];
-    container.innerHTML = users.map(u => `
-      <button type="button" onclick="App.login('${u.email}')" 
-              class="text-[11px] bg-slate-100 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 text-slate-700 px-2.5 py-1.5 rounded-lg border border-slate-200 transition text-left flex items-center space-x-1.5">
-        <span class="w-2 h-2 rounded-full ${u.rol === 'admin' ? 'bg-red-500' : (u.rol === 'direccion_medica' ? 'bg-purple-500' : 'bg-blue-500')}"></span>
-        <span class="font-bold">${u.nombre.split('(')[0].trim()}</span>
-        <span class="text-[10px] text-slate-400">(${u.rol})</span>
-      </button>
-    `).join('');
+
+    if (select) {
+      select.innerHTML = '<option value="">-- Selecciona una cuenta autorizada del desplegable --</option>' +
+        users.map(u => `<option value="${u.email}">${u.nombre} (${u.email}) - Rol: ${u.rol.toUpperCase()}</option>`).join('');
+    }
+
+    if (container) {
+      container.innerHTML = users.map(u => `
+        <button type="button" onclick="App.quickSelectUser('${u.email}')" 
+                class="text-[11px] bg-slate-100 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 text-slate-700 p-2.5 rounded-xl border border-slate-200 transition text-left flex flex-col space-y-0.5 w-full cursor-pointer">
+          <div class="flex items-center space-x-1.5">
+            <span class="w-2 h-2 rounded-full shrink-0 ${u.rol === 'admin' ? 'bg-red-500' : (u.rol === 'direccion_medica' ? 'bg-purple-500' : 'bg-blue-500')}"></span>
+            <span class="font-bold text-slate-800 text-xs">${u.nombre}</span>
+            <span class="text-[10px] text-slate-400">(${u.rol})</span>
+          </div>
+          <div class="text-[11px] text-blue-600 font-mono pl-3.5">${u.email}</div>
+        </button>
+      `).join('');
+    }
+  },
+
+  handleSelectAuthorizedAccount(email) {
+    if (!email) return;
+    const input = document.getElementById('inputLoginScreenEmail');
+    if (input) input.value = email;
+    this.login(email);
+  },
+
+  quickSelectUser(email) {
+    const input = document.getElementById('inputLoginScreenEmail');
+    if (input) input.value = email;
+    this.login(email);
+  },
+
+  openRegisterAdminModal() {
+    const modal = document.getElementById('modalRegisterAdmin');
+    if (modal) {
+      modal.style.setProperty('display', 'flex', 'important');
+      modal.classList.remove('hidden');
+    }
+    if (window.lucide) lucide.createIcons();
+  },
+
+  closeRegisterAdminModal() {
+    const modal = document.getElementById('modalRegisterAdmin');
+    if (modal) {
+      modal.style.setProperty('display', 'none', 'important');
+      modal.classList.add('hidden');
+    }
+  },
+
+  handleRegisterAdminSubmit() {
+    const name = document.getElementById('inputRegisterAdminName')?.value.trim();
+    const email = document.getElementById('inputRegisterAdminEmail')?.value.trim();
+
+    if (!name || !email || !email.includes('@')) {
+      alert('Por favor ingresa tu nombre y un correo de Gmail válido.');
+      return;
+    }
+
+    const newAdmin = DataStore.addUser({
+      nombre: name,
+      email: email,
+      sede: 'Todas',
+      rol: 'admin',
+      activo: true,
+      puede_crear: true,
+      puede_avanzar: true,
+      puede_priorizar_medica: true,
+      puede_asignar_partida: true,
+      solo_lectura: false
+    });
+
+    this.closeRegisterAdminModal();
+    this.login(email);
+    this.showToast(`¡Cuenta ${email} registrada y autenticada como Administrador!`);
   },
 
   login(email) {
@@ -1208,86 +1288,6 @@ const App = {
         alert(res.msg);
       }
       if (window.lucide) lucide.createIcons();
-    }
-  },
-
-  loginWithGooglePrompt() {
-    if (SupabaseManager.isConfigured) {
-      SupabaseManager.signInWithGoogle();
-    } else {
-      this.openGoogleLoginModal();
-    }
-  },
-
-  handleLoginEmailSubmit() {
-    const input = document.getElementById('inputLoginScreenEmail');
-    if (!input || !input.value.trim()) return;
-    this.login(input.value.trim());
-  },
-
-  logout() {
-    DataStore.logout();
-    this.checkAuth();
-    this.showToast('Has cerrado sesión correctamente.');
-    if (window.lucide) lucide.createIcons();
-  },
-
-  openGoogleLoginModal() {
-    const err = document.getElementById('modalGoogleLoginError');
-    if (err) err.classList.add('hidden');
-    document.getElementById('modalGoogleLogin').classList.remove('hidden');
-    if (window.lucide) lucide.createIcons();
-  },
-
-  closeGoogleLoginModal() {
-    document.getElementById('modalGoogleLogin').classList.add('hidden');
-  },
-
-  handleGoogleLoginSubmit() {
-    const email = document.getElementById('inputGoogleEmail').value.trim();
-    const pwd = document.getElementById('inputGooglePassword')?.value.trim() || '';
-    const errBox = document.getElementById('modalGoogleLoginError');
-    const errText = document.getElementById('modalGoogleLoginErrorText');
-
-    if (!email || !email.includes('@')) {
-      if (errBox && errText) {
-        errText.innerText = 'Por favor ingresa un correo de Gmail válido';
-        errBox.classList.remove('hidden');
-      } else {
-        alert('Por favor ingresa un correo de Gmail válido');
-      }
-      return;
-    }
-
-    if (!pwd) {
-      if (errBox && errText) {
-        errText.innerText = 'Por favor ingresa la contraseña de tu cuenta de Google';
-        errBox.classList.remove('hidden');
-      }
-      return;
-    }
-
-    const res = DataStore.loginWithGoogle(email);
-    if (res.success) {
-      if (errBox) errBox.classList.add('hidden');
-      if (DataStore.currentUser && DataStore.currentUser.sede !== 'Todas') {
-        this.filters.sede = DataStore.currentUser.sede;
-      }
-      this.closeGoogleLoginModal();
-      this.checkAuth();
-      this.updateUserUI();
-      this.render();
-      this.showToast(`¡Autenticación con Google exitosa! Bienvenido/a ${res.user.nombre}`);
-      if (window.lucide) lucide.createIcons();
-    } else {
-      if (errBox && errText) {
-        errText.innerText = res.msg;
-        errBox.classList.remove('hidden');
-      } else {
-        alert(res.msg);
-      }
-      if (window.lucide) lucide.createIcons();
-    }
   },
 
   updateUserUI() {

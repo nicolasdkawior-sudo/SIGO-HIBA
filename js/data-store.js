@@ -127,6 +127,11 @@ const DataStore = {
     if (localUsers) {
       try {
         this.users = JSON.parse(localUsers);
+        DEFAULT_USERS.forEach(defU => {
+          if (!this.users.some(u => (u.email || '').toLowerCase() === defU.email.toLowerCase())) {
+            this.users.push({ ...defU });
+          }
+        });
       } catch (e) {
         this.users = [...DEFAULT_USERS];
       }
