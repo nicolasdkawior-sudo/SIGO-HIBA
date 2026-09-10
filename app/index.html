@@ -20,6 +20,77 @@
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col">
 
+  <!-- ================= PANTALLA DE ACCESO / LOGIN GATE ================= -->
+  <div id="loginScreen" class="fixed inset-0 z-50 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 flex items-center justify-center p-4 overflow-y-auto">
+    <div class="max-w-md w-full bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden my-auto">
+      <!-- Header Banner -->
+      <div class="bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 p-6 text-white text-center relative">
+        <div class="w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl mx-auto flex items-center justify-center mb-3 shadow-inner border border-white/20">
+          <i data-lucide="building-2" class="w-8 h-8 text-white"></i>
+        </div>
+        <h1 class="text-xl font-black tracking-tight">SIGO <span class="text-blue-300 font-normal">| HIBA</span></h1>
+        <p class="text-xs text-blue-100 mt-1 font-medium">Hospital Italiano de Buenos Aires</p>
+        <p class="text-[11px] text-blue-200/70">Sistema Integral de Gestión de Obras e Inversiones</p>
+      </div>
+
+      <!-- Body -->
+      <div class="p-6 space-y-5">
+        <div class="text-center">
+          <h2 class="text-base font-bold text-slate-800">Portal de Acceso al Sistema</h2>
+          <p class="text-xs text-slate-500 mt-1">Ingresa con tu cuenta de correo autorizada para acceder al tablero de gestión de obras.</p>
+        </div>
+
+        <!-- Google Login Button -->
+        <button type="button" onclick="App.loginWithGooglePrompt()" class="w-full bg-white hover:bg-slate-50 text-slate-700 font-bold text-sm py-3 px-4 rounded-xl border border-slate-300 shadow-xs flex items-center justify-center space-x-3 transition group hover:border-slate-400 cursor-pointer">
+          <svg class="w-5 h-5" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24z"/>
+            <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+          </svg>
+          <span class="group-hover:text-slate-900">Continuar con Gmail / Google</span>
+        </button>
+
+        <div class="relative flex items-center justify-center">
+          <div class="border-t border-slate-200 w-full"></div>
+          <span class="bg-white px-3 text-[11px] text-slate-400 uppercase font-semibold tracking-wider">o con tu Gmail</span>
+        </div>
+
+        <!-- Form Email Directo -->
+        <form onsubmit="event.preventDefault(); App.handleLoginEmailSubmit();" class="space-y-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Correo Electrónico (Gmail)</label>
+            <div class="relative">
+              <input type="email" id="inputLoginScreenEmail" required placeholder="tu.nombre@gmail.com" 
+                     class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-medium pl-9 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+              <i data-lucide="mail" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+            </div>
+          </div>
+          <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-md transition flex items-center justify-center space-x-2 cursor-pointer">
+            <span>Ingresar al Sistema</span>
+            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+          </button>
+        </form>
+
+        <!-- Accesos directos de evaluación / Roles demo -->
+        <div class="pt-2 border-t border-slate-100">
+          <p class="text-[11px] text-slate-400 font-semibold mb-2 flex items-center justify-between">
+            <span>Perfiles autorizados (demo):</span>
+            <span class="text-[10px] text-blue-600 font-bold">Clic para probar</span>
+          </p>
+          <div id="loginScreenDemoUsers" class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1"></div>
+        </div>
+
+        <div class="text-center text-[10px] text-slate-400 pt-1">
+          🔒 Acceso restringido al personal del Hospital Italiano. Permisos auditados por la Dirección General.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= CONTENEDOR PRINCIPAL DE LA APP ================= -->
+  <div id="appContainer" class="hidden min-h-screen flex flex-col">
+
   <!-- ================= TOPBAR BRANDING & AUTH ================= -->
   <header class="bg-slate-900 text-white border-b border-slate-800 px-6 py-3 flex items-center justify-between sticky top-0 z-40 shadow-sm">
     <div class="flex items-center space-x-4">
@@ -53,9 +124,18 @@
         <i data-lucide="user" class="w-4 h-4 text-blue-400"></i>
         <div class="text-left">
           <div id="userNameLabel" class="font-semibold text-white leading-tight">Dirección General</div>
-          <div id="userRoleBadge" class="text-[10px] text-blue-400 font-bold">ADMIN</div>
+          <div class="flex items-center space-x-1.5">
+            <span id="userRoleBadge" class="text-[10px] text-blue-400 font-bold">ADMIN</span>
+            <span id="userEmailBadge" class="text-[10px] text-slate-400 hidden lg:inline">admin.obras@gmail.com</span>
+          </div>
         </div>
       </div>
+
+      <!-- Botón Cerrar Sesión -->
+      <button onclick="App.logout()" class="bg-slate-800 hover:bg-red-950/60 hover:border-red-500/50 text-slate-300 hover:text-red-300 px-2.5 py-1.5 rounded-lg border border-slate-700 text-xs font-semibold flex items-center space-x-1 transition" title="Cerrar Sesión">
+        <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+        <span class="hidden sm:inline">Salir</span>
+      </button>
 
       <!-- Botón Gestión de Usuarios (Admin) -->
       <button onclick="App.openUsersAdminModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-semibold flex items-center space-x-1.5 transition" title="Gestión de Usuarios y Permisos">
@@ -952,6 +1032,8 @@
       </div>
     </div>
   </div>
+
+  </div> <!-- Fin appContainer -->
 
   <!-- Toast Notification -->
   <div id="toastNotification" class="hidden fixed bottom-5 right-5 z-50 bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-lg shadow-xl flex items-center space-x-2"></div>

@@ -21,13 +21,19 @@ const App = {
     DataStore.init();
     SupabaseManager.init();
 
+    this.setupEventListeners();
+    this.updateCloudStatusUI();
+
+    if (!this.checkAuth()) {
+      if (window.lucide) lucide.createIcons();
+      return;
+    }
+
     if (DataStore.currentUser && DataStore.currentUser.sede !== 'Todas') {
       this.filters.sede = DataStore.currentUser.sede;
     }
 
-    this.setupEventListeners();
     this.updateUserUI();
-    this.updateCloudStatusUI();
     this.render();
 
     if (window.lucide) {
@@ -1148,6 +1154,73 @@ const App = {
     }
   },
 
+  // ================= CONTROL DE AUTENTICACIÓN Y LOGIN GATE =================
+  checkAuth() {
+    const loginScreen = document.getElementById('loginScreen');
+    const appContainer = document.getElementById('appContainer');
+
+    if (!DataStore.currentUser) {
+      if (loginScreen) loginScreen.classList.remove('hidden');
+      if (appContainer) appContainer.classList.add('hidden');
+      this.renderLoginScreenProfiles();
+      return false;
+    } else {
+      if (loginScreen) loginScreen.classList.add('hidden');
+      if (appContainer) appContainer.classList.remove('hidden');
+      return true;
+    }
+  },
+
+  renderLoginScreenProfiles() {
+    const container = document.getElementById('loginScreenDemoUsers');
+    if (!container) return;
+    const users = DataStore.users || [];
+    container.innerHTML = users.map(u => `
+      <button type="button" onclick="App.login('${u.email}')" 
+              class="text-[11px] bg-slate-100 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 text-slate-700 px-2.5 py-1.5 rounded-lg border border-slate-200 transition text-left flex items-center space-x-1.5">
+        <span class="w-2 h-2 rounded-full ${u.rol === 'admin' ? 'bg-red-500' : (u.rol === 'direccion_medica' ? 'bg-purple-500' : 'bg-blue-500')}"></span>
+        <span class="font-bold">${u.nombre.split('(')[0].trim()}</span>
+        <span class="text-[10px] text-slate-400">(${u.rol})</span>
+      </button>
+    `).join('');
+  },
+
+  login(email) {
+    const res = DataStore.loginWithGoogle(email);
+    if (res.success) {
+      if (DataStore.currentUser && DataStore.currentUser.sede !== 'Todas') {
+        this.filters.sede = DataStore.currentUser.sede;
+      }
+      this.checkAuth();
+      this.updateUserUI();
+      this.render();
+      this.showToast(res.msg || `¡Bienvenido/a ${res.user.nombre}!`);
+      if (window.lucide) lucide.createIcons();
+    } else {
+      alert(res.msg);
+    }
+  },
+
+  loginWithGooglePrompt() {
+    const email = prompt("Ingresa tu correo de Gmail personal para ingresar:", "admin.obras@gmail.com");
+    if (email) {
+      this.login(email.trim());
+    }
+  },
+
+  handleLoginEmailSubmit() {
+    const input = document.getElementById('inputLoginScreenEmail');
+    if (!input || !input.value.trim()) return;
+    this.login(input.value.trim());
+  },
+
+  logout() {
+    DataStore.logout();
+    this.checkAuth();
+    this.showToast('Has cerrado sesión correctamente.');
+    if (window.lucide) lucide.createIcons();
+  },
+
   openGoogleLoginModal() {
     document.getElementById('modalGoogleLogin').classList.remove('hidden');
   },
@@ -1162,19 +1235,8 @@ const App = {
       alert("Por favor ingresa un correo de Gmail válido");
       return;
     }
-
-    const res = DataStore.loginWithGoogle(email);
-    if (res.success) {
-      if (DataStore.currentUser.sede !== 'Todas') {
-        this.filters.sede = DataStore.currentUser.sede;
-      }
-      this.updateUserUI();
-      this.closeGoogleLoginModal();
-      this.render();
-      this.showToast(res.msg || `¡Bienvenido ${res.user.nombre}!`);
-    } else {
-      alert(res.msg);
-    }
+    this.login(email);
+    this.closeGoogleLoginModal();
   },
 
   updateUserUI() {
@@ -1183,11 +1245,13 @@ const App = {
 
     const nameEl = document.getElementById('userNameLabel');
     const roleEl = document.getElementById('userRoleBadge');
+    const emailEl = document.getElementById('userEmailBadge');
     const sedeEl = document.getElementById('userSedeBadge');
     const sedeSelect = document.getElementById('filterSede');
 
     if (nameEl) nameEl.innerText = u.nombre;
     if (roleEl) roleEl.innerText = `${u.rol.toUpperCase()}`;
+    if (emailEl) emailEl.innerText = u.email || '';
     if (sedeEl) sedeEl.innerText = u.sede !== 'Todas' ? `📍 Sede: ${u.sede}` : '🌐 Todas las Sedes';
 
     if (sedeSelect) {

@@ -136,7 +136,7 @@ const DataStore = {
     }
 
     const activeUsrId = localStorage.getItem('sigo_active_user_id');
-    this.currentUser = this.users.find(u => u.id === activeUsrId) || this.users[0];
+    this.currentUser = activeUsrId ? (this.users.find(u => u.id === activeUsrId && u.activo) || null) : null;
 
     // 2. Cargar Obras
     const localObras = localStorage.getItem('sigo_obras_data');
@@ -672,6 +672,11 @@ const DataStore = {
       return true;
     }
     return false;
+  },
+
+  logout() {
+    this.currentUser = null;
+    localStorage.removeItem('sigo_active_user_id');
   },
 
   loginWithGoogle(email) {
