@@ -287,6 +287,16 @@
         </select>
       </div>
 
+      <!-- Asignación Filter -->
+      <div id="filterAsignacionWrapper" class="flex items-center space-x-1.5 text-xs">
+        <span class="text-slate-500 font-medium">Asignación:</span>
+        <select id="filterAsignacion" class="bg-slate-100 border border-slate-300 text-slate-800 rounded-md px-2.5 py-1.5 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500">
+          <option value="TODAS">Todas</option>
+          <option value="ASIGNADAS">Solo Asignadas</option>
+          <option value="SIN_ASIGNAR">Solo Sin Asignar</option>
+        </select>
+      </div>
+
       <!-- BOTÓN FILTRO DE FINALIZADAS -->
       <button id="btnToggleFinalizadas" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-md font-semibold flex items-center space-x-1.5 border border-slate-300 transition">
         <i data-lucide="play-circle" class="w-3.5 h-3.5 text-emerald-600"></i>
@@ -996,6 +1006,7 @@
                   <th class="py-2.5 px-3">Nombre & Correo</th>
                   <th class="py-2.5 px-3">Sede</th>
                   <th class="py-2.5 px-3">Rol</th>
+                  <th class="py-2.5 px-3">Obras a Cargo</th>
                   <th class="py-2.5 px-3">Estado</th>
                   <th class="py-2.5 px-3 text-right">Acciones de Control</th>
                 </tr>
@@ -1007,7 +1018,81 @@
       </div>
 
       <div class="bg-slate-100 px-6 py-3 border-t border-slate-200 flex justify-end">
-        <button onclick="App.closeUsersAdminModal()" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-bold">Cerrar</button>
+        <button onclick="App.closeUsersAdminModal()" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-bold cursor-pointer">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: ASIGNACIÓN DE OBRAS A USUARIO (ADMIN) ================= -->
+  <div id="modalAssignUserObras" class="hidden fixed inset-0 z-[55] flex items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-slate-100 text-xs">
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 text-white px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-blue-600/30 flex items-center justify-center border border-blue-400/30 text-blue-300">
+            <i data-lucide="folder-kanban" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h3 class="font-bold text-sm">Asignar Cartera de Obras e Infraestructura</h3>
+              <span id="assignModalUserBadge" class="bg-blue-500/30 border border-blue-400/40 text-blue-200 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold"></span>
+            </div>
+            <p id="assignModalUserSubtitle" class="text-xs text-slate-300 mt-0.5">Marca o desmarca las obras que estarán exclusivamente a cargo de este usuario.</p>
+          </div>
+        </div>
+        <button type="button" onclick="App.closeAssignUserObrasModal()" class="text-slate-400 hover:text-white cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <!-- Barra de Filtros y Búsqueda -->
+      <div class="p-3.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2.5">
+        <div class="flex items-center space-x-2 flex-1 min-w-[280px]">
+          <div class="relative flex-1">
+            <input type="text" id="assignModalSearch" oninput="App.filterAssignObrasModalList()" placeholder="Buscar por código, nombre o sede..." class="w-full bg-white border border-slate-300 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500">
+            <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5"></i>
+          </div>
+          <select id="assignModalTypeFilter" onchange="App.filterAssignObrasModalList()" class="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700">
+            <option value="TODOS">Todos los Módulos</option>
+            <option value="Obra Civil">Solo Obras Civiles</option>
+            <option value="Infraestructura">Solo Infraestructura</option>
+          </select>
+          <select id="assignModalStateFilter" onchange="App.filterAssignObrasModalList()" class="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700">
+            <option value="TODAS">Todas las Obras</option>
+            <option value="ASIGNADAS_A_ESTE">Asignadas a este usuario</option>
+            <option value="SIN_ASIGNAR">Sin Asignar (Libres)</option>
+            <option value="OTRO_RESPONSABLE">Asignadas a otros PMs</option>
+          </select>
+        </div>
+
+        <div class="flex items-center space-x-2 shrink-0">
+          <button type="button" onclick="App.toggleSelectAllAssignObras(true)" class="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-[11px] font-bold transition cursor-pointer">
+            Marcar visibles
+          </button>
+          <button type="button" onclick="App.toggleSelectAllAssignObras(false)" class="px-2.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-[11px] font-semibold transition cursor-pointer">
+            Desmarcar visibles
+          </button>
+        </div>
+      </div>
+
+      <!-- Lista de Obras con Checkboxes -->
+      <div class="p-4 overflow-y-auto flex-1 max-h-[55vh] bg-slate-50/50">
+        <input type="hidden" id="assignModalTargetUserId">
+        <div id="assignModalObrasList" class="space-y-2"></div>
+      </div>
+
+      <!-- Footer con Resumen y Guardar -->
+      <div class="bg-slate-100 px-6 py-3 border-t border-slate-200 flex items-center justify-between">
+        <div id="assignModalSummaryText" class="text-xs text-slate-700 font-semibold flex items-center space-x-2">
+          <span>Cargando obras...</span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button type="button" onclick="App.closeAssignUserObrasModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold transition cursor-pointer">
+            Cancelar
+          </button>
+          <button type="button" onclick="App.saveAssignUserObras()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-md transition cursor-pointer flex items-center space-x-1.5">
+            <i data-lucide="check" class="w-4 h-4"></i>
+            <span>Guardar Asignaciones</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -1365,9 +1450,15 @@
         <!-- Actores y Prioridades -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label class="block font-semibold text-slate-700 mb-1">Jefe de Obra / PM Responsable</label>
-            <input type="text" id="modalObraResponsable" list="responsablesDatalist" placeholder="Seleccionar o escribir responsable" class="w-full border border-slate-300 rounded-lg px-3 py-2">
-            <datalist id="responsablesDatalist"></datalist>
+            <label class="block font-semibold text-slate-700 mb-1 flex items-center justify-between">
+              <span>Jefe de Obra / PM Responsable</span>
+              <span id="modalObraAssignmentBadge"></span>
+            </label>
+            <select id="modalObraResponsableSelect" onchange="App.handleModalResponsableSelectChange(this.value)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+              <option value="">-- Sin Asignar --</option>
+            </select>
+            <input type="hidden" id="modalObraResponsable">
+            <input type="hidden" id="modalObraResponsableId">
           </div>
           <div>
             <label class="block font-semibold text-slate-700 mb-1">Proveedor / Contratista</label>

@@ -11,6 +11,7 @@ const App = {
     estado: 'TODOS',
     semaforo: 'TODOS',
     responsable: 'TODOS',
+    asignacion: 'TODAS', // 'TODAS', 'ASIGNADAS', 'SIN_ASIGNAR'
     filtroFinalizadas: 'todas', // 'todas', 'activas', 'finalizadas', 'suspendidas'
     search: ''
   },
@@ -63,6 +64,11 @@ const App = {
 
     document.getElementById('filterTipo')?.addEventListener('change', (e) => {
       this.filters.tipo = e.target.value;
+      this.render();
+    });
+
+    document.getElementById('filterAsignacion')?.addEventListener('change', (e) => {
+      this.filters.asignacion = e.target.value;
       this.render();
     });
 
@@ -123,6 +129,7 @@ const App = {
       estado: 'TODOS',
       semaforo: 'TODOS',
       responsable: 'TODOS',
+      asignacion: 'TODAS',
       filtroFinalizadas: 'todas',
       search: ''
     };
@@ -133,6 +140,8 @@ const App = {
     if (selSede) selSede.value = userSede;
     const selTipo = document.getElementById('filterTipo');
     if (selTipo) selTipo.value = 'TODOS';
+    const selAsign = document.getElementById('filterAsignacion');
+    if (selAsign) selAsign.value = 'TODAS';
     const inSearch = document.getElementById('inputSearch');
     if (inSearch) inSearch.value = '';
 
@@ -619,9 +628,13 @@ const App = {
       const canAvanzar = canAdvanceThis && u && !u.solo_lectura && u.rol !== 'visualizador';
       const isCorta = DataStore.isPartidaCorta(item);
       const deficit = isCorta ? DataStore.getPartidaDeficit(item) : 0;
+      const isAssigned = DataStore.isObraAssigned(item);
 
       html += `
-        <div class="py-3 flex items-center justify-between hover:bg-slate-50 px-2 rounded-lg cursor-pointer transition ${isCorta ? 'bg-rose-50/50 border-l-4 border-rose-500 my-1' : ''}" onclick="App.openObraModal('${item.id}')">
+        <div class="py-3 flex items-center justify-between hover:bg-slate-50 px-2 rounded-lg cursor-pointer transition ${
+          isCorta ? 'bg-rose-50/50 border-l-4 border-rose-500 my-1' :
+          (!isAssigned && isAdmin ? 'bg-amber-50/40 border-l-4 border-amber-400 my-1' : '')
+        }" onclick="App.openObraModal('${item.id}')">
           <div class="flex items-center space-x-3">
             <span class="px-2.5 py-1 text-xs font-semibold rounded-md ${sem.class}">
               ${sem.label}
@@ -633,14 +646,24 @@ const App = {
                   ${pond.nivelLabel} (${pond.valor}★)
                 </span>
                 ${!item.partida || item.partida === 'S/D' ? `<span class="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.2 rounded font-bold">Sin Partida</span>` : ''}
-                ${isCorta ? `<span class="bg-rose-100 text-rose-800 text-[10px] px-1.5 py-0.2 rounded font-bold border border-rose-300 inline-flex items-center space-x-1" title="Partida asignada menor al costo requerido (-USD ${DataStore.formatUSD(deficit)})"><i data-lucide="alert-triangle" class="w-2.5 h-2.5 text-rose-600"></i><span>Partida Corta (-USD ${DataStore.formatUSD(deficit)})</span></span>` : ''}
+                ${isCorta ? `<span class="bg-rose-100 text-rose-800 text-[10px] px-2 py-0.2 rounded font-bold border border-rose-300 inline-flex items-center space-x-1" title="Partida asignada menor al costo requerido (-USD ${DataStore.formatUSD(deficit)})"><i data-lucide="alert-triangle" class="w-2.5 h-2.5 text-rose-600"></i><span>Partida Corta (-USD ${DataStore.formatUSD(deficit)})</span></span>` : ''}
               </div>
-              <div class="text-xs text-slate-400 flex items-center space-x-2 mt-0.5">
+              <div class="text-xs text-slate-400 flex items-center space-x-2 mt-0.5 flex-wrap gap-y-1">
                 <span class="font-semibold text-slate-600">📍 ${item.sede}</span>
                 <span>•</span>
                 <span>Fase: <strong class="text-blue-600">${item.estado}</strong></span>
                 <span>•</span>
-                <span>PM: ${item.responsable || 'Sin asignar'}</span>
+                ${isAssigned ? `
+                  <span class="bg-emerald-50 text-emerald-800 border border-emerald-300 text-[10px] px-2 py-0.5 rounded-full font-bold inline-flex items-center space-x-1" title="Obra a cargo de ${item.responsable}">
+                    <i data-lucide="user-check" class="w-3 h-3 text-emerald-600"></i>
+                    <span>Asignada: <strong>${item.responsable}</strong></span>
+                  </span>
+                ` : `
+                  <span class="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] px-2 py-0.5 rounded-full font-bold inline-flex items-center space-x-1" title="Obra pendiente de ser asignada a un responsable">
+                    <i data-lucide="alert-circle" class="w-3 h-3 text-amber-600"></i>
+                    <span>⚠️ Sin Asignar</span>
+                  </span>
+                `}
                 ${item.sector_solicitante ? `<span>• Sector: <strong>${item.sector_solicitante}</strong></span>` : ''}
               </div>
             </div>
@@ -731,9 +754,13 @@ const App = {
           const canAvanzar = canAdvanceThis && u && !u.solo_lectura && u.rol !== 'visualizador';
           const isCorta = DataStore.isPartidaCorta(item);
           const deficit = isCorta ? DataStore.getPartidaDeficit(item) : 0;
+          const isAssigned = DataStore.isObraAssigned(item);
 
           html += `
-            <div class="kanban-card bg-white p-3.5 rounded-xl border ${isCorta ? 'border-rose-400 border-l-4 bg-rose-50/20' : 'border-slate-200'} shadow-2xs cursor-pointer" onclick="App.openObraModal('${item.id}')">
+            <div class="kanban-card bg-white p-3.5 rounded-xl border ${
+              isCorta ? 'border-rose-400 border-l-4 bg-rose-50/20' : 
+              (!isAssigned && isAdmin ? 'border-amber-300 border-l-4 bg-amber-50/30' : 'border-slate-200')
+            } shadow-2xs cursor-pointer" onclick="App.openObraModal('${item.id}')">
               <div class="flex items-center justify-between mb-1.5">
                 <span class="text-xs font-mono font-bold text-slate-400">${item.id}</span>
                 <span class="px-2 py-0.5 text-[11px] font-semibold rounded ${sem.class}">${sem.label}</span>
@@ -762,7 +789,19 @@ const App = {
               </div>
 
               <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
-                <span class="text-slate-400 truncate max-w-[110px]">👤 ${item.responsable || 'S/D'}</span>
+                <div class="truncate max-w-[130px]">
+                  ${isAssigned ? `
+                    <span class="text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded text-[10px] font-bold truncate inline-flex items-center space-x-1" title="Asignada a: ${item.responsable}">
+                      <i data-lucide="user-check" class="w-2.5 h-2.5 text-emerald-600 shrink-0"></i>
+                      <span class="truncate">${item.responsable}</span>
+                    </span>
+                  ` : `
+                    <span class="text-amber-800 bg-amber-100 border border-amber-300 px-1.5 py-0.5 rounded text-[10px] font-bold inline-flex items-center space-x-1" title="Pendiente de asignación">
+                      <i data-lucide="alert-circle" class="w-2.5 h-2.5 text-amber-600 shrink-0"></i>
+                      <span>Sin Asignar</span>
+                    </span>
+                  `}
+                </div>
                 
                 <div class="flex items-center space-x-1.5">
                   ${isAdmin ? `
@@ -823,9 +862,13 @@ const App = {
       const canAvanzar = canAdvanceThis && u && !u.solo_lectura && u.rol !== 'visualizador';
       const isCorta = DataStore.isPartidaCorta(item);
       const deficit = isCorta ? DataStore.getPartidaDeficit(item) : 0;
+      const isAssigned = DataStore.isObraAssigned(item);
 
       html += `
-        <tr class="hover:bg-slate-50/80 transition cursor-pointer border-b ${isCorta ? 'border-rose-300 bg-rose-50/60 text-rose-950 font-medium' : 'border-slate-100'}" onclick="App.openObraModal('${item.id}')">
+        <tr class="hover:bg-slate-50/80 transition cursor-pointer border-b ${
+          isCorta ? 'border-rose-300 bg-rose-50/60 text-rose-950 font-medium' :
+          (!isAssigned && isAdmin ? 'border-amber-300 bg-amber-50/30' : 'border-slate-100')
+        }" onclick="App.openObraModal('${item.id}')">
           <td class="py-3 px-4 text-xs font-mono font-bold text-slate-500">${item.id}</td>
           <td class="py-3 px-4 text-xs font-semibold">
             <span class="px-2 py-0.5 rounded ${
@@ -852,7 +895,19 @@ const App = {
             <span class="px-2.5 py-1 text-xs font-semibold rounded-md ${sem.class}">${sem.label}</span>
           </td>
           <td class="py-3 px-4 text-sm font-black text-slate-900 text-right">${monto}</td>
-          <td class="py-3 px-4 text-xs text-slate-600">${item.responsable || '-'}</td>
+          <td class="py-3 px-4 text-xs">
+            ${isAssigned ? `
+              <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold" title="Asignada a ${item.responsable}">
+                <i data-lucide="user-check" class="w-3 h-3 text-emerald-600"></i>
+                <span class="truncate max-w-[120px]">${item.responsable}</span>
+              </span>
+            ` : `
+              <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-bold" title="Obra sin responsable asignado">
+                <i data-lucide="alert-circle" class="w-3 h-3 text-amber-600"></i>
+                <span>Sin Asignar</span>
+              </span>
+            `}
+          </td>
           <td class="py-3 px-4 text-xs text-slate-500">${item.fecha_fin_etapa || '-'}</td>
           <td class="py-3 px-4 text-center" onclick="event.stopPropagation()">
             <div class="flex items-center justify-center space-x-1.5">
@@ -1637,6 +1692,9 @@ const App = {
     let html = '';
     DataStore.users.forEach(u => {
       const isCurrent = DataStore.currentUser && DataStore.currentUser.id === u.id;
+      const assignedObras = DataStore.getUserAssignedObras(u.id);
+      const obraCount = assignedObras.length;
+
       html += `
         <tr class="border-b border-slate-100 hover:bg-slate-50 text-xs">
           <td class="py-2.5 px-3">
@@ -1659,6 +1717,21 @@ const App = {
           </td>
           <td class="py-2.5 px-3 font-semibold text-slate-700 uppercase text-[10px]">${u.rol}</td>
           <td class="py-2.5 px-3">
+            <div class="flex items-center space-x-1.5">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                obraCount > 0 ? 'bg-blue-100 text-blue-800 border border-blue-200' : 'bg-slate-100 text-slate-500 border border-slate-200'
+              }">
+                ${obraCount} ${obraCount === 1 ? 'obra' : 'obras'}
+              </span>
+              <button type="button" onclick="App.openAssignUserObrasModal('${u.id}')" 
+                      class="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded text-[10px] font-bold inline-flex items-center space-x-1 transition cursor-pointer"
+                      title="Asignar o desasignar obras a este usuario">
+                <i data-lucide="folder-plus" class="w-3 h-3 text-emerald-600"></i>
+                <span>Asignar</span>
+              </button>
+            </div>
+          </td>
+          <td class="py-2.5 px-3">
             ${u.activo 
               ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>Acceso Habilitado</span>' 
               : '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800"><span class="w-1.5 h-1.5 rounded-full bg-rose-500 mr-1.5"></span>Acceso Revocado</span>'
@@ -1666,6 +1739,12 @@ const App = {
           </td>
           <td class="py-2.5 px-3 text-right">
             <div class="flex items-center justify-end space-x-1.5 flex-wrap gap-y-1">
+              <!-- 0. Botón Asignar Cartera de Obras -->
+              <button type="button" onclick="App.openAssignUserObrasModal('${u.id}')" title="Asignar cartera de obras e infraestructura a este usuario" class="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded font-bold text-[11px] transition cursor-pointer flex items-center space-x-1">
+                <i data-lucide="folder-kanban" class="w-3 h-3 text-emerald-600"></i>
+                <span>Asignar</span>
+              </button>
+
               <!-- 1. Botón Cambiar Permisos -->
               <button type="button" onclick="App.openEditPermissionsModal('${u.id}')" title="Modificar rol, sede y permisos granulares" class="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded font-bold text-[11px] transition cursor-pointer flex items-center space-x-1">
                 <i data-lucide="settings" class="w-3 h-3"></i>
@@ -1707,6 +1786,252 @@ const App = {
     });
     listEl.innerHTML = html;
     if (window.lucide) lucide.createIcons();
+  },
+
+  // ================= MODAL: ASIGNACIÓN DE OBRAS A USUARIOS =================
+  assignModalState: {
+    targetUserId: null,
+    selectedObraIds: new Set(),
+    initialObraIds: new Set()
+  },
+
+  openAssignUserObrasModal(userId) {
+    const user = (DataStore.users || []).find(u => u.id === userId);
+    if (!user) {
+      alert("Usuario no encontrado.");
+      return;
+    }
+    if (!DataStore.isAdmin()) {
+      alert("⛔ Acceso Denegado: Exclusivo para el Administrador. Solo el administrador puede asignar obras a los usuarios.");
+      return;
+    }
+
+    const assignedObras = DataStore.getUserAssignedObras(userId);
+    const assignedIds = new Set(assignedObras.map(o => o.id));
+
+    this.assignModalState = {
+      targetUserId: userId,
+      selectedObraIds: new Set(assignedIds),
+      initialObraIds: new Set(assignedIds)
+    };
+
+    const targetInput = document.getElementById('assignModalTargetUserId');
+    if (targetInput) targetInput.value = userId;
+
+    const badge = document.getElementById('assignModalUserBadge');
+    if (badge) badge.innerText = `@${user.username} (${user.rol.toUpperCase()})`;
+
+    const subtitle = document.getElementById('assignModalUserSubtitle');
+    if (subtitle) subtitle.innerHTML = `Gestionando cartera a cargo de <strong>${user.nombre}</strong> (${user.sede} - ${user.rol}).`;
+
+    const searchInput = document.getElementById('assignModalSearch');
+    if (searchInput) searchInput.value = '';
+
+    const typeFilter = document.getElementById('assignModalTypeFilter');
+    if (typeFilter) typeFilter.value = 'TODOS';
+
+    const stateFilter = document.getElementById('assignModalStateFilter');
+    if (stateFilter) stateFilter.value = 'TODAS';
+
+    this.renderAssignObrasModalList();
+
+    const modal = document.getElementById('modalAssignUserObras');
+    if (modal) {
+      modal.classList.remove('hidden');
+    }
+    if (window.lucide) lucide.createIcons();
+  },
+
+  closeAssignUserObrasModal() {
+    const modal = document.getElementById('modalAssignUserObras');
+    if (modal) {
+      modal.classList.add('hidden');
+    }
+  },
+
+  filterAssignObrasModalList() {
+    this.renderAssignObrasModalList();
+  },
+
+  renderAssignObrasModalList() {
+    const listContainer = document.getElementById('assignModalObrasList');
+    if (!listContainer) return;
+
+    const userId = this.assignModalState.targetUserId;
+    const user = (DataStore.users || []).find(u => u.id === userId);
+    if (!user) return;
+
+    const searchTerm = (document.getElementById('assignModalSearch')?.value || '').trim().toLowerCase();
+    const typeFilter = document.getElementById('assignModalTypeFilter')?.value || 'TODOS';
+    const stateFilter = document.getElementById('assignModalStateFilter')?.value || 'TODAS';
+
+    const visibleItems = (DataStore.items || []).filter(item => {
+      // Type filter
+      if (typeFilter !== 'TODOS') {
+        const itemType = (item.tipo || '').toLowerCase();
+        if (typeFilter === 'Obra Civil' && !itemType.includes('civil') && !itemType.includes('obra')) return false;
+        if (typeFilter === 'Infraestructura' && !itemType.includes('infra')) return false;
+      }
+
+      // Assignment status
+      const isSelected = this.assignModalState.selectedObraIds.has(item.id);
+      const isAssigned = DataStore.isObraAssigned(item);
+      const assignedUser = DataStore.getObraAssignedUser(item);
+      const isAssignedToThis = (assignedUser && assignedUser.id === userId) || isSelected;
+
+      if (stateFilter === 'ASIGNADAS_A_ESTE' && !isAssignedToThis) return false;
+      if (stateFilter === 'SIN_ASIGNAR' && isAssigned && !isSelected) return false;
+      if (stateFilter === 'OTRO_RESPONSABLE' && (!isAssigned || isAssignedToThis)) return false;
+
+      // Search term
+      if (searchTerm) {
+        const haystack = `${item.id} ${item.nombre} ${item.sede} ${item.responsable || ''} ${item.categoria || ''}`.toLowerCase();
+        if (!haystack.includes(searchTerm)) return false;
+      }
+
+      return true;
+    });
+
+    if (visibleItems.length === 0) {
+      listContainer.innerHTML = `
+        <div class="text-center py-8 text-slate-400">
+          <i data-lucide="folder-x" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+          <p class="font-medium text-xs">No se encontraron proyectos con los filtros de búsqueda seleccionados.</p>
+        </div>
+      `;
+      this.updateAssignModalSummary(0);
+      if (window.lucide) lucide.createIcons();
+      return;
+    }
+
+    let html = '';
+    visibleItems.forEach(item => {
+      const isSelected = this.assignModalState.selectedObraIds.has(item.id);
+      const isAssigned = DataStore.isObraAssigned(item);
+      const assignedUser = DataStore.getObraAssignedUser(item);
+      const isCurrentOwner = (assignedUser && assignedUser.id === userId) || (item.responsable_id === userId);
+      const otherOwnerName = !isCurrentOwner && isAssigned ? (item.responsable || (assignedUser ? assignedUser.nombre : 'Otro')) : null;
+      const monto = DataStore.formatUSD(item.monto_total_usd || item.monto_obra_usd || 0);
+
+      html += `
+        <label class="flex items-start p-3 bg-white hover:bg-slate-50 border rounded-xl transition cursor-pointer ${
+          isSelected ? 'border-blue-400 bg-blue-50/30 shadow-2xs' : 'border-slate-200'
+        }">
+          <div class="pt-0.5 pr-3">
+            <input type="checkbox" 
+                   value="${item.id}" 
+                   ${isSelected ? 'checked' : ''} 
+                   onchange="App.handleAssignObraCheckboxChange('${item.id}', this.checked)"
+                   class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 cursor-pointer">
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center space-x-2 flex-wrap">
+                <span class="font-mono font-bold text-slate-500 text-[11px]">${item.id}</span>
+                <span class="font-bold text-slate-900 text-xs">${item.nombre}</span>
+              </div>
+              <span class="font-black text-slate-900 text-xs shrink-0">${monto}</span>
+            </div>
+            <div class="flex items-center space-x-2 text-[11px] text-slate-400 mt-1 flex-wrap gap-y-1">
+              <span class="font-semibold text-slate-600">📍 ${item.sede}</span>
+              <span>•</span>
+              <span class="px-1.5 py-0.2 rounded text-[10px] font-semibold ${item.tipo === 'Infraestructura' ? 'bg-purple-50 text-purple-700' : 'bg-blue-50 text-blue-700'}">${item.tipo || 'Obra Civil'}</span>
+              <span>•</span>
+              <span>Fase: <strong class="text-slate-700">${item.estado}</strong></span>
+              <span>•</span>
+              ${isSelected ? `
+                <span class="bg-blue-100 text-blue-800 font-bold px-2 py-0.2 rounded-full inline-flex items-center space-x-1">
+                  <i data-lucide="check" class="w-3 h-3 text-blue-600"></i>
+                  <span>Seleccionada para asignar</span>
+                </span>
+              ` : (otherOwnerName ? `
+                <span class="bg-amber-100 text-amber-900 font-semibold px-2 py-0.2 rounded-full inline-flex items-center space-x-1" title="Actualmente a cargo de otro usuario">
+                  <i data-lucide="user" class="w-3 h-3 text-amber-600"></i>
+                  <span>Actual: <strong>${otherOwnerName}</strong></span>
+                </span>
+              ` : `
+                <span class="bg-slate-100 text-slate-600 font-semibold px-2 py-0.2 rounded-full inline-flex items-center space-x-1">
+                  <i data-lucide="circle-dashed" class="w-3 h-3 text-slate-400"></i>
+                  <span>Sin Asignar</span>
+                </span>
+              `)}
+            </div>
+          </div>
+        </label>
+      `;
+    });
+
+    listContainer.innerHTML = html;
+    this.updateAssignModalSummary(visibleItems.length);
+    if (window.lucide) lucide.createIcons();
+  },
+
+  handleAssignObraCheckboxChange(obraId, isChecked) {
+    if (isChecked) {
+      this.assignModalState.selectedObraIds.add(obraId);
+    } else {
+      this.assignModalState.selectedObraIds.delete(obraId);
+    }
+    this.updateAssignModalSummary();
+    this.renderAssignObrasModalList();
+  },
+
+  toggleSelectAllAssignObras(select) {
+    const listContainer = document.getElementById('assignModalObrasList');
+    if (!listContainer) return;
+    const checkboxes = listContainer.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(cb => {
+      const obraId = cb.value;
+      if (select) {
+        this.assignModalState.selectedObraIds.add(obraId);
+      } else {
+        this.assignModalState.selectedObraIds.delete(obraId);
+      }
+    });
+    this.renderAssignObrasModalList();
+  },
+
+  updateAssignModalSummary(visibleCount = null) {
+    const summaryEl = document.getElementById('assignModalSummaryText');
+    if (!summaryEl) return;
+
+    const totalSelected = this.assignModalState.selectedObraIds.size;
+    const initialSelected = this.assignModalState.initialObraIds.size;
+    const diff = totalSelected - initialSelected;
+    let diffText = '';
+    if (diff > 0) {
+      diffText = `<span class="text-emerald-700 font-bold ml-1">(+${diff} nuevas)</span>`;
+    } else if (diff < 0) {
+      diffText = `<span class="text-rose-600 font-bold ml-1">(${diff} removidas)</span>`;
+    }
+
+    summaryEl.innerHTML = `
+      <div class="flex items-center space-x-2">
+        <span class="bg-blue-100 text-blue-800 px-2.5 py-1 rounded-lg font-bold">
+          ${totalSelected} ${totalSelected === 1 ? 'obra seleccionada' : 'obras seleccionadas'}
+        </span>
+        ${diffText}
+        ${visibleCount !== null ? `<span class="text-slate-400 font-normal">| ${visibleCount} visibles en el filtro</span>` : ''}
+      </div>
+    `;
+  },
+
+  saveAssignUserObras() {
+    const userId = this.assignModalState.targetUserId;
+    const user = (DataStore.users || []).find(u => u.id === userId);
+    if (!user) return;
+
+    const obraIds = Array.from(this.assignModalState.selectedObraIds);
+    const res = DataStore.assignObrasToUser(userId, obraIds);
+
+    if (res.success) {
+      this.closeAssignUserObrasModal();
+      this.renderUsersList();
+      this.render();
+      this.showToast(`✅ Cartera actualizada: ${res.assignedCount} obras asignadas a ${user.nombre}`);
+    } else {
+      alert("Error al asignar obras: " + res.msg);
+    }
   },
 
   // ================= MODAL: EDITAR PERMISOS =================
@@ -1955,8 +2280,16 @@ const App = {
 
       this.renderUsersList();
       this.renderLoginScreenProfiles();
-      this.showToast(`Usuario "${username}" creado. Clave temporal: ${result.tempPassword}`);
+      this.showToast(`Usuario "${username}" creado con 0 obras asignadas.`);
       this.openForcedPasswordModal(result.user.nombre, result.user.username, result.tempPassword);
+
+      // Ofrecer asignación inmediata de obras para este usuario
+      setTimeout(() => {
+        if (confirm(`El nuevo usuario "${result.user.nombre}" (@${result.user.username}) ha sido dado de alta sin asignaciones (arranca en 0 obras a cargo).\n\n¿Deseas abrir ahora el panel para asignarle proyectos de obras o infraestructura?`)) {
+          this.closeForcedPasswordModal();
+          this.openAssignUserObrasModal(result.user.id);
+        }
+      }, 500);
     } catch (err) {
       alert("Error al dar de alta usuario: " + err.message);
     }
@@ -2295,6 +2628,34 @@ const App = {
     setVal('modalObraM2', item.superficie_m2 || 0);
     setVal('modalObraUsdM2', item.costo_usd_m2 || 0);
     setVal('modalObraResponsable', item.responsable || '');
+    setVal('modalObraResponsableId', item.responsable_id || '');
+
+    // Poblar y seleccionar en el selector de Responsable
+    const selResp = document.getElementById('modalObraResponsableSelect');
+    if (selResp) {
+      let optionsHtml = '<option value="">-- Sin Asignar --</option>';
+      const activeUsers = (DataStore.users || []).filter(u => u.activo);
+      activeUsers.forEach(u => {
+        optionsHtml += `<option value="${u.id}">${u.nombre} (@${u.username}) - ${u.sede} [${u.rol}]</option>`;
+      });
+      const assignedUser = DataStore.getObraAssignedUser(item);
+      if (!assignedUser && item.responsable && item.responsable.trim() !== '' && item.responsable !== 'S/D' && item.responsable !== 'Sin Asignar') {
+        optionsHtml += `<option value="custom:${item.responsable}">${item.responsable} (Histórico / Externo)</option>`;
+      }
+      selResp.innerHTML = optionsHtml;
+
+      if (assignedUser) {
+        selResp.value = assignedUser.id;
+      } else if (item.responsable_id) {
+        selResp.value = item.responsable_id;
+      } else if (item.responsable && item.responsable.trim() !== '' && item.responsable !== 'S/D' && item.responsable !== 'Sin Asignar') {
+        selResp.value = `custom:${item.responsable}`;
+      } else {
+        selResp.value = '';
+      }
+      this.updateModalAssignmentBadge(selResp.value);
+    }
+
     setVal('modalObraProveedor', item.proveedor || '');
     setVal('modalObraFechaInicio', item.fecha_inicio_etapa || '');
     setVal('modalObraFechaFin', item.fecha_fin_etapa || '');
@@ -2306,6 +2667,43 @@ const App = {
 
     // Calcular instantáneamente precio por m2 y actualizar desglose con signos
     this.calculateModalUsdM2();
+  },
+
+  handleModalResponsableSelectChange(val) {
+    const hiddenResp = document.getElementById('modalObraResponsable');
+    const hiddenRespId = document.getElementById('modalObraResponsableId');
+    if (!val) {
+      if (hiddenResp) hiddenResp.value = 'Sin Asignar';
+      if (hiddenRespId) hiddenRespId.value = '';
+    } else if (val.startsWith('custom:')) {
+      const customName = val.replace('custom:', '');
+      if (hiddenResp) hiddenResp.value = customName;
+      if (hiddenRespId) hiddenRespId.value = '';
+    } else {
+      const user = (DataStore.users || []).find(u => u.id === val);
+      if (user) {
+        if (hiddenResp) hiddenResp.value = user.nombre;
+        if (hiddenRespId) hiddenRespId.value = user.id;
+      }
+    }
+    this.updateModalAssignmentBadge(val);
+  },
+
+  updateModalAssignmentBadge(val) {
+    const badge = document.getElementById('modalObraAssignmentBadge');
+    if (!badge) return;
+    if (!val) {
+      badge.innerHTML = `<span class="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1"><i data-lucide="alert-circle" class="w-3 h-3 text-amber-600"></i><span>Sin Asignar</span></span>`;
+    } else if (val.startsWith('custom:')) {
+      const customName = val.replace('custom:', '');
+      badge.innerHTML = `<span class="bg-slate-100 text-slate-800 border border-slate-300 text-[10px] px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1"><i data-lucide="user" class="w-3 h-3 text-slate-600"></i><span>${customName}</span></span>`;
+    } else {
+      const user = (DataStore.users || []).find(u => u.id === val);
+      if (user) {
+        badge.innerHTML = `<span class="bg-emerald-100 text-emerald-900 border border-emerald-300 text-[10px] px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1"><i data-lucide="user-check" class="w-3 h-3 text-emerald-600"></i><span>Asignada: ${user.nombre}</span></span>`;
+      }
+    }
+    if (window.lucide) lucide.createIcons();
   },
 
   toggleAdminEditMode(enable) {
@@ -2387,6 +2785,7 @@ const App = {
       'modalObraMontoEquip',
       'modalObraM2',
       'modalObraResponsable',
+      'modalObraResponsableSelect',
       'modalObraProveedor',
       'modalObraCategoria',
       'modalObraPrioridadTec',
@@ -2577,7 +2976,32 @@ const App = {
       return;
     }
 
-    const newResponsable = document.getElementById('modalObraResponsable').value.trim();
+    const selResp = document.getElementById('modalObraResponsableSelect');
+    let newResponsable = '';
+    let newResponsableId = '';
+    if (selResp && selResp.value) {
+      const selVal = selResp.value;
+      if (selVal.startsWith('custom:')) {
+        newResponsable = selVal.replace('custom:', '');
+        newResponsableId = '';
+      } else {
+        const uObj = (DataStore.users || []).find(u => u.id === selVal);
+        if (uObj) {
+          newResponsable = uObj.nombre;
+          newResponsableId = uObj.id;
+        } else {
+          newResponsable = selVal;
+          newResponsableId = '';
+        }
+      }
+    } else if (selResp && !selResp.value) {
+      newResponsable = 'Sin Asignar';
+      newResponsableId = '';
+    } else {
+      newResponsable = (document.getElementById('modalObraResponsable')?.value || '').trim() || 'Sin Asignar';
+      newResponsableId = (document.getElementById('modalObraResponsableId')?.value || '').trim();
+    }
+
     const newProveedor = document.getElementById('modalObraProveedor').value.trim();
     const newFechaInicio = document.getElementById('modalObraFechaInicio').value;
     const newFechaFin = document.getElementById('modalObraFechaFin').value;
@@ -2621,6 +3045,7 @@ const App = {
     item.superficie_m2 = newM2;
     item.costo_usd_m2 = newM2 > 0 ? (Math.round((newMontoTotal / newM2) * 100) / 100) : 0;
     item.responsable = newResponsable;
+    item.responsable_id = newResponsableId || null;
     item.proveedor = newProveedor;
     item.fecha_inicio_etapa = newFechaInicio;
     item.fecha_fin_etapa = newFechaFin;

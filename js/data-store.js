@@ -921,9 +921,24 @@ const DataStore = {
     if (this.currentUser.rol === 'admin') return true;
     if (this.currentUser.solo_lectura || this.currentUser.rol === 'visualizador') return false;
 
+    // 1. Coincidencia directa por ID de usuario asignado
+    if (item.responsable_id && item.responsable_id === this.currentUser.id) return true;
+
+    // 2. Si la obra ya está asignada formalmente a otro usuario activo por ID, no pertenece a este
+    if (item.responsable_id && item.responsable_id !== this.currentUser.id) {
+      const otherUser = this.users.find(u => u.id === item.responsable_id);
+      if (otherUser && otherUser.activo) return false;
+    }
+
+    // 3. Usuarios dados de alta por el Administrador (arrancan en 0 obras a cargo):
+    // Solo tienen asignadas las obras que el Administrador les asigne explícitamente.
+    if (this.currentUser.arranca_en_cero || this.currentUser.origen === 'creado_admin' || (this.currentUser.id && this.currentUser.id.startsWith('usr-'))) {
+      return false;
+    }
+
     const normalizeStr = s => (s || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
     const resp = normalizeStr(item.responsable);
-    if (!resp || resp === 'sin asignar' || resp === 's/d') return false;
+    if (!resp || resp === 'sin asignar' || resp === 's/d' || resp === 'pendiente' || resp === 'a designar') return false;
 
     const u = this.currentUser;
     const uUser = normalizeStr(u.username);
@@ -950,6 +965,131 @@ const DataStore = {
     }
 
     return false;
+  },
+
+  isObraAssigned(item) {
+    if (!item) return false;
+    if (item.responsable_id) {
+      const user = this.users.find(u => u.id === item.responsable_id);
+      if (user && user.activo) return true;
+    }
+    const resp = (item.responsable || '').trim().toLowerCase();
+    if (!resp || resp === 'sin asignar' || resp === 's/d' || resp === 'pendiente' || resp === 'a designar') return false;
+    return true;
+  },
+
+  getObraAssignedUser(item) {
+    if (!item) return null;
+    if (item.responsable_id) {
+      const u = this.users.find(user => user.id === item.responsable_id);
+      if (u) return u;
+    }
+    if (!item.responsable) return null;
+    const normalizeStr = s => (s || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    const resp = normalizeStr(item.responsable);
+    if (!resp || resp === 'sin asignar' || resp === 's/d' || resp === 'pendiente' || resp === 'a designar') return null;
+
+    return this.users.find(u => {
+      // Si el usuario fue dado de alta por administrador / arranca en cero, solo se asocia por ID
+      if (u.arranca_en_cero || u.origen === 'creado_admin' || (u.id && u.id.startsWith('usr-'))) return false;
+
+      const uUser = normalizeStr(u.username);
+      const uName = normalizeStr(u.nombre);
+      if (uUser && (resp === uUser || resp.includes(uUser) || uUser.includes(resp))) return true;
+      if (uName && (resp.includes(uName) || uName.includes(resp))) return true;
+      const stopwords = ['arq', 'ing', 'dr', 'dra', 'pm', 'central', 'san', 'justo', 'perifericos'];
+      const tokens = uName.replace(/[^a-z0-9]/g, ' ').split(/\s+/).filter(t => t.length > 2 && !stopwords.includes(t));
+      return tokens.some(t => resp.includes(t));
+    }) || null;
+  },
+
+  getUserAssignedObras(userId) {
+    const user = this.users.find(u => u.id === userId);
+    if (!user) return [];
+    const savedUser = this.currentUser;
+    this.currentUser = user;
+    const list = this.items.filter(item => {
+      if (item.responsable_id && item.responsable_id === user.id) return true;
+      return this.isUserAssignedToObra(item);
+    });
+    this.currentUser = savedUser;
+    return list;
+  },
+
+  assignObrasToUser(userId, obraIds = []) {
+    const user = this.users.find(u => u.id === userId);
+    if (!user) return { success: false, msg: 'Usuario no encontrado' };
+
+    const actor = this.currentUser ? this.currentUser.nombre : 'Administrador';
+    const nowStr = new Date().toISOString().split('T')[0];
+    let assignedCount = 0;
+
+    this.items.forEach(item => {
+      const shouldBeAssigned = obraIds.includes(item.id);
+      const isCurrentlyAssignedToThisUser = (item.responsable_id === user.id) || 
+        (!item.responsable_id && this.getObraAssignedUser(item)?.id === user.id);
+
+      if (shouldBeAssigned) {
+        if (item.responsable_id !== user.id) {
+          item.responsable_id = user.id;
+          item.responsable = user.nombre;
+          if (!item.historial) item.historial = [];
+          item.historial.push({
+            fecha: nowStr,
+            usuario: actor,
+            estado_anterior: item.estado,
+            estado_nuevo: item.estado,
+            observaciones: `Obra asignada a: ${user.nombre} (@${user.username})`
+          });
+        }
+        assignedCount++;
+      } else if (isCurrentlyAssignedToThisUser) {
+        // Desasignar si estaba asignada a este usuario y fue desmarcada
+        item.responsable_id = null;
+        item.responsable = 'Sin Asignar';
+        if (!item.historial) item.historial = [];
+        item.historial.push({
+          fecha: nowStr,
+          usuario: actor,
+          estado_anterior: item.estado,
+          estado_nuevo: item.estado,
+          observaciones: `Obra desasignada de ${user.nombre}. Queda Sin Asignar.`
+        });
+      }
+    });
+
+    this.persist();
+    return { success: true, assignedCount: assignedCount, user: user };
+  },
+
+  assignSingleObra(obraId, userId) {
+    const item = this.getItemById(obraId);
+    if (!item) return { success: false, msg: 'Obra no encontrada' };
+
+    const actor = this.currentUser ? this.currentUser.nombre : 'Administrador';
+    const nowStr = new Date().toISOString().split('T')[0];
+
+    if (!userId || userId === 'sin_asignar') {
+      item.responsable_id = null;
+      item.responsable = 'Sin Asignar';
+    } else {
+      const user = this.users.find(u => u.id === userId);
+      if (!user) return { success: false, msg: 'Usuario no encontrado' };
+      item.responsable_id = user.id;
+      item.responsable = user.nombre;
+    }
+
+    if (!item.historial) item.historial = [];
+    item.historial.push({
+      fecha: nowStr,
+      usuario: actor,
+      estado_anterior: item.estado,
+      estado_nuevo: item.estado,
+      observaciones: `Asignación de responsable: ${item.responsable}`
+    });
+
+    this.persist();
+    return { success: true, item: item };
   },
 
   canUserAdvanceItem(item) {
@@ -997,6 +1137,12 @@ const DataStore = {
       // Filtro Tipo
       if (filters.tipo && filters.tipo !== 'TODOS') {
         if (item.tipo !== filters.tipo) return false;
+      }
+      // Filtro Asignación (TODAS, ASIGNADAS, SIN_ASIGNAR)
+      if (filters.asignacion && filters.asignacion !== 'TODAS') {
+        const isAssigned = this.isObraAssigned(item);
+        if (filters.asignacion === 'ASIGNADAS' && !isAssigned) return false;
+        if (filters.asignacion === 'SIN_ASIGNAR' && isAssigned) return false;
       }
       // Filtro Finalizadas
       if (filters.filtroFinalizadas === 'activas') {
@@ -1369,7 +1515,9 @@ const DataStore = {
       puede_avanzar: userData.puede_avanzar ?? true,
       puede_priorizar_medica: userData.puede_priorizar_medica ?? false,
       puede_asignar_partida: userData.puede_asignar_partida ?? false,
-      solo_lectura: userData.solo_lectura ?? false
+      solo_lectura: userData.solo_lectura ?? false,
+      origen: 'creado_admin',
+      arranca_en_cero: true
     };
 
     this.users.push(newUser);
