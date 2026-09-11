@@ -92,9 +92,14 @@
               Usuario: <strong class="font-mono bg-blue-100 px-1 py-0.2 rounded text-blue-900">admin</strong> | Clave: <strong class="font-mono bg-blue-100 px-1 py-0.2 rounded text-blue-900">Admin2025!</strong>
             </div>
           </div>
-          <button type="button" onclick="App.quickFillAdminLogin()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg shadow-xs transition cursor-pointer shrink-0">
-            Autocompletar
-          </button>
+          <div class="flex items-center space-x-1.5 shrink-0">
+            <button type="button" onclick="App.quickFillAdminLogin()" class="bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold text-[10px] px-2 py-1.5 rounded-lg transition cursor-pointer" title="Cargar credenciales de admin en el formulario">
+              Autocompletar
+            </button>
+            <button type="button" onclick="App.directLogin('admin', 'Admin2025!')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg shadow-xs transition cursor-pointer" title="Ingresar inmediatamente como Administrador">
+              Entrar
+            </button>
+          </div>
         </div>
 
         <!-- Selector de cuentas registradas -->
@@ -113,7 +118,7 @@
   </div>
 
   <!-- ================= MODAL: CAMBIO OBLIGATORIO DE CONTRASEÑA ================= -->
-  <div id="modalChangePassword" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+  <div id="modalChangePassword" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 modal-backdrop">
     <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden border border-slate-100 text-xs">
       <div class="bg-slate-900 text-white px-5 py-3.5 flex items-center justify-between font-bold">
         <div class="flex items-center space-x-2">

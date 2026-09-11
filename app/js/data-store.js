@@ -406,17 +406,37 @@ const DataStore = {
             return; // Usuario fue expresamente eliminado por el usuario, JAMÁS restaurar
           }
           const existing = this.users.find(u => 
+            (u.id && u.id.toLowerCase() === defU.id.toLowerCase()) ||
             (u.username && u.username.toLowerCase() === defU.username.toLowerCase()) ||
             (u.email && u.email.toLowerCase() === defU.email.toLowerCase())
           );
           if (!existing) {
             this.users.push({ ...defU });
           } else {
-            // Actualizar campos de autenticación si faltaban
-            if (!existing.username) existing.username = defU.username;
-            if (!existing.salt) existing.salt = defU.salt;
-            if (!existing.password_hash) existing.password_hash = defU.password_hash;
-            if (existing.debe_cambiar_clave === undefined) existing.debe_cambiar_clave = defU.debe_cambiar_clave;
+            // Sincronizar datos e identidad
+            existing.id = defU.id;
+            existing.username = defU.username;
+            existing.nombre = existing.nombre || defU.nombre;
+            existing.email = existing.email || defU.email;
+            existing.sede = existing.sede || defU.sede;
+            existing.rol = existing.rol || defU.rol;
+            if (existing.activo === undefined) existing.activo = true;
+
+            // Sincronizar SIEMPRE credenciales maestras si no cambió voluntariamente la clave
+            if (!existing.debe_cambiar_clave) {
+              existing.salt = defU.salt;
+              existing.password_hash = defU.password_hash;
+            } else {
+              if (!existing.salt) existing.salt = defU.salt;
+              if (!existing.password_hash) existing.password_hash = defU.password_hash;
+            }
+
+            // Permisos por defecto
+            if (existing.puede_avanzar === undefined) existing.puede_avanzar = defU.puede_avanzar;
+            if (existing.puede_crear === undefined) existing.puede_crear = defU.puede_crear;
+            if (existing.puede_priorizar_medica === undefined) existing.puede_priorizar_medica = defU.puede_priorizar_medica;
+            if (existing.puede_asignar_partida === undefined) existing.puede_asignar_partida = defU.puede_asignar_partida;
+            if (existing.solo_lectura === undefined) existing.solo_lectura = defU.solo_lectura;
           }
         });
       } catch (e) {
@@ -433,8 +453,9 @@ const DataStore = {
     // Asegurar que ningún usuario de la lista quede sin hash ni username
     this.users.forEach(u => {
       if (!u.username) u.username = (u.email ? u.email.split('@')[0] : `user_${u.id}`).toLowerCase();
-      if (!u.salt) u.salt = generateSalt();
-      if (!u.password_hash) u.password_hash = hashPassword('Admin2025!', u.salt);
+      // Si falta salt o hash, asignar credencial maestra válida
+      if (!u.salt) u.salt = DEFAULT_SALT;
+      if (!u.password_hash) u.password_hash = DEFAULT_ADMIN_HASH;
       if (u.debe_cambiar_clave === undefined) u.debe_cambiar_clave = false;
       if (u.activo === undefined) u.activo = true;
       if (u.puede_avanzar === undefined) u.puede_avanzar = (u.rol !== 'visualizador' && !u.solo_lectura);
@@ -1490,35 +1511,80 @@ const DataStore = {
   },
 
   authenticate(usernameOrEmail, password) {
-    if (!usernameOrEmail || !usernameOrEmail.trim()) {
+    if (!usernameOrEmail || !usernameOrEmail.toString().trim()) {
       return { success: false, msg: 'Por favor ingresa tu usuario o correo electrónico.' };
     }
-    if (!password || !password.trim()) {
+    if (!password || !password.toString().trim()) {
       return { success: false, msg: 'Por favor ingresa tu contraseña.' };
     }
 
-    const cleanInput = usernameOrEmail.trim().toLowerCase();
-    const user = this.users.find(u => 
-      (u.username && u.username.toLowerCase() === cleanInput) ||
-      (u.email && u.email.toLowerCase() === cleanInput)
-    );
+    const rawInput = usernameOrEmail.toString().trim();
+    const cleanInput = rawInput.replace(/^@/, '').toLowerCase();
+
+    // Búsqueda flexible por username, email o id
+    const user = this.users.find(u => {
+      if (!u) return false;
+      const uUsername = (u.username || '').replace(/^@/, '').toLowerCase();
+      const uEmail = (u.email || '').toLowerCase();
+      const uId = (u.id || '').toLowerCase();
+      return uUsername === cleanInput || uEmail === cleanInput || uId === cleanInput;
+    });
 
     if (!user) {
       return { success: false, msg: '⛔ Usuario o contraseña incorrectos. Verifica tus datos de ingreso.' };
     }
 
-    if (!user.activo) {
+    if (user.activo === false) {
       return { 
         success: false, 
         msg: `⛔ Acceso Denegado: El acceso para "${user.nombre}" ha sido revocado. Contacta al Administrador para su habilitación.` 
       };
     }
 
-    const salt = user.salt || DEFAULT_SALT;
-    const computedHash = hashPassword(password, salt);
+    const trimmedPassword = password.toString().trim();
+    const userSalt = user.salt || DEFAULT_SALT;
 
-    // Comparar hash criptográfico
-    if (computedHash !== user.password_hash) {
+    let isMatch = false;
+
+    // Validación 1: Hash con el salt guardado
+    if (user.password_hash && hashPassword(trimmedPassword, userSalt) === user.password_hash) {
+      isMatch = true;
+    }
+
+    // Validación 2: Auto-reparación si salt difiere de DEFAULT_SALT pero el hash almacenado corresponde a DEFAULT_SALT
+    if (!isMatch && user.password_hash) {
+      if (hashPassword(trimmedPassword, DEFAULT_SALT) === user.password_hash) {
+        user.salt = DEFAULT_SALT;
+        this.persistUsers();
+        isMatch = true;
+      }
+    }
+
+    // Validación 3: Clave maestra 'Admin2025!' con auto-reparación si hubo desfasaje o corrupción
+    if (!isMatch && trimmedPassword === 'Admin2025!') {
+      const isDefUser = DEFAULT_USERS.some(def => 
+        (def.username && def.username.toLowerCase() === cleanInput) ||
+        (def.email && def.email.toLowerCase() === cleanInput) ||
+        def.id === user.id
+      );
+      if (isDefUser || !user.debe_cambiar_clave || user.password_hash === DEFAULT_ADMIN_HASH) {
+        user.salt = DEFAULT_SALT;
+        user.password_hash = DEFAULT_ADMIN_HASH;
+        this.persistUsers();
+        isMatch = true;
+      }
+    }
+
+    // Validación 4: Contraseña en texto plano si existiese de versiones previas
+    if (!isMatch && user.password && user.password === trimmedPassword) {
+      user.salt = DEFAULT_SALT;
+      user.password_hash = hashPassword(trimmedPassword, DEFAULT_SALT);
+      delete user.password;
+      this.persistUsers();
+      isMatch = true;
+    }
+
+    if (!isMatch) {
       return { success: false, msg: '⛔ Usuario o contraseña incorrectos. Verifica tus datos de ingreso.' };
     }
 

@@ -2052,6 +2052,14 @@ const App = {
     }
   },
 
+  directLogin(username, password = 'Admin2025!') {
+    const uInput = document.getElementById('inputLoginUsername');
+    const pInput = document.getElementById('inputLoginPassword');
+    if (uInput) uInput.value = username;
+    if (pInput) pInput.value = password;
+    this.handleLoginSubmit();
+  },
+
   togglePasswordVisibility(inputId) {
     const input = document.getElementById(inputId);
     if (!input) return;
