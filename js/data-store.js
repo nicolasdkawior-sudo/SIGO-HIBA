@@ -219,6 +219,125 @@ const DEFAULT_USERS = [
     solo_lectura: false
   },
   {
+    id: 'usr-boselli',
+    username: 'boselli',
+    nombre: 'Ing. Boselli (PM Infraestructura)',
+    email: 'boselli.infra@hospitalitaliano.org.ar',
+    salt: DEFAULT_SALT,
+    password_hash: DEFAULT_ADMIN_HASH,
+    debe_cambiar_clave: false,
+    sede: 'Central',
+    rol: 'pm_obra',
+    activo: true,
+    puede_crear: true,
+    puede_avanzar: true,
+    puede_priorizar_medica: false,
+    puede_asignar_partida: false,
+    solo_lectura: false
+  },
+  {
+    id: 'usr-lopez',
+    username: 'lopez',
+    nombre: 'Ing. López (PM Infraestructura)',
+    email: 'lopez.infra@hospitalitaliano.org.ar',
+    salt: DEFAULT_SALT,
+    password_hash: DEFAULT_ADMIN_HASH,
+    debe_cambiar_clave: false,
+    sede: 'Central',
+    rol: 'pm_obra',
+    activo: true,
+    puede_crear: true,
+    puede_avanzar: true,
+    puede_priorizar_medica: false,
+    puede_asignar_partida: false,
+    solo_lectura: false
+  },
+  {
+    id: 'usr-vasquez',
+    username: 'vasquez',
+    nombre: 'Ing. Vasquez (PM Infraestructura)',
+    email: 'vasquez.infra@hospitalitaliano.org.ar',
+    salt: DEFAULT_SALT,
+    password_hash: DEFAULT_ADMIN_HASH,
+    debe_cambiar_clave: false,
+    sede: 'Central',
+    rol: 'pm_obra',
+    activo: true,
+    puede_crear: true,
+    puede_avanzar: true,
+    puede_priorizar_medica: false,
+    puede_asignar_partida: false,
+    solo_lectura: false
+  },
+  {
+    id: 'usr-gimenez',
+    username: 'gimenez',
+    nombre: 'Ing. Giménez (PM Infraestructura)',
+    email: 'gimenez.infra@hospitalitaliano.org.ar',
+    salt: DEFAULT_SALT,
+    password_hash: DEFAULT_ADMIN_HASH,
+    debe_cambiar_clave: false,
+    sede: 'Central',
+    rol: 'pm_obra',
+    activo: true,
+    puede_crear: true,
+    puede_avanzar: true,
+    puede_priorizar_medica: false,
+    puede_asignar_partida: false,
+    solo_lectura: false
+  },
+  {
+    id: 'usr-gallardo',
+    username: 'gallardo',
+    nombre: 'Arq. Gallardo (PM Obras)',
+    email: 'gallardo.obras@hospitalitaliano.org.ar',
+    salt: DEFAULT_SALT,
+    password_hash: DEFAULT_ADMIN_HASH,
+    debe_cambiar_clave: false,
+    sede: 'Central',
+    rol: 'pm_obra',
+    activo: true,
+    puede_crear: true,
+    puede_avanzar: true,
+    puede_priorizar_medica: false,
+    puede_asignar_partida: false,
+    solo_lectura: false
+  },
+  {
+    id: 'usr-sulpis',
+    username: 'sulpis',
+    nombre: 'Arq. Sulpis (PM Obras)',
+    email: 'sulpis.obras@hospitalitaliano.org.ar',
+    salt: DEFAULT_SALT,
+    password_hash: DEFAULT_ADMIN_HASH,
+    debe_cambiar_clave: false,
+    sede: 'Central',
+    rol: 'pm_obra',
+    activo: true,
+    puede_crear: true,
+    puede_avanzar: true,
+    puede_priorizar_medica: false,
+    puede_asignar_partida: false,
+    solo_lectura: false
+  },
+  {
+    id: 'usr-kawior-pm',
+    username: 'kawior',
+    nombre: 'Ing. Kawior (PM Infraestructura)',
+    email: 'kawior.infra@hospitalitaliano.org.ar',
+    salt: DEFAULT_SALT,
+    password_hash: DEFAULT_ADMIN_HASH,
+    debe_cambiar_clave: false,
+    sede: 'Central',
+    rol: 'pm_obra',
+    activo: true,
+    puede_crear: true,
+    puede_avanzar: true,
+    puede_priorizar_medica: false,
+    puede_asignar_partida: false,
+    solo_lectura: false
+  },
+  {
     id: 'usr-licitaciones',
     username: 'licitaciones',
     nombre: 'Compras & Licitaciones',
@@ -318,11 +437,21 @@ const DataStore = {
       if (!u.password_hash) u.password_hash = hashPassword('Admin2025!', u.salt);
       if (u.debe_cambiar_clave === undefined) u.debe_cambiar_clave = false;
       if (u.activo === undefined) u.activo = true;
+      if (u.puede_avanzar === undefined) u.puede_avanzar = (u.rol !== 'visualizador' && !u.solo_lectura);
+      if (u.puede_crear === undefined) u.puede_crear = (u.rol !== 'visualizador' && !u.solo_lectura);
     });
     this.persistUsers();
 
     const activeUsrId = localStorage.getItem('sigo_active_user_id');
     this.currentUser = activeUsrId ? (this.users.find(u => u.id === activeUsrId && u.activo) || null) : null;
+    if (this.currentUser) {
+      if (this.currentUser.puede_avanzar === undefined) {
+        this.currentUser.puede_avanzar = (this.currentUser.rol !== 'visualizador' && !this.currentUser.solo_lectura);
+      }
+      if (this.currentUser.puede_crear === undefined) {
+        this.currentUser.puede_crear = (this.currentUser.rol !== 'visualizador' && !this.currentUser.solo_lectura);
+      }
+    }
     if (activeUsrId && !this.currentUser) {
       localStorage.removeItem('sigo_active_user_id');
     }
@@ -646,21 +775,24 @@ const DataStore = {
       return { success: false, msg: 'Esta obra ya se encuentra en su etapa final' };
     }
 
-    // VALIDACIÓN CRÍTICA: De Factibilidad a Proyecto se REQUIERE OBLIGATORIAMENTE permiso específico puede_asignar_partida y número de partida presupuestaria
+    // VALIDACIÓN CRÍTICA: De Factibilidad a Proyecto se REQUIERE que la obra cuente con Partida Presupuestaria y Monto
     if (currentStage === 'Estudio de Factibilidad' && nextStage === 'Proyecto') {
-      if (!this.currentUser.puede_asignar_partida) {
-        return { 
-          success: false, 
-          msg: '⛔ Acceso Denegado: Para avanzar de Estudio de Factibilidad a Proyecto se requiere el permiso específico de \'Asignar Partida Presupuestaria\'. No tienes autorización para habilitar esta transición.',
-          requierePartida: false 
-        };
-      }
-      if (!item.partida || item.partida.trim() === '' || item.partida === 'S/D' || item.partida.toUpperCase() === 'PENDIENTE') {
-        return { 
-          success: false, 
-          msg: '⛔ Bloqueado: Para avanzar a la etapa de "Proyecto" es OBLIGATORIO contar con un Número de Partida Presupuestaria asignado. Si no existe número de partida, el sistema no permite avanzar.',
-          requierePartida: true 
-        };
+      const hasPartida = this.hasValidPartida(item);
+      if (!hasPartida) {
+        if (!this.currentUser.puede_asignar_partida && !this.isAdmin()) {
+          return { 
+            success: false, 
+            msg: '⛔ Bloqueado: Para avanzar de Estudio de Factibilidad a Proyecto es OBLIGATORIO que la obra cuente con una Partida Presupuestaria asignada. Solicita a Dirección la asignación de partida para continuar.',
+            requierePartida: true 
+          };
+        }
+        if (!item.partida || item.partida.trim() === '' || item.partida === 'S/D' || item.partida.toUpperCase() === 'PENDIENTE') {
+          return { 
+            success: false, 
+            msg: '⛔ Bloqueado: Para avanzar a la etapa de "Proyecto" es OBLIGATORIO contar con un Número de Partida Presupuestaria asignado. Si no existe número de partida, el sistema no permite avanzar.',
+            requierePartida: true 
+          };
+        }
       }
       const montoPart = item.monto_partida_usd || item.monto_total_usd || item.monto_obra_usd || 0;
       if (montoPart <= 0) {
@@ -768,28 +900,41 @@ const DataStore = {
     if (this.currentUser.rol === 'admin') return true;
     if (this.currentUser.solo_lectura || this.currentUser.rol === 'visualizador') return false;
 
-    const resp = (item.responsable || '').toLowerCase().trim();
+    const normalizeStr = s => (s || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    const resp = normalizeStr(item.responsable);
     if (!resp || resp === 'sin asignar' || resp === 's/d') return false;
 
     const u = this.currentUser;
-    const uUser = (u.username || '').toLowerCase().trim();
-    const uName = (u.nombre || '').toLowerCase().trim();
+    const uUser = normalizeStr(u.username);
+    const uName = normalizeStr(u.nombre);
 
     if (uUser && (resp === uUser || resp.includes(uUser) || uUser.includes(resp))) return true;
     if (uName && (resp.includes(uName) || uName.includes(resp))) return true;
 
-    // Tokens identificatorios del nombre de usuario (ej: "palmioli", "waldemar", "cossano")
-    const stopwords = ['arq.', 'arq', 'ing.', 'ing', 'dr.', 'dr', 'dra.', 'dra', 'pm', 'central', 'san', 'justo', 'periféricos', 'perifericos', 'de', 'la', 'el', 'compras', 'licitaciones'];
-    const tokens = uName.replace(/[(),/]/g, ' ').split(/\s+/).filter(t => t.length > 2 && !stopwords.includes(t));
+    // Tokens identificatorios significativos del nombre de usuario (ej: "palmioli", "waldemar", "boselli", "lopez", "vasquez")
+    const stopwords = ['arq', 'ing', 'dr', 'dra', 'pm', 'central', 'san', 'justo', 'perifericos', 'de', 'la', 'el', 'compras', 'licitaciones', 'obras', 'infraestructura'];
+    const tokens = uName.replace(/[^a-z0-9]/g, ' ').split(/\s+/).filter(t => t.length > 2 && !stopwords.includes(t));
     for (const token of tokens) {
       if (resp.includes(token)) return true;
     }
+
+    const userTokens = uUser.replace(/[^a-z0-9]/g, ' ').split(/\s+/).filter(t => t.length > 2 && !stopwords.includes(t));
+    for (const token of userTokens) {
+      if (resp.includes(token)) return true;
+    }
+
+    // Si fue creada por este usuario
+    if (item.creado_por && (normalizeStr(item.creado_por) === uUser || normalizeStr(item.creado_por) === uName)) {
+      return true;
+    }
+
     return false;
   },
 
   canUserAdvanceItem(item) {
     if (!this.currentUser) return false;
-    if (this.currentUser.solo_lectura || this.currentUser.rol === 'visualizador' || !this.currentUser.puede_avanzar) return false;
+    if (this.currentUser.solo_lectura || this.currentUser.rol === 'visualizador') return false;
+    if (this.currentUser.puede_avanzar === false) return false;
     if (this.isAdmin()) return true;
     return this.isUserAssignedToObra(item);
   },
@@ -811,9 +956,20 @@ const DataStore = {
 
   // ================= FILTROS Y KPIS DESGLOSADOS =================
   getFilteredItems(filters = {}) {
+    const isAdm = this.isAdmin();
+    const u = this.currentUser;
+
+    // Los usuarios responsables de obras deben ver y operar únicamente las obras que tienen a su cargo.
+    // El Administrador ve todo el universo del hospital. Perfiles de consulta/auditoría ven todo en solo lectura.
+    const isRestrictedToAssigned = Boolean(u && !isAdm && !u.solo_lectura && u.rol !== 'visualizador');
+
     return this.items.filter(item => {
-      // "Cada usuario puede ver todo": se permite visualización completa de todas las sedes
-      // Filtro Sede explícito (cuando el usuario selecciona en la barra superior Central, San Justo o Periféricos)
+      // 1. Restricción estricta de asignación a cargo
+      if (isRestrictedToAssigned) {
+        if (!this.isUserAssignedToObra(item)) return false;
+      }
+
+      // 2. Filtro Sede explícito (cuando el usuario selecciona en la barra superior Central, San Justo o Periféricos)
       if (filters.sede && filters.sede !== 'TODAS') {
         if ((item.sede || '').toLowerCase() !== filters.sede.toLowerCase()) return false;
       }

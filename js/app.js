@@ -616,9 +616,7 @@ const App = {
       const u = DataStore.currentUser;
       const isAdmin = DataStore.isAdmin();
       const canAdvanceThis = DataStore.canUserAdvanceItem(item);
-      const canAvanzar = canAdvanceThis && u && !u.solo_lectura && u.rol !== 'visualizador' && Boolean(u.puede_avanzar);
-      const isFactibilidad = item.estado === 'Estudio de Factibilidad';
-      const canPartida = u && Boolean(u.puede_asignar_partida);
+      const canAvanzar = canAdvanceThis && u && !u.solo_lectura && u.rol !== 'visualizador';
       const isCorta = DataStore.isPartidaCorta(item);
       const deficit = isCorta ? DataStore.getPartidaDeficit(item) : 0;
 
@@ -660,20 +658,14 @@ const App = {
                 <span>Editar</span>
               </button>
             ` : ''}
-            ${nextStage && canAvanzar ? (
-              (isFactibilidad && !canPartida) ? `
-                <span class="bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-1 rounded-lg text-xs font-bold flex items-center space-x-1" title="Requiere asignación de partida presupuestaria por usuario autorizado">
-                  <i data-lucide="lock" class="w-3.5 h-3.5"></i>
-                  <span>Espera Partida</span>
-                </span>
-              ` : `
-                <button onclick="event.stopPropagation(); App.openTransitionModal('${item.id}')" 
-                        class="bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer">
-                  <span>Avanzar</span>
-                  <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-                </button>
-              `
-            ) : (nextStage && !isAdmin ? `<span class="px-1.5 py-0.5 bg-slate-100 text-slate-400 rounded text-[10px]" title="Solo puede certificar el responsable asignado">🔒 ${item.responsable || 'Sin Asignar'}</span>` : '')}
+            ${nextStage && canAvanzar ? `
+              <button onclick="event.stopPropagation(); App.openTransitionModal('${item.id}')" 
+                      class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-xs" 
+                      title="Finalizar esta etapa y certificar avance a ${nextStage}">
+                <span>Avanzar</span>
+                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+              </button>
+            ` : (nextStage && !isAdmin ? `<span class="px-1.5 py-0.5 bg-slate-100 text-slate-400 rounded text-[10px]" title="Solo el responsable asignado puede certificar esta obra">🔒 ${item.responsable || 'Sin Asignar'}</span>` : '')}
           </div>
         </div>
       `;
@@ -736,9 +728,7 @@ const App = {
           const u = DataStore.currentUser;
           const isAdmin = DataStore.isAdmin();
           const canAdvanceThis = DataStore.canUserAdvanceItem(item);
-          const canAvanzar = canAdvanceThis && u && !u.solo_lectura && u.rol !== 'visualizador' && Boolean(u.puede_avanzar);
-          const isFactibilidad = item.estado === 'Estudio de Factibilidad';
-          const canPartida = u && Boolean(u.puede_asignar_partida);
+          const canAvanzar = canAdvanceThis && u && !u.solo_lectura && u.rol !== 'visualizador';
           const isCorta = DataStore.isPartidaCorta(item);
           const deficit = isCorta ? DataStore.getPartidaDeficit(item) : 0;
 
@@ -783,21 +773,14 @@ const App = {
                       <span>Editar</span>
                     </button>
                   ` : ''}
-                  ${nextStage && canAvanzar ? (
-                    (isFactibilidad && !canPartida) ? `
-                      <span class="bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded text-[10px] font-bold inline-flex items-center space-x-1" title="Requiere asignación de partida presupuestaria por usuario autorizado">
-                        <i data-lucide="lock" class="w-2.5 h-2.5"></i>
-                        <span>Espera Partida</span>
-                      </span>
-                    ` : `
-                      <button onclick="event.stopPropagation(); App.openTransitionModal('${item.id}')" 
-                              class="bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white px-2.5 py-1 rounded-md font-bold flex items-center space-x-1 transition shadow-2xs cursor-pointer"
-                              title="Finalizar esta etapa y avanzar a ${nextStage}">
-                        <span>Avanzar</span>
-                        <i data-lucide="check" class="w-3.5 h-3.5"></i>
-                      </button>
-                    `
-                  ) : (nextStage && !isAdmin ? `<span class="px-1.5 py-0.5 bg-slate-100 text-slate-400 rounded text-[10px]" title="Solo el responsable asignado puede certificar esta obra">🔒</span>` : '')}
+                  ${nextStage && canAvanzar ? `
+                    <button onclick="event.stopPropagation(); App.openTransitionModal('${item.id}')" 
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded-md font-bold text-xs flex items-center space-x-1 transition shadow-xs cursor-pointer"
+                            title="Finalizar esta etapa y certificar avance a ${nextStage}">
+                      <span>Avanzar</span>
+                      <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                    </button>
+                  ` : (nextStage && !isAdmin ? `<span class="px-1.5 py-0.5 bg-slate-100 text-slate-400 rounded text-[10px]" title="Solo el responsable asignado puede certificar esta obra">🔒</span>` : '')}
                 </div>
               </div>
             </div>
@@ -837,9 +820,7 @@ const App = {
       const u = DataStore.currentUser;
       const isAdmin = DataStore.isAdmin();
       const canAdvanceThis = DataStore.canUserAdvanceItem(item);
-      const canAvanzar = canAdvanceThis && u && !u.solo_lectura && u.rol !== 'visualizador' && Boolean(u.puede_avanzar);
-      const isFactibilidad = item.estado === 'Estudio de Factibilidad';
-      const canPartida = u && Boolean(u.puede_asignar_partida);
+      const canAvanzar = canAdvanceThis && u && !u.solo_lectura && u.rol !== 'visualizador';
       const isCorta = DataStore.isPartidaCorta(item);
       const deficit = isCorta ? DataStore.getPartidaDeficit(item) : 0;
 
@@ -883,21 +864,14 @@ const App = {
                   <span>Editar</span>
                 </button>
               ` : ''}
-              ${nextStage && canAvanzar ? (
-                (isFactibilidad && !canPartida) ? `
-                  <span class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded text-[10px] font-bold inline-flex items-center space-x-1" title="Requiere asignación de partida presupuestaria por usuario autorizado">
-                    <i data-lucide="lock" class="w-2.5 h-2.5"></i>
-                    <span>Espera Partida</span>
-                  </span>
-                ` : `
-                  <button onclick="event.stopPropagation(); App.openTransitionModal('${item.id}')" 
-                          class="px-2.5 py-1 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 rounded text-xs font-bold flex items-center space-x-1 transition cursor-pointer" 
-                          title="Finalizar etapa y avanzar a ${nextStage}">
-                    <span>Avanzar</span>
-                    <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
-                  </button>
-                `
-              ) : (nextStage && !isAdmin ? `<span class="text-slate-400 text-[10px] font-medium px-1.5 py-0.5 bg-slate-100 rounded" title="Solo puede avanzar el responsable asignado: ${item.responsable || 'Sin Asignar'}">🔒 ${item.responsable || 'Sin Asignar'}</span>` : (!isAdmin ? `<span class="text-slate-300 text-xs font-mono">-</span>` : ''))}
+              ${nextStage && canAvanzar ? `
+                <button onclick="event.stopPropagation(); App.openTransitionModal('${item.id}')" 
+                        class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-bold flex items-center space-x-1 transition shadow-xs cursor-pointer" 
+                        title="Finalizar etapa y certificar avance a ${nextStage}">
+                  <span>Avanzar</span>
+                  <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                </button>
+              ` : (nextStage && !isAdmin ? `<span class="text-slate-400 text-[10px] font-medium px-1.5 py-0.5 bg-slate-100 rounded" title="Solo puede avanzar el responsable asignado: ${item.responsable || 'Sin Asignar'}">🔒 ${item.responsable || 'Sin Asignar'}</span>` : (!isAdmin ? `<span class="text-slate-300 text-xs font-mono">-</span>` : ''))}
             </div>
           </td>
         </tr>
@@ -1381,9 +1355,10 @@ const App = {
       return;
     }
 
+    const hasPartida = DataStore.hasValidPartida(item);
     if (currentStage === 'Estudio de Factibilidad' && nextStage === 'Proyecto') {
-      if (!u.puede_asignar_partida) {
-        alert("⛔ Acceso Denegado: Para avanzar de Estudio de Factibilidad a Proyecto se requiere el permiso específico de 'Asignar Partida Presupuestaria'. Tu usuario no cuenta con esta autorización.");
+      if (!hasPartida && !u.puede_asignar_partida && !isAdmin) {
+        alert(`⛔ Para avanzar de Estudio de Factibilidad a Proyecto es necesario que la obra cuente con una Partida Presupuestaria asignada.\n\nSolicita a Dirección Médica o Administración la asignación del número y monto de partida para "${item.nombre}".`);
         return;
       }
     }
@@ -1431,7 +1406,13 @@ const App = {
 
     if (requierePartida && !tienePartida) {
       if (warnSinPartida) warnSinPartida.classList.remove('hidden');
-      if (inputQuickPartida) inputQuickPartida.classList.remove('hidden');
+      if (inputQuickPartida) {
+        if (u.puede_asignar_partida || isAdmin) {
+          inputQuickPartida.classList.remove('hidden');
+        } else {
+          inputQuickPartida.classList.add('hidden');
+        }
+      }
     } else {
       if (warnSinPartida) warnSinPartida.classList.add('hidden');
       if (inputQuickPartida) inputQuickPartida.classList.add('hidden');
@@ -1452,6 +1433,7 @@ const App = {
     if (!item) return;
 
     const u = DataStore.currentUser;
+    const isAdmin = DataStore.isAdmin();
     if (!u || u.solo_lectura || u.rol === 'visualizador' || !u.puede_avanzar) {
       alert("⛔ Acceso Denegado: Tu perfil es de solo lectura y no tiene autorización para avanzar etapas.");
       return;
@@ -1465,9 +1447,15 @@ const App = {
     const currentStage = item.estado;
     const nextStage = DataStore.getNextStage(currentStage);
 
+    const hasPartida = DataStore.hasValidPartida(item);
+    const quickPartidaInput = document.getElementById('transQuickPartidaInput');
+    const quickMontoInput = document.getElementById('transQuickMontoPartidaInput');
+    const enteredPartida = quickPartidaInput ? quickPartidaInput.value.trim() : '';
+    const enteredMonto = quickMontoInput ? quickMontoInput.value.trim() : '';
+
     if (currentStage === 'Estudio de Factibilidad' && nextStage === 'Proyecto') {
-      if (!u.puede_asignar_partida) {
-        alert("⛔ Acceso Denegado: Para avanzar de Estudio de Factibilidad a Proyecto se requiere el permiso específico de 'Asignar Partida Presupuestaria'. Tu usuario no cuenta con esta autorización.");
+      if (!hasPartida && !enteredPartida && !u.puede_asignar_partida && !isAdmin) {
+        alert("⛔ No es posible avanzar a la etapa de Proyecto:\n\nEsta obra requiere que Dirección Médica o Administración asigne una Partida Presupuestaria previamente.");
         return;
       }
     }
