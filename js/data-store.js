@@ -630,8 +630,11 @@ const DataStore = {
     const item = this.getItemById(itemId);
     if (!item) return { success: false, msg: 'Obra no encontrada' };
 
-    if (!this.canUserEditObra(item)) {
-      return { success: false, msg: `No tienes permisos para modificar obras de la sede ${item.sede}` };
+    if (!this.canUserAdvanceItem(item)) {
+      return { 
+        success: false, 
+        msg: `⛔ Acceso Denegado: Solo puedes avanzar etapas de las obras asignadas a tu usuario. Esta obra está asignada a: ${item.responsable || 'Sin Asignar'}.` 
+      };
     }
     if (this.currentUser.solo_lectura || this.currentUser.rol === 'visualizador' || !this.currentUser.puede_avanzar) {
       return { success: false, msg: '⛔ Acceso Denegado: Tu rol no tiene permiso para certificar ni avanzar etapas' };
@@ -648,7 +651,7 @@ const DataStore = {
       if (!this.currentUser.puede_asignar_partida) {
         return { 
           success: false, 
-          msg: '⛔ Acceso Denegado: No tienes el permiso específico requerido para asignar partida presupuestaria ni autorizar la salida de Factibilidad hacia Proyecto.',
+          msg: '⛔ Acceso Denegado: Para avanzar de Estudio de Factibilidad a Proyecto se requiere el permiso específico de \'Asignar Partida Presupuestaria\'. No tienes autorización para habilitar esta transición.',
           requierePartida: false 
         };
       }
@@ -669,16 +672,28 @@ const DataStore = {
       }
     }
 
-    const today = new Date().toISOString().split('T')[0];
-    const compDate = completionDate || today;
+    // Validación de fecha de finalización: Hoy y hasta 7 días hacia atrás máximo
+    const now = new Date();
+    const maxDateStr = now.toISOString().split('T')[0];
+    const minDate = new Date();
+    minDate.setDate(now.getDate() - 7);
+    const minDateStr = minDate.toISOString().split('T')[0];
+
+    const compDate = (completionDate || maxDateStr).trim();
+    if (compDate > maxDateStr) {
+      return { success: false, msg: '⛔ La fecha de finalización de etapa no puede ser posterior al día de hoy.' };
+    }
+    if (compDate < minDateStr) {
+      return { success: false, msg: `⛔ La fecha de finalización no puede tener más de 7 días de antigüedad (rango permitido: ${minDateStr} a ${maxDateStr}).` };
+    }
 
     item.historial.unshift({
       fecha: compDate,
-      usuario: this.currentUser.nombre,
+      usuario: `${this.currentUser.nombre} (${this.currentUser.rol})`,
       estado_anterior: currentStage,
       estado_nuevo: nextStage,
       fecha_limite: nextDeadline,
-      observaciones: notes || `Etapa '${currentStage}' completada y confirmada. Avanza a '${nextStage}'.`
+      observaciones: notes ? `Etapa '${currentStage}' completada el ${compDate} por ${this.currentUser.nombre}. ${notes}` : `Etapa '${currentStage}' finalizada y certificada el ${compDate} por ${this.currentUser.nombre}. Avanza a '${nextStage}'.`
     });
 
     item.estado = nextStage;
@@ -748,12 +763,43 @@ const DataStore = {
     return this.isAdmin();
   },
 
+  isUserAssignedToObra(item) {
+    if (!this.currentUser || !item) return false;
+    if (this.currentUser.rol === 'admin') return true;
+    if (this.currentUser.solo_lectura || this.currentUser.rol === 'visualizador') return false;
+
+    const resp = (item.responsable || '').toLowerCase().trim();
+    if (!resp || resp === 'sin asignar' || resp === 's/d') return false;
+
+    const u = this.currentUser;
+    const uUser = (u.username || '').toLowerCase().trim();
+    const uName = (u.nombre || '').toLowerCase().trim();
+
+    if (uUser && (resp === uUser || resp.includes(uUser) || uUser.includes(resp))) return true;
+    if (uName && (resp.includes(uName) || uName.includes(resp))) return true;
+
+    // Tokens identificatorios del nombre de usuario (ej: "palmioli", "waldemar", "cossano")
+    const stopwords = ['arq.', 'arq', 'ing.', 'ing', 'dr.', 'dr', 'dra.', 'dra', 'pm', 'central', 'san', 'justo', 'periféricos', 'perifericos', 'de', 'la', 'el', 'compras', 'licitaciones'];
+    const tokens = uName.replace(/[(),/]/g, ' ').split(/\s+/).filter(t => t.length > 2 && !stopwords.includes(t));
+    for (const token of tokens) {
+      if (resp.includes(token)) return true;
+    }
+    return false;
+  },
+
+  canUserAdvanceItem(item) {
+    if (!this.currentUser) return false;
+    if (this.currentUser.solo_lectura || this.currentUser.rol === 'visualizador' || !this.currentUser.puede_avanzar) return false;
+    if (this.isAdmin()) return true;
+    return this.isUserAssignedToObra(item);
+  },
+
   canUserEditObra(item) {
     if (!this.currentUser) return false;
     if (this.currentUser.solo_lectura || this.currentUser.rol === 'visualizador') return false;
     if (this.currentUser.rol === 'admin') return true;
     if (this.currentUser.sede === 'Todas') return true;
-    return (item.sede || '').toLowerCase() === (this.currentUser.sede || '').toLowerCase();
+    return this.isUserAssignedToObra(item) || (item.sede || '').toLowerCase() === (this.currentUser.sede || '').toLowerCase();
   },
 
   canUserCreateInSede(sede) {
@@ -766,11 +812,8 @@ const DataStore = {
   // ================= FILTROS Y KPIS DESGLOSADOS =================
   getFilteredItems(filters = {}) {
     return this.items.filter(item => {
-      // Restricción de Sede por usuario
-      if (this.currentUser && this.currentUser.sede !== 'Todas') {
-        if ((item.sede || '').toLowerCase() !== this.currentUser.sede.toLowerCase()) return false;
-      }
-      // Filtro Sede explícito
+      // "Cada usuario puede ver todo": se permite visualización completa de todas las sedes
+      // Filtro Sede explícito (cuando el usuario selecciona en la barra superior Central, San Justo o Periféricos)
       if (filters.sede && filters.sede !== 'TODAS') {
         if ((item.sede || '').toLowerCase() !== filters.sede.toLowerCase()) return false;
       }
@@ -932,6 +975,21 @@ const DataStore = {
     if (!item || !item.partida) return false;
     const p = String(item.partida).trim();
     return p !== '' && p !== 'S/D' && p.toUpperCase() !== 'PENDIENTE' && p.toUpperCase() !== 'NONE';
+  },
+
+  isPartidaCorta(item) {
+    if (!item) return false;
+    if (!this.hasValidPartida(item)) return false;
+    const montoPartida = item.monto_partida_usd || 0;
+    const montoTotal = item.monto_total_usd || ((item.monto_obra_usd || 0) + (item.monto_equipamiento_usd || 0));
+    return (montoPartida > 0 && montoTotal > montoPartida);
+  },
+
+  getPartidaDeficit(item) {
+    if (!this.isPartidaCorta(item)) return 0;
+    const montoPartida = item.monto_partida_usd || 0;
+    const montoTotal = item.monto_total_usd || ((item.monto_obra_usd || 0) + (item.monto_equipamiento_usd || 0));
+    return Math.max(0, montoTotal - montoPartida);
   },
 
   getItemMontoPartida(item) {

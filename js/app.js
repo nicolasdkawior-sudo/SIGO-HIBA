@@ -613,26 +613,29 @@ const App = {
       const pond = DataStore.getPonderacionGlobal(item);
       const monto = DataStore.formatUSD(item.monto_total_usd || item.monto_obra_usd || 0);
       const nextStage = DataStore.getNextStage(item.estado);
-      const canEdit = DataStore.canUserEditObra(item);
       const u = DataStore.currentUser;
       const isAdmin = DataStore.isAdmin();
-      const canAvanzar = canEdit && u && !u.solo_lectura && u.rol !== 'visualizador' && Boolean(u.puede_avanzar);
+      const canAdvanceThis = DataStore.canUserAdvanceItem(item);
+      const canAvanzar = canAdvanceThis && u && !u.solo_lectura && u.rol !== 'visualizador' && Boolean(u.puede_avanzar);
       const isFactibilidad = item.estado === 'Estudio de Factibilidad';
       const canPartida = u && Boolean(u.puede_asignar_partida);
+      const isCorta = DataStore.isPartidaCorta(item);
+      const deficit = isCorta ? DataStore.getPartidaDeficit(item) : 0;
 
       html += `
-        <div class="py-3 flex items-center justify-between hover:bg-slate-50 px-2 rounded-lg cursor-pointer transition" onclick="App.openObraModal('${item.id}')">
+        <div class="py-3 flex items-center justify-between hover:bg-slate-50 px-2 rounded-lg cursor-pointer transition ${isCorta ? 'bg-rose-50/50 border-l-4 border-rose-500 my-1' : ''}" onclick="App.openObraModal('${item.id}')">
           <div class="flex items-center space-x-3">
             <span class="px-2.5 py-1 text-xs font-semibold rounded-md ${sem.class}">
               ${sem.label}
             </span>
             <div>
-              <div class="font-bold text-slate-800 text-sm flex items-center space-x-2">
+              <div class="font-bold text-slate-800 text-sm flex items-center space-x-2 flex-wrap">
                 <span>${item.nombre}</span>
                 <span class="px-1.5 py-0.2 text-[10px] rounded border ${pond.colorClass}">
                   ${pond.nivelLabel} (${pond.valor}★)
                 </span>
                 ${!item.partida || item.partida === 'S/D' ? `<span class="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.2 rounded font-bold">Sin Partida</span>` : ''}
+                ${isCorta ? `<span class="bg-rose-100 text-rose-800 text-[10px] px-1.5 py-0.2 rounded font-bold border border-rose-300 inline-flex items-center space-x-1" title="Partida asignada menor al costo requerido (-USD ${DataStore.formatUSD(deficit)})"><i data-lucide="alert-triangle" class="w-2.5 h-2.5 text-rose-600"></i><span>Partida Corta (-USD ${DataStore.formatUSD(deficit)})</span></span>` : ''}
               </div>
               <div class="text-xs text-slate-400 flex items-center space-x-2 mt-0.5">
                 <span class="font-semibold text-slate-600">📍 ${item.sede}</span>
@@ -670,7 +673,7 @@ const App = {
                   <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
                 </button>
               `
-            ) : ''}
+            ) : (nextStage && !isAdmin ? `<span class="px-1.5 py-0.5 bg-slate-100 text-slate-400 rounded text-[10px]" title="Solo puede certificar el responsable asignado">🔒 ${item.responsable || 'Sin Asignar'}</span>` : '')}
           </div>
         </div>
       `;
@@ -730,25 +733,28 @@ const App = {
           const sem = DataStore.calculateSemaforo(item);
           const pond = DataStore.getPonderacionGlobal(item);
           const monto = DataStore.formatUSD(item.monto_total_usd || item.monto_obra_usd || 0);
-          const canEdit = DataStore.canUserEditObra(item);
           const u = DataStore.currentUser;
           const isAdmin = DataStore.isAdmin();
-          const canAvanzar = canEdit && u && !u.solo_lectura && u.rol !== 'visualizador' && Boolean(u.puede_avanzar);
+          const canAdvanceThis = DataStore.canUserAdvanceItem(item);
+          const canAvanzar = canAdvanceThis && u && !u.solo_lectura && u.rol !== 'visualizador' && Boolean(u.puede_avanzar);
           const isFactibilidad = item.estado === 'Estudio de Factibilidad';
           const canPartida = u && Boolean(u.puede_asignar_partida);
+          const isCorta = DataStore.isPartidaCorta(item);
+          const deficit = isCorta ? DataStore.getPartidaDeficit(item) : 0;
 
           html += `
-            <div class="kanban-card bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs cursor-pointer" onclick="App.openObraModal('${item.id}')">
+            <div class="kanban-card bg-white p-3.5 rounded-xl border ${isCorta ? 'border-rose-400 border-l-4 bg-rose-50/20' : 'border-slate-200'} shadow-2xs cursor-pointer" onclick="App.openObraModal('${item.id}')">
               <div class="flex items-center justify-between mb-1.5">
                 <span class="text-xs font-mono font-bold text-slate-400">${item.id}</span>
                 <span class="px-2 py-0.5 text-[11px] font-semibold rounded ${sem.class}">${sem.label}</span>
               </div>
 
-              <div class="mb-2 flex items-center space-x-1.5">
+              <div class="mb-2 flex items-center space-x-1.5 flex-wrap gap-1">
                 <span class="px-1.5 py-0.2 text-[10px] rounded border ${pond.colorClass}">
                   ${pond.nivelLabel} (${pond.valor}★)
                 </span>
                 ${!item.partida || item.partida === 'S/D' ? `<span class="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.2 rounded font-bold">Sin Partida</span>` : ''}
+                ${isCorta ? `<span class="bg-rose-100 text-rose-800 text-[10px] px-1.5 py-0.2 rounded font-bold border border-rose-300 inline-flex items-center space-x-1" title="Partida asignada menor al costo requerido (-USD ${DataStore.formatUSD(deficit)})"><i data-lucide="alert-triangle" class="w-2.5 h-2.5 text-rose-600"></i><span>Partida Corta</span></span>` : ''}
               </div>
 
               <h4 class="font-bold text-slate-800 text-sm leading-tight mb-2">${item.nombre}</h4>
@@ -791,7 +797,7 @@ const App = {
                         <i data-lucide="check" class="w-3.5 h-3.5"></i>
                       </button>
                     `
-                  ) : ''}
+                  ) : (nextStage && !isAdmin ? `<span class="px-1.5 py-0.5 bg-slate-100 text-slate-400 rounded text-[10px]" title="Solo el responsable asignado puede certificar esta obra">🔒</span>` : '')}
                 </div>
               </div>
             </div>
@@ -828,15 +834,17 @@ const App = {
       const pond = DataStore.getPonderacionGlobal(item);
       const monto = DataStore.formatUSD(item.monto_total_usd || item.monto_obra_usd || 0);
       const nextStage = DataStore.getNextStage(item.estado);
-      const canEdit = DataStore.canUserEditObra(item);
       const u = DataStore.currentUser;
       const isAdmin = DataStore.isAdmin();
-      const canAvanzar = canEdit && u && !u.solo_lectura && u.rol !== 'visualizador' && Boolean(u.puede_avanzar);
+      const canAdvanceThis = DataStore.canUserAdvanceItem(item);
+      const canAvanzar = canAdvanceThis && u && !u.solo_lectura && u.rol !== 'visualizador' && Boolean(u.puede_avanzar);
       const isFactibilidad = item.estado === 'Estudio de Factibilidad';
       const canPartida = u && Boolean(u.puede_asignar_partida);
+      const isCorta = DataStore.isPartidaCorta(item);
+      const deficit = isCorta ? DataStore.getPartidaDeficit(item) : 0;
 
       html += `
-        <tr class="hover:bg-slate-50/80 transition cursor-pointer border-b border-slate-100" onclick="App.openObraModal('${item.id}')">
+        <tr class="hover:bg-slate-50/80 transition cursor-pointer border-b ${isCorta ? 'border-rose-300 bg-rose-50/60 text-rose-950 font-medium' : 'border-slate-100'}" onclick="App.openObraModal('${item.id}')">
           <td class="py-3 px-4 text-xs font-mono font-bold text-slate-500">${item.id}</td>
           <td class="py-3 px-4 text-xs font-semibold">
             <span class="px-2 py-0.5 rounded ${
@@ -845,8 +853,11 @@ const App = {
             }">${item.sede}</span>
           </td>
           <td class="py-3 px-4">
-            <div class="font-bold text-slate-900 text-sm">${item.nombre}</div>
-            <div class="text-xs text-slate-400">${item.categoria || 'Obra'} • Partida: <span class="font-mono font-bold text-slate-600">${item.partida || 'PENDIENTE'}</span></div>
+            <div class="font-bold text-slate-900 text-sm flex items-center space-x-1.5 flex-wrap">
+              <span>${item.nombre}</span>
+              ${isCorta ? `<span class="bg-rose-100 text-rose-800 text-[10px] px-2 py-0.5 rounded font-black border border-rose-300 inline-flex items-center space-x-1" title="Partida asignada (USD ${DataStore.formatUSD(item.monto_partida_usd)}) menor al costo requerido (USD ${DataStore.formatUSD(item.monto_total_usd)}). Déficit: -USD ${DataStore.formatUSD(deficit)}"><i data-lucide="alert-triangle" class="w-2.5 h-2.5 text-rose-600"></i><span>Partida Corta (-USD ${DataStore.formatUSD(deficit)})</span></span>` : ''}
+            </div>
+            <div class="text-xs text-slate-400 mt-0.5">${item.categoria || 'Obra'} • Partida: <span class="font-mono font-bold ${isCorta ? 'text-rose-700 font-black' : 'text-slate-600'}">${item.partida || 'PENDIENTE'}</span> ${item.monto_partida_usd ? `(Asig: USD ${DataStore.formatUSD(item.monto_partida_usd)})` : ''}</div>
           </td>
           <td class="py-3 px-4 text-xs">
             <span class="font-semibold text-slate-700">${item.estado}</span>
@@ -879,14 +890,14 @@ const App = {
                     <span>Espera Partida</span>
                   </span>
                 ` : `
-                  <button onclick="App.openTransitionModal('${item.id}')" 
+                  <button onclick="event.stopPropagation(); App.openTransitionModal('${item.id}')" 
                           class="px-2.5 py-1 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 rounded text-xs font-bold flex items-center space-x-1 transition cursor-pointer" 
                           title="Finalizar etapa y avanzar a ${nextStage}">
                     <span>Avanzar</span>
                     <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
                   </button>
                 `
-              ) : (!isAdmin ? `<span class="text-slate-300 text-xs font-mono">-</span>` : '')}
+              ) : (nextStage && !isAdmin ? `<span class="text-slate-400 text-[10px] font-medium px-1.5 py-0.5 bg-slate-100 rounded" title="Solo puede avanzar el responsable asignado: ${item.responsable || 'Sin Asignar'}">🔒 ${item.responsable || 'Sin Asignar'}</span>` : (!isAdmin ? `<span class="text-slate-300 text-xs font-mono">-</span>` : ''))}
             </div>
           </td>
         </tr>
@@ -1296,7 +1307,30 @@ const App = {
     document.getElementById('inputMontoPartida').value = (defMonto > 0) ? defMonto : '';
 
     document.getElementById('modalAsignarPartida').classList.remove('hidden');
+    this.checkPartidaCortaModalAsignar();
     if (window.lucide) lucide.createIcons();
+  },
+
+  checkPartidaCortaModalAsignar() {
+    const id = document.getElementById('partidaItemId')?.value;
+    const item = DataStore.getItemById(id);
+    const inputMonto = document.getElementById('inputMontoPartida');
+    const warnBox = document.getElementById('partidaCortaWarningContainer');
+    const warnTxt = document.getElementById('partidaCortaWarningText');
+    if (!item || !inputMonto || !warnBox) return;
+
+    const montoVal = parseFloat(inputMonto.value) || 0;
+    const costoRequerido = item.monto_total_usd || ((item.monto_obra_usd || 0) + (item.monto_equipamiento_usd || 0));
+
+    if (montoVal > 0 && costoRequerido > montoVal) {
+      const deficit = costoRequerido - montoVal;
+      warnBox.classList.remove('hidden');
+      if (warnTxt) {
+        warnTxt.innerText = `El monto de la partida asignada (USD ${DataStore.formatUSD(montoVal)}) es menor al costo requerido de la obra (USD ${DataStore.formatUSD(costoRequerido)}). Déficit presupuestario: -USD ${DataStore.formatUSD(deficit)}. La obra quedará marcada con "Partida Corta".`;
+      }
+    } else {
+      warnBox.classList.add('hidden');
+    }
   },
 
   closeAsignarPartidaModal() {
@@ -1335,8 +1369,8 @@ const App = {
       return;
     }
 
-    if (!DataStore.canUserEditObra(item)) {
-      this.showToast(`Acceso restringido: Solo puedes gestionar obras de sede ${u.sede}`);
+    if (!DataStore.canUserAdvanceItem(item)) {
+      alert(`⛔ Acceso Denegado: Solo puedes avanzar etapas de las obras asignadas a tu usuario. Esta obra está a cargo de: ${item.responsable || 'Sin Asignar'}.`);
       return;
     }
 
@@ -1358,10 +1392,29 @@ const App = {
     document.getElementById('transItemName').innerText = `${item.id}: ${item.nombre}`;
     document.getElementById('transCurrentStage').innerText = currentStage;
     document.getElementById('transNextStageAuto').innerText = nextStage;
+
+    // Nombre de quien finaliza: Automático según la sesión del usuario logueado
+    const certUserEl = document.getElementById('transLoggedUserName');
+    if (certUserEl) {
+      certUserEl.innerText = `${u.nombre} (${u.rol.toUpperCase()})`;
+    }
     
     const defaultDeadline = DataStore.getDefaultDeadlineForStage(nextStage);
     document.getElementById('transNewDeadline').value = defaultDeadline;
-    document.getElementById('transCompletionDate').value = new Date().toISOString().split('T')[0];
+
+    // Restricción estricta de fecha: Hoy y hasta 7 días hacia atrás máximo
+    const now = new Date();
+    const maxDateStr = now.toISOString().split('T')[0];
+    const minDate = new Date();
+    minDate.setDate(now.getDate() - 7);
+    const minDateStr = minDate.toISOString().split('T')[0];
+
+    const inputCompDate = document.getElementById('transCompletionDate');
+    if (inputCompDate) {
+      inputCompDate.max = maxDateStr;
+      inputCompDate.min = minDateStr;
+      inputCompDate.value = maxDateStr;
+    }
     document.getElementById('transNotes').value = '';
 
     const warnSinPartida = document.getElementById('transSinPartidaNotice');
@@ -1404,6 +1457,11 @@ const App = {
       return;
     }
 
+    if (!DataStore.canUserAdvanceItem(item)) {
+      alert(`⛔ Acceso Denegado: Solo puedes certificar y avanzar obras asignadas a tu usuario. Esta obra está a cargo de: ${item.responsable || 'Sin Asignar'}.`);
+      return;
+    }
+
     const currentStage = item.estado;
     const nextStage = DataStore.getNextStage(currentStage);
 
@@ -1417,6 +1475,29 @@ const App = {
     const compDate = document.getElementById('transCompletionDate').value;
     const newDeadline = document.getElementById('transNewDeadline').value;
     const notes = document.getElementById('transNotes').value;
+
+    // Validación de fecha: Hoy y hasta 7 días hacia atrás máximo
+    const now = new Date();
+    const maxDateStr = now.toISOString().split('T')[0];
+    const minDate = new Date();
+    minDate.setDate(now.getDate() - 7);
+    const minDateStr = minDate.toISOString().split('T')[0];
+
+    if (!compDate) {
+      alert("⚠️ Debes seleccionar una fecha de finalización de la etapa.");
+      document.getElementById('transCompletionDate').focus();
+      return;
+    }
+    if (compDate > maxDateStr) {
+      alert("⚠️ La fecha de finalización de etapa no puede ser posterior al día de hoy.");
+      document.getElementById('transCompletionDate').focus();
+      return;
+    }
+    if (compDate < minDateStr) {
+      alert(`⚠️ La fecha de finalización no puede tener más de 7 días de antigüedad (rango permitido: ${minDateStr} al ${maxDateStr}).`);
+      document.getElementById('transCompletionDate').focus();
+      return;
+    }
 
     const quickPartidaInput = document.getElementById('transQuickPartidaInput');
     const quickMontoInput = document.getElementById('transQuickMontoPartidaInput');
@@ -2130,14 +2211,9 @@ const App = {
     if (sedeEl) sedeEl.innerText = u.sede !== 'Todas' ? `📍 Sede: ${u.sede}` : '🌐 Todas las Sedes';
 
     if (sedeSelect) {
-      if (u.sede !== 'Todas') {
-        sedeSelect.value = u.sede;
-        sedeSelect.disabled = true;
-        sedeSelect.classList.add('bg-slate-200', 'cursor-not-allowed');
-      } else {
-        sedeSelect.disabled = false;
-        sedeSelect.classList.remove('bg-slate-200', 'cursor-not-allowed');
-      }
+      // Cada usuario puede ver todo: navegación abierta sin deshabilitar selector de sede
+      sedeSelect.disabled = false;
+      sedeSelect.classList.remove('bg-slate-200', 'cursor-not-allowed');
     }
 
     // Visibilidad de controles según permisos y rol
@@ -2158,6 +2234,46 @@ const App = {
     }
   },
 
+  // ================= CÁLCULO INSTANTÁNEO Y AUDITORÍA DE M2 =================
+  calculateModalUsdM2() {
+    const mObra = parseFloat(document.getElementById('modalObraMontoObra')?.value) || 0;
+    const mEquip = parseFloat(document.getElementById('modalObraMontoEquip')?.value) || 0;
+    const mTotal = mObra + mEquip;
+    const m2 = parseFloat(document.getElementById('modalObraM2')?.value) || 0;
+    const tipo = document.getElementById('modalObraTipo')?.value || 'Obra Civil';
+    const isObraCivil = (tipo === 'Obra Civil');
+
+    const badge = document.getElementById('modalObraM2RequiredBadge');
+    if (badge) badge.classList.toggle('hidden', !isObraCivil);
+
+    const usdM2 = m2 > 0 ? (Math.round((mTotal / m2) * 100) / 100) : 0;
+    const elUsdM2 = document.getElementById('modalObraUsdM2');
+    if (elUsdM2) elUsdM2.value = usdM2 > 0 ? usdM2.toFixed(2) : 0;
+
+    // Actualizar panel de desglose visual de signos (+, =, ÷, =)
+    const elFMO = document.getElementById('calcFormulaMontoObra');
+    const elFME = document.getElementById('calcFormulaMontoEquip');
+    const elFMT = document.getElementById('calcFormulaTotal');
+    const elFM2 = document.getElementById('calcFormulaM2');
+    const elFRes = document.getElementById('calcFormulaResultado');
+    const elFNota = document.getElementById('calcFormulaNota');
+
+    if (elFMO) elFMO.innerText = `USD ${mObra.toLocaleString('en-US')}`;
+    if (elFME) elFME.innerText = `USD ${mEquip.toLocaleString('en-US')}`;
+    if (elFMT) elFMT.innerText = `USD ${mTotal.toLocaleString('en-US')}`;
+    if (elFM2) elFM2.innerText = m2 > 0 ? `${m2.toLocaleString('en-US')} m²` : (isObraCivil ? '0 m² (Falta m²)' : 'N/A');
+    if (elFRes) elFRes.innerText = usdM2 > 0 ? `USD ${usdM2.toFixed(2)} / m²` : 'USD 0.00 / m²';
+    if (elFNota) {
+      if (isObraCivil && m2 <= 0) {
+        elFNota.innerText = '⚠️ M² obligatorio para Obra Civil';
+        elFNota.className = 'text-[10px] text-rose-600 font-bold';
+      } else {
+        elFNota.innerText = 'Cálculo instantáneo auditado';
+        elFNota.className = 'text-[10px] text-slate-500 font-medium';
+      }
+    }
+  },
+
   // ================= MODAL DETALLE OBRA =================
   populateObraModalFields(item) {
     const pond = DataStore.getPonderacionGlobal(item);
@@ -2171,6 +2287,9 @@ const App = {
       if (el) el.innerText = text !== undefined && text !== null ? text : '';
     };
 
+    const montoObra = item.monto_obra_usd !== undefined ? item.monto_obra_usd : (item.monto_total_usd || 0);
+    const montoEquip = item.monto_equipamiento_usd || 0;
+
     setText('modalObraId', item.id);
     setVal('modalObraTitle', item.nombre);
     setVal('modalObraSede', item.sede || 'Central');
@@ -2180,8 +2299,8 @@ const App = {
     setVal('modalObraMontoPartida', item.monto_partida_usd || (item.partida ? item.monto_total_usd : '') || '');
     setVal('modalObraCategoria', item.categoria || 'Obra Civil');
     setVal('modalObraClasificacion', item.clasificacion || '');
-    setVal('modalObraMontoObra', item.monto_obra_usd || 0);
-    setVal('modalObraMontoEquip', item.monto_equipamiento_usd || 0);
+    setVal('modalObraMontoObra', montoObra);
+    setVal('modalObraMontoEquip', montoEquip);
     setVal('modalObraM2', item.superficie_m2 || 0);
     setVal('modalObraUsdM2', item.costo_usd_m2 || 0);
     setVal('modalObraResponsable', item.responsable || '');
@@ -2193,6 +2312,9 @@ const App = {
     setVal('modalObraPrioridadMed', item.prioridad_medica || '');
     setVal('modalObraPrioridadFin', pond.valor || 1);
     setVal('modalObraObservaciones', item.observaciones || '');
+
+    // Calcular instantáneamente precio por m2 y actualizar desglose con signos
+    this.calculateModalUsdM2();
   },
 
   toggleAdminEditMode(enable) {
@@ -2273,7 +2395,6 @@ const App = {
       'modalObraMontoObra',
       'modalObraMontoEquip',
       'modalObraM2',
-      'modalObraUsdM2',
       'modalObraResponsable',
       'modalObraProveedor',
       'modalObraCategoria',
@@ -2292,6 +2413,14 @@ const App = {
         el.classList.toggle('border-amber-400', active);
       }
     });
+
+    // USD/M2 se calcula de forma automática y siempre permanece de solo lectura
+    const elUsdM2 = document.getElementById('modalObraUsdM2');
+    if (elUsdM2) {
+      elUsdM2.disabled = true;
+      elUsdM2.classList.add('bg-slate-100');
+      elUsdM2.classList.remove('bg-white', 'border-amber-400');
+    }
 
     // If canceling edit mode, restore values from current item
     if (!enable) {
@@ -2392,6 +2521,21 @@ const App = {
       `).join('') : '<div class="text-xs text-slate-400 italic">Sin registros en el historial</div>';
     }
 
+    // Alerta de Partida Corta en el modal
+    const alertaCorta = document.getElementById('modalPartidaCortaAlert');
+    const textoCorta = document.getElementById('modalPartidaCortaText');
+    if (alertaCorta) {
+      if (DataStore.isPartidaCorta(item)) {
+        const def = DataStore.getPartidaDeficit(item);
+        if (textoCorta) {
+          textoCorta.innerText = `Partida asignada (USD ${DataStore.formatUSD(item.monto_partida_usd)}) es menor al costo requerido de la obra (USD ${DataStore.formatUSD(item.monto_total_usd)}). Déficit presupuestario: -USD ${DataStore.formatUSD(def)}. La obra cuenta con fondos insuficientes.`;
+        }
+        alertaCorta.classList.remove('hidden');
+      } else {
+        alertaCorta.classList.add('hidden');
+      }
+    }
+
     // Configurar estado de edición (bloqueado o activo)
     this.toggleAdminEditMode(Boolean(isAdmin && startInEditMode));
 
@@ -2433,6 +2577,15 @@ const App = {
     const newMontoObra = parseFloat(document.getElementById('modalObraMontoObra').value) || 0;
     const newMontoEquip = parseFloat(document.getElementById('modalObraMontoEquip').value) || 0;
     const newMontoTotal = newMontoObra + newMontoEquip;
+    const newM2 = parseFloat(document.getElementById('modalObraM2')?.value) || 0;
+
+    // Validación de M2: Obligatorio para Obra Civil (mayor a 0), opcional para Infraestructura
+    if (newTipo === 'Obra Civil' && newM2 <= 0) {
+      alert("⚠️ Para 'Obra Civil', la Superficie (M2) es obligatoria y debe ser mayor a 0.");
+      document.getElementById('modalObraM2')?.focus();
+      return;
+    }
+
     const newResponsable = document.getElementById('modalObraResponsable').value.trim();
     const newProveedor = document.getElementById('modalObraProveedor').value.trim();
     const newFechaInicio = document.getElementById('modalObraFechaInicio').value;
@@ -2443,6 +2596,7 @@ const App = {
     const changes = [];
     if (oldNombre !== newTitle) changes.push(`Tarea: "${oldNombre}" ➔ "${newTitle}"`);
     if (oldMontoTotal !== newMontoTotal) changes.push(`Monto: USD ${DataStore.formatUSD(oldMontoTotal)} ➔ USD ${DataStore.formatUSD(newMontoTotal)}`);
+    if ((item.superficie_m2 || 0) !== newM2) changes.push(`M2: ${item.superficie_m2 || 0} ➔ ${newM2}`);
     if ((oldResponsable || '') !== newResponsable) changes.push(`Responsable: "${oldResponsable || 'Sin asignar'}" ➔ "${newResponsable || 'Sin asignar'}"`);
     if ((oldFechaFin || '') !== newFechaFin) changes.push(`Fecha Fin: "${oldFechaFin || 'S/D'}" ➔ "${newFechaFin || 'S/D'}"`);
     if (oldEstado !== newEstado) changes.push(`Estado: "${oldEstado}" ➔ "${newEstado}"`);
@@ -2473,8 +2627,8 @@ const App = {
     item.monto_obra_usd = newMontoObra;
     item.monto_equipamiento_usd = newMontoEquip;
     item.monto_total_usd = newMontoTotal;
-    item.superficie_m2 = parseFloat(getVal('modalObraM2')) || 0;
-    item.costo_usd_m2 = parseFloat(getVal('modalObraUsdM2')) || 0;
+    item.superficie_m2 = newM2;
+    item.costo_usd_m2 = newM2 > 0 ? (Math.round((newMontoTotal / newM2) * 100) / 100) : 0;
     item.responsable = newResponsable;
     item.proveedor = newProveedor;
     item.fecha_inicio_etapa = newFechaInicio;
