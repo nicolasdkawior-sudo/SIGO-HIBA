@@ -1487,11 +1487,6 @@ const App = {
       return;
     }
 
-    const quickPartidaInput = document.getElementById('transQuickPartidaInput');
-    const quickMontoInput = document.getElementById('transQuickMontoPartidaInput');
-    const enteredPartida = quickPartidaInput ? quickPartidaInput.value.trim() : '';
-    const enteredMonto = quickMontoInput ? quickMontoInput.value.trim() : '';
-
     if (enteredPartida) {
       if (!u.puede_asignar_partida) {
         alert("⛔ Acceso Denegado: No tienes el permiso específico para asignar partida presupuestaria.");
