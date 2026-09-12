@@ -1515,7 +1515,7 @@
               <span>Dependencia / Dpto.</span>
               <span id="modalObraDepBadge" class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-indigo-50 text-indigo-700 border border-indigo-200"></span>
             </label>
-            <select id="modalObraDependenciaSelect" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+            <select id="modalObraDependenciaSelect" onchange="App.handleModalDependenciaSelectChange(this.value)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500">
               <option value="Departamento de Proyectos Central">Proyectos Central</option>
               <option value="Departamento de Proyectos San Justo">Proyectos San Justo</option>
               <option value="Departamento de Mantenimiento Central">Mantenimiento Central</option>

@@ -2783,9 +2783,22 @@ const App = {
       if (user) {
         if (hiddenResp) hiddenResp.value = user.nombre;
         if (hiddenRespId) hiddenRespId.value = user.id;
+        if (user.dependencia && user.dependencia !== 'Dirección General / Administración') {
+          const depSelect = document.getElementById('modalObraDependenciaSelect');
+          if (depSelect) depSelect.value = user.dependencia;
+          const depBadge = document.getElementById('modalObraDepBadge');
+          if (depBadge) depBadge.innerText = user.dependencia.replace('Departamento de ', 'Dpto. ');
+        }
       }
     }
     this.updateModalAssignmentBadge(val);
+  },
+
+  handleModalDependenciaSelectChange(val) {
+    const depBadge = document.getElementById('modalObraDepBadge');
+    if (depBadge && val) {
+      depBadge.innerText = val.replace('Departamento de ', 'Dpto. ');
+    }
   },
 
   updateModalAssignmentBadge(val) {
@@ -3228,7 +3241,16 @@ const App = {
     if (oldPartida !== newPartida) changes.push(`Partida: "${oldPartida || 'Pendiente'}" ➔ "${newPartida || 'Pendiente'}"`);
 
     const selDep = document.getElementById('modalObraDependenciaSelect');
-    const newDep = selDep ? selDep.value : (item.dependencia || DataStore.getObraDependencia(item));
+    let newDep = selDep ? selDep.value : (item.dependencia || DataStore.getObraDependencia(item));
+
+    // Si se asignó un usuario formal con dependencia operativa, la dependencia de la obra
+    // se sincroniza obligatoriamente con la de dicho responsable para garantizar aislamiento estricto
+    const chosenUser = newResponsableId ? (DataStore.users || []).find(u => u.id === newResponsableId) : null;
+    if (chosenUser && chosenUser.dependencia && chosenUser.dependencia !== 'Dirección General / Administración') {
+      newDep = chosenUser.dependencia;
+      if (selDep) selDep.value = newDep;
+    }
+
     const oldDep = item.dependencia || DataStore.getObraDependencia(item);
     if (newDep && oldDep !== newDep) {
       changes.push(`Dependencia: "${oldDep}" ➔ "${newDep}"`);

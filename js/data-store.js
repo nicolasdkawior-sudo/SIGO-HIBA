@@ -541,9 +541,8 @@ const DataStore = {
       if (item.sede === 'Periférico') item.sede = 'Periféricos';
       if (item.estado === 'Ante Proyecto') item.estado = 'Estudio de Factibilidad';
 
-      if (!item.dependencia) {
-        item.dependencia = this.getObraDependencia(item);
-      }
+      // Sincronizar dependencia canónica (repara automáticamente discrepancias en localStorage)
+      item.dependencia = this.getObraDependencia(item);
 
       if (!item.historial) {
         item.historial = [{
@@ -1118,6 +1117,9 @@ const DataStore = {
       if (!user) return { success: false, msg: 'Usuario no encontrado' };
       item.responsable_id = user.id;
       item.responsable = user.nombre;
+      if (user.dependencia && user.dependencia !== 'Dirección General / Administración') {
+        item.dependencia = user.dependencia;
+      }
     }
 
     if (!item.historial) item.historial = [];
@@ -1136,9 +1138,25 @@ const DataStore = {
   // ================= DERIVACIÓN Y GOBIERNO POR DEPENDENCIAS =================
   getObraDependencia(item) {
     if (!item) return '';
+
+    // 1. Si la obra está asignada formalmente a un usuario, la obra pertenece indefectiblemente a la dependencia del responsable
+    if (item.responsable_id) {
+      const respUser = this.users.find(u => u.id === item.responsable_id);
+      if (respUser && respUser.dependencia && respUser.dependencia !== 'Dirección General / Administración') {
+        return respUser.dependencia.trim();
+      }
+    }
+    const respObj = this.getObraAssignedUser(item);
+    if (respObj && respObj.dependencia && respObj.dependencia !== 'Dirección General / Administración') {
+      return respObj.dependencia.trim();
+    }
+
+    // 2. Si tiene dependencia explícita asignada o derivada
     if (item.dependencia && item.dependencia.trim() !== '') {
       return item.dependencia.trim();
     }
+
+    // 3. Heurística según categoría, tipo y sede para obras sin asignar
     const cat = (item.categoria || '').toLowerCase();
     const nom = (item.nombre || '').toLowerCase();
     const tipo = (item.tipo || '').toLowerCase();
@@ -1175,10 +1193,22 @@ const DataStore = {
       if (user) {
         item.responsable_id = user.id;
         item.responsable = user.nombre;
+        if (user.dependencia && user.dependencia !== 'Dirección General / Administración') {
+          item.dependencia = user.dependencia;
+        }
       }
     } else if (responsableId === 'sin_asignar') {
       item.responsable_id = null;
       item.responsable = 'Sin Asignar';
+    } else if (!responsableId && item.responsable_id) {
+      // Si se deriva a otra dependencia sin especificar responsable,
+      // verificar si el responsable actual pertenece a la nueva dependencia.
+      // Si no pertenece, liberar la asignación para evitar conflictos interdepartamentales.
+      const currentResp = this.users.find(u => u.id === item.responsable_id);
+      if (currentResp && currentResp.dependencia && currentResp.dependencia !== dependencia) {
+        item.responsable_id = null;
+        item.responsable = 'Sin Asignar';
+      }
     }
 
     if (!item.historial) item.historial = [];
@@ -1204,6 +1234,16 @@ const DataStore = {
       if (obraIds.includes(item.id)) {
         const oldDep = item.dependencia || this.getObraDependencia(item);
         item.dependencia = dependencia;
+
+        // Si el responsable pertenecía a otra dependencia, liberar para evitar fuga interdepartamental
+        if (item.responsable_id) {
+          const currentResp = this.users.find(u => u.id === item.responsable_id);
+          if (currentResp && currentResp.dependencia && currentResp.dependencia !== dependencia) {
+            item.responsable_id = null;
+            item.responsable = 'Sin Asignar';
+          }
+        }
+
         if (!item.historial) item.historial = [];
         item.historial.unshift({
           fecha: nowStr,
@@ -1233,35 +1273,22 @@ const DataStore = {
     }
 
     const uDep = (u.dependencia || '').trim().toLowerCase();
-    const itemDep = (item.dependencia || this.getObraDependencia(item) || '').trim().toLowerCase();
-
-    // 3. Aislamiento Departamental: Ve todo lo derivado a su departamento
-    if (uDep && itemDep && uDep === itemDep) {
-      return true;
-    }
-
-    // 4. Ve todo lo que hayan generado ellos mismos desde su departamento como factibilidad
-    if (item.creado_por_dependencia && (item.creado_por_dependencia.trim().toLowerCase() === uDep)) {
-      return true;
-    }
-    const normalizeStr = s => (s || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-    if (item.creado_por && (normalizeStr(item.creado_por) === normalizeStr(u.username) || normalizeStr(item.creado_por) === normalizeStr(u.nombre))) {
-      return true;
-    }
-
-    // 5. Ve obras asignadas formalmente a su nombre
-    if (this.isUserAssignedToObra(item)) {
-      return true;
-    }
-
-    // 6. Si no tiene dependencia cargada, fallback por sede
     if (!uDep) {
       if (u.sede === 'Todas') return true;
       return (item.sede || '').toLowerCase() === (u.sede || '').toLowerCase();
     }
 
-    // El resto de los departamentos no lo tienen que poder ver
-    return false;
+    // 3. Aislamiento Departamental Estricto:
+    // La obra pertenece a UNA SOLA dependencia canónica.
+    const canonicalDep = (this.getObraDependencia(item) || item.dependencia || '').trim().toLowerCase();
+
+    // Si la obra pertenece a otro departamento, es IMPOSIBLE que un usuario de este departamento la vea
+    if (canonicalDep !== uDep) {
+      return false;
+    }
+
+    // Pertenece a este departamento: todos los miembros de este departamento pueden verla
+    return true;
   },
 
   canUserAdvanceItem(item) {
