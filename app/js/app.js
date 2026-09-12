@@ -3154,7 +3154,6 @@ const App = {
       return;
     }
 
-    const u = DataStore.currentUser;
     const oldNombre = item.nombre;
     const oldMontoTotal = item.monto_total_usd;
     const oldResponsable = item.responsable;
