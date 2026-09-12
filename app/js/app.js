@@ -6,6 +6,7 @@
 const App = {
   currentView: 'dashboard',
   filters: {
+    dependencia: 'TODAS',
     sede: 'TODAS',
     tipo: 'TODOS',
     estado: 'TODOS',
@@ -35,6 +36,10 @@ const App = {
       return;
     }
 
+    if (DataStore.currentUser && DataStore.currentUser.dependencia && DataStore.currentUser.dependencia !== 'Dirección General / Administración' && !DataStore.isAdmin()) {
+      this.filters.dependencia = DataStore.currentUser.dependencia;
+    }
+
     if (DataStore.currentUser && DataStore.currentUser.sede !== 'Todas') {
       this.filters.sede = DataStore.currentUser.sede;
     }
@@ -57,6 +62,11 @@ const App = {
     });
 
     // Filtros superiores
+    document.getElementById('filterDependencia')?.addEventListener('change', (e) => {
+      this.filters.dependencia = e.target.value;
+      this.render();
+    });
+
     document.getElementById('filterSede')?.addEventListener('change', (e) => {
       this.filters.sede = e.target.value;
       this.render();
@@ -122,8 +132,12 @@ const App = {
   // ================= RESTABLECER / LIMPIAR TODOS LOS FILTROS =================
   resetAllFilters() {
     const userSede = DataStore.currentUser && DataStore.currentUser.sede !== 'Todas' ? DataStore.currentUser.sede : 'TODAS';
+    const userDep = (!DataStore.isAdmin() && DataStore.currentUser && DataStore.currentUser.dependencia && DataStore.currentUser.dependencia !== 'Dirección General / Administración')
+      ? DataStore.currentUser.dependencia
+      : 'TODAS';
     
     this.filters = {
+      dependencia: userDep,
       sede: userSede,
       tipo: 'TODOS',
       estado: 'TODOS',
@@ -136,6 +150,8 @@ const App = {
     this.pipelineSelectedStage = null;
 
     // Sincronizar inputs del DOM
+    const selDep = document.getElementById('filterDependencia');
+    if (selDep) selDep.value = userDep;
     const selSede = document.getElementById('filterSede');
     if (selSede) selSede.value = userSede;
     const selTipo = document.getElementById('filterTipo');
@@ -651,6 +667,8 @@ const App = {
               <div class="text-xs text-slate-400 flex items-center space-x-2 mt-0.5 flex-wrap gap-y-1">
                 <span class="font-semibold text-slate-600">📍 ${item.sede}</span>
                 <span>•</span>
+                <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] px-1.5 py-0.2 rounded font-semibold">${item.dependencia || DataStore.getObraDependencia(item)}</span>
+                <span>•</span>
                 <span>Fase: <strong class="text-blue-600">${item.estado}</strong></span>
                 <span>•</span>
                 ${isAssigned ? `
@@ -664,6 +682,9 @@ const App = {
                     <span>⚠️ Sin Asignar</span>
                   </span>
                 `}
+                ${(!isAdmin && !canAdvanceThis) ? `
+                  <span class="bg-slate-100 text-slate-500 border border-slate-200 text-[10px] px-1.5 py-0.5 rounded font-medium inline-flex items-center gap-1" title="Solo lectura departamental"><i data-lucide="eye" class="w-2.5 h-2.5 text-slate-400"></i><span>Consulta</span></span>
+                ` : ''}
                 ${item.sector_solicitante ? `<span>• Sector: <strong>${item.sector_solicitante}</strong></span>` : ''}
               </div>
             </div>
@@ -673,10 +694,10 @@ const App = {
               <div class="text-sm font-bold text-slate-800">${monto}</div>
               <div class="text-xs text-slate-400">${item.fecha_fin_etapa ? 'Límite: ' + item.fecha_fin_etapa : 'Sin fecha'}</div>
             </div>
-            ${isAdmin ? `
+            ${(isAdmin || canAdvanceThis) ? `
               <button onclick="event.stopPropagation(); App.openObraModal('${item.id}', true)" 
                       class="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer shadow-2xs" 
-                      title="Editar Proyecto (Solo Administrador)">
+                      title="${isAdmin ? 'Editar Proyecto (Solo Administrador)' : 'Editar Fechas y Observaciones'}">
                 <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
                 <span>Editar</span>
               </button>
@@ -770,6 +791,7 @@ const App = {
                 <span class="px-1.5 py-0.2 text-[10px] rounded border ${pond.colorClass}">
                   ${pond.nivelLabel} (${pond.valor}★)
                 </span>
+                <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] px-1.5 py-0.2 rounded font-semibold">${(item.dependencia || DataStore.getObraDependencia(item)).replace('Departamento de ', '')}</span>
                 ${!item.partida || item.partida === 'S/D' ? `<span class="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.2 rounded font-bold">Sin Partida</span>` : ''}
                 ${isCorta ? `<span class="bg-rose-100 text-rose-800 text-[10px] px-1.5 py-0.2 rounded font-bold border border-rose-300 inline-flex items-center space-x-1" title="Partida asignada menor al costo requerido (-USD ${DataStore.formatUSD(deficit)})"><i data-lucide="alert-triangle" class="w-2.5 h-2.5 text-rose-600"></i><span>Partida Corta</span></span>` : ''}
               </div>
@@ -801,13 +823,16 @@ const App = {
                       <span>Sin Asignar</span>
                     </span>
                   `}
+                  ${(!isAdmin && !canAdvanceThis) ? `
+                    <span class="text-slate-400 text-[10px] ml-1 font-medium" title="Consulta departamental">👁️</span>
+                  ` : ''}
                 </div>
                 
                 <div class="flex items-center space-x-1.5">
-                  ${isAdmin ? `
+                  ${(isAdmin || canAdvanceThis) ? `
                     <button onclick="event.stopPropagation(); App.openObraModal('${item.id}', true)" 
                             class="bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-300 px-2 py-1 rounded-md font-bold text-[11px] inline-flex items-center space-x-1 transition shadow-2xs cursor-pointer" 
-                            title="Editar Proyecto (Solo Administrador)">
+                            title="${isAdmin ? 'Editar Proyecto (Solo Administrador)' : 'Editar Fechas y Observaciones'}">
                       <i data-lucide="edit-3" class="w-3 h-3"></i>
                       <span>Editar</span>
                     </button>
@@ -879,6 +904,7 @@ const App = {
           <td class="py-3 px-4">
             <div class="font-bold text-slate-900 text-sm flex items-center space-x-1.5 flex-wrap">
               <span>${item.nombre}</span>
+              <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] px-1.5 py-0.2 rounded font-semibold">${item.dependencia || DataStore.getObraDependencia(item)}</span>
               ${isCorta ? `<span class="bg-rose-100 text-rose-800 text-[10px] px-2 py-0.5 rounded font-black border border-rose-300 inline-flex items-center space-x-1" title="Partida asignada (USD ${DataStore.formatUSD(item.monto_partida_usd)}) menor al costo requerido (USD ${DataStore.formatUSD(item.monto_total_usd)}). Déficit: -USD ${DataStore.formatUSD(deficit)}"><i data-lucide="alert-triangle" class="w-2.5 h-2.5 text-rose-600"></i><span>Partida Corta (-USD ${DataStore.formatUSD(deficit)})</span></span>` : ''}
             </div>
             <div class="text-xs text-slate-400 mt-0.5">${item.categoria || 'Obra'} • Partida: <span class="font-mono font-bold ${isCorta ? 'text-rose-700 font-black' : 'text-slate-600'}">${item.partida || 'PENDIENTE'}</span> ${item.monto_partida_usd ? `(Asig: USD ${DataStore.formatUSD(item.monto_partida_usd)})` : ''}</div>
@@ -907,14 +933,17 @@ const App = {
                 <span>Sin Asignar</span>
               </span>
             `}
+            ${(!isAdmin && !canAdvanceThis) ? `
+              <span class="text-slate-400 text-[10px] ml-1 font-medium" title="Consulta departamental">👁️</span>
+            ` : ''}
           </td>
           <td class="py-3 px-4 text-xs text-slate-500">${item.fecha_fin_etapa || '-'}</td>
           <td class="py-3 px-4 text-center" onclick="event.stopPropagation()">
             <div class="flex items-center justify-center space-x-1.5">
-              ${isAdmin ? `
+              ${(isAdmin || canAdvanceThis) ? `
                 <button onclick="event.stopPropagation(); App.openObraModal('${item.id}', true)" 
                         class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded text-xs font-bold inline-flex items-center space-x-1 transition shadow-2xs cursor-pointer" 
-                        title="Editar Proyecto (Solo Administrador)">
+                        title="${isAdmin ? 'Editar Proyecto (Solo Administrador)' : 'Editar Fechas y Observaciones'}">
                   <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
                   <span>Editar</span>
                 </button>
@@ -1709,6 +1738,11 @@ const App = {
             <div class="text-[11px] text-slate-400 font-normal">${u.email || ''}</div>
           </td>
           <td class="py-2.5 px-3">
+            <span class="px-2 py-0.5 rounded font-semibold text-[10px] bg-slate-100 text-slate-700 border border-slate-200">
+              ${u.dependencia || 'Sin Dependencia'}
+            </span>
+          </td>
+          <td class="py-2.5 px-3">
             <span class="px-2 py-0.5 rounded font-semibold text-[11px] ${
               u.sede === 'Central' ? 'bg-blue-50 text-blue-700' :
               u.sede === 'San Justo' ? 'bg-emerald-50 text-emerald-700' :
@@ -1863,6 +1897,7 @@ const App = {
 
     const searchTerm = (document.getElementById('assignModalSearch')?.value || '').trim().toLowerCase();
     const typeFilter = document.getElementById('assignModalTypeFilter')?.value || 'TODOS';
+    const depFilter = document.getElementById('assignModalDepFilter')?.value || 'TODAS';
     const stateFilter = document.getElementById('assignModalStateFilter')?.value || 'TODAS';
 
     const visibleItems = (DataStore.items || []).filter(item => {
@@ -1871,6 +1906,12 @@ const App = {
         const itemType = (item.tipo || '').toLowerCase();
         if (typeFilter === 'Obra Civil' && !itemType.includes('civil') && !itemType.includes('obra')) return false;
         if (typeFilter === 'Infraestructura' && !itemType.includes('infra')) return false;
+      }
+
+      // Dependencia filter
+      if (depFilter !== 'TODAS') {
+        const itemDep = item.dependencia || DataStore.getObraDependencia(item);
+        if (itemDep !== depFilter) return false;
       }
 
       // Assignment status
@@ -1885,7 +1926,7 @@ const App = {
 
       // Search term
       if (searchTerm) {
-        const haystack = `${item.id} ${item.nombre} ${item.sede} ${item.responsable || ''} ${item.categoria || ''}`.toLowerCase();
+        const haystack = `${item.id} ${item.nombre} ${item.sede} ${item.dependencia || ''} ${item.responsable || ''} ${item.categoria || ''}`.toLowerCase();
         if (!haystack.includes(searchTerm)) return false;
       }
 
@@ -1912,6 +1953,7 @@ const App = {
       const isCurrentOwner = (assignedUser && assignedUser.id === userId) || (item.responsable_id === userId);
       const otherOwnerName = !isCurrentOwner && isAssigned ? (item.responsable || (assignedUser ? assignedUser.nombre : 'Otro')) : null;
       const monto = DataStore.formatUSD(item.monto_total_usd || item.monto_obra_usd || 0);
+      const depTag = item.dependencia || DataStore.getObraDependencia(item);
 
       html += `
         <label class="flex items-start p-3 bg-white hover:bg-slate-50 border rounded-xl transition cursor-pointer ${
@@ -1929,6 +1971,7 @@ const App = {
               <div class="flex items-center space-x-2 flex-wrap">
                 <span class="font-mono font-bold text-slate-500 text-[11px]">${item.id}</span>
                 <span class="font-bold text-slate-900 text-xs">${item.nombre}</span>
+                <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] px-1.5 py-0.2 rounded font-semibold">${depTag}</span>
               </div>
               <span class="font-black text-slate-900 text-xs shrink-0">${monto}</span>
             </div>
@@ -2040,9 +2083,15 @@ const App = {
     if (!user) return;
 
     document.getElementById('editUserId').value = user.id;
-    document.getElementById('editUserName').value = user.nombre || '';
+    document.getElementById('editUserName').value = user.nombre_pila || user.nombre || '';
+    if (document.getElementById('editUserApellido')) {
+      document.getElementById('editUserApellido').value = user.apellido || '';
+    }
     document.getElementById('editUserUsername').value = `@${user.username || ''}`;
     document.getElementById('editUserEmail').value = user.email || '';
+    if (document.getElementById('editUserDependencia')) {
+      document.getElementById('editUserDependencia').value = user.dependencia || 'Departamento de Proyectos Central';
+    }
     document.getElementById('editUserSede').value = user.sede || 'Central';
     document.getElementById('editUserRol').value = user.rol || 'pm_obra';
 
@@ -2072,8 +2121,11 @@ const App = {
   handleSaveEditPermissionsSubmit(e) {
     e.preventDefault();
     const userId = document.getElementById('editUserId').value;
-    const nombre = document.getElementById('editUserName').value.trim();
+    const nombrePila = document.getElementById('editUserName').value.trim();
+    const apellido = (document.getElementById('editUserApellido')?.value || '').trim();
+    const fullNombre = apellido && !nombrePila.includes(apellido) ? `${nombrePila} ${apellido}` : nombrePila;
     const email = document.getElementById('editUserEmail').value.trim();
+    const dependencia = document.getElementById('editUserDependencia')?.value;
     const sede = document.getElementById('editUserSede').value;
     const rol = document.getElementById('editUserRol').value;
 
@@ -2085,10 +2137,13 @@ const App = {
     const debeCambiarClave = document.getElementById('editUserDebeCambiarClave').checked;
 
     const res = DataStore.updateUserPermissions(userId, {
-      nombre,
-      email,
-      sede,
-      rol,
+      nombre: fullNombre,
+      nombre_pila: nombrePila,
+      apellido: apellido,
+      email: email,
+      dependencia: dependencia,
+      sede: sede,
+      rol: rol,
       puede_crear: puedeCrear,
       puede_avanzar: puedeAvanzar,
       puede_priorizar_medica: puedeMedica,
@@ -2241,9 +2296,11 @@ const App = {
 
   handleCreateUser(e) {
     e.preventDefault();
-    const nombre = document.getElementById('newUserName')?.value.trim();
-    const username = document.getElementById('newUserUsername')?.value.trim();
-    const email = document.getElementById('newUserEmail')?.value.trim();
+    const nombrePila = (document.getElementById('newUserNameFirst')?.value || document.getElementById('newUserName')?.value || '').trim();
+    const apellido = (document.getElementById('newUserNameLast')?.value || '').trim();
+    const username = (document.getElementById('newUserUsername')?.value || '').trim();
+    const email = (document.getElementById('newUserEmail')?.value || '').trim();
+    const dependencia = document.getElementById('newUserDependencia')?.value || 'Departamento de Proyectos Central';
     const sede = document.getElementById('newUserSede')?.value;
     const rol = document.getElementById('newUserRol')?.value;
     const tempPassword = document.getElementById('newUserTempPassword')?.value.trim() || 'Hiba2025!';
@@ -2253,19 +2310,24 @@ const App = {
     const puedePartida = document.getElementById('newUserPuedePartida')?.checked ?? false;
     const soloLectura = document.getElementById('newUserSoloLectura')?.checked ?? false;
 
-    if (!nombre || !username) {
+    if (!nombrePila || !username) {
       alert("Por favor completa al menos el Nombre y el Usuario (Login).");
       return;
     }
 
+    const fullNombre = apellido ? `${nombrePila} ${apellido}` : nombrePila;
+
     try {
       const result = DataStore.addUser({
-        nombre,
-        username,
-        email,
-        sede,
-        rol,
-        tempPassword,
+        nombre: fullNombre,
+        nombre_pila: nombrePila,
+        apellido: apellido,
+        username: username,
+        email: email,
+        dependencia: dependencia,
+        sede: sede,
+        rol: rol,
+        tempPassword: tempPassword,
         puede_crear: puedeCrear,
         puede_avanzar: puedeAvanzar,
         puede_priorizar_medica: puedeMedica,
@@ -2273,19 +2335,21 @@ const App = {
         solo_lectura: soloLectura
       });
 
-      document.getElementById('newUserName').value = '';
+      if (document.getElementById('newUserNameFirst')) document.getElementById('newUserNameFirst').value = '';
+      if (document.getElementById('newUserNameLast')) document.getElementById('newUserNameLast').value = '';
+      if (document.getElementById('newUserName')) document.getElementById('newUserName').value = '';
       document.getElementById('newUserUsername').value = '';
       document.getElementById('newUserEmail').value = '';
       this.generateRandomTempPassword();
 
       this.renderUsersList();
       this.renderLoginScreenProfiles();
-      this.showToast(`Usuario "${username}" creado con 0 obras asignadas.`);
+      this.showToast(`Usuario "${username}" creado en "${dependencia}" con 0 obras asignadas.`);
       this.openForcedPasswordModal(result.user.nombre, result.user.username, result.tempPassword);
 
       // Ofrecer asignación inmediata de obras para este usuario
       setTimeout(() => {
-        if (confirm(`El nuevo usuario "${result.user.nombre}" (@${result.user.username}) ha sido dado de alta sin asignaciones (arranca en 0 obras a cargo).\n\n¿Deseas abrir ahora el panel para asignarle proyectos de obras o infraestructura?`)) {
+        if (confirm(`El nuevo usuario "${result.user.nombre}" (@${result.user.username}) ha sido dado de alta en "${dependencia}" sin asignaciones (arranca en 0 obras a cargo).\n\n¿Deseas abrir ahora el panel para asignarle proyectos de obras o infraestructura?`)) {
           this.closeForcedPasswordModal();
           this.openAssignUserObrasModal(result.user.id);
         }
@@ -2309,15 +2373,21 @@ const App = {
   switchUserAccount(userId) {
     const success = DataStore.switchActiveUser(userId);
     if (success) {
-      if (DataStore.currentUser.sede !== 'Todas') {
-        this.filters.sede = DataStore.currentUser.sede;
+      const u = DataStore.currentUser;
+      if (u.dependencia && u.dependencia !== 'Dirección General / Administración' && !DataStore.isAdmin()) {
+        this.filters.dependencia = u.dependencia;
+      } else {
+        this.filters.dependencia = 'TODAS';
+      }
+      if (u.sede !== 'Todas') {
+        this.filters.sede = u.sede;
       } else {
         this.filters.sede = 'TODAS';
       }
       this.updateUserUI();
       this.render();
       this.renderUsersList();
-      this.showToast(`Sesión activa: ${DataStore.currentUser.nombre} (${DataStore.currentUser.sede})`);
+      this.showToast(`Sesión activa: ${u.nombre} (${u.dependencia || u.sede})`);
     }
   },
 
@@ -2421,6 +2491,11 @@ const App = {
         // Obligar cambio de contraseña temporal
         this.openChangePasswordModal();
       } else {
+        if (DataStore.currentUser && DataStore.currentUser.dependencia && DataStore.currentUser.dependencia !== 'Dirección General / Administración' && !DataStore.isAdmin()) {
+          this.filters.dependencia = DataStore.currentUser.dependencia;
+        } else {
+          this.filters.dependencia = 'TODAS';
+        }
         if (DataStore.currentUser && DataStore.currentUser.sede !== 'Todas') {
           this.filters.sede = DataStore.currentUser.sede;
         }
@@ -2494,6 +2569,11 @@ const App = {
     const res = DataStore.changePassword(DataStore.currentUser.id, newPwd);
     if (res.success) {
       this.closeChangePasswordModal();
+      if (DataStore.currentUser && DataStore.currentUser.dependencia && DataStore.currentUser.dependencia !== 'Dirección General / Administración' && !DataStore.isAdmin()) {
+        this.filters.dependencia = DataStore.currentUser.dependencia;
+      } else {
+        this.filters.dependencia = 'TODAS';
+      }
       if (DataStore.currentUser && DataStore.currentUser.sede !== 'Todas') {
         this.filters.sede = DataStore.currentUser.sede;
       }
@@ -2532,7 +2612,20 @@ const App = {
     if (nameEl) nameEl.innerText = u.nombre;
     if (roleEl) roleEl.innerText = `${u.rol.toUpperCase()}`;
     if (emailEl) emailEl.innerText = u.email || '';
-    if (sedeEl) sedeEl.innerText = u.sede !== 'Todas' ? `📍 Sede: ${u.sede}` : '🌐 Todas las Sedes';
+    const depShort = (u.dependencia || '').replace('Departamento de ', 'Dpto. ');
+    if (sedeEl) sedeEl.innerText = `${u.sede !== 'Todas' ? '📍 ' + u.sede : '🌐 Todas'} • ${depShort || 'General'}`;
+
+    const depSelect = document.getElementById('filterDependencia');
+    if (depSelect) {
+      if (DataStore.isAdmin()) {
+        depSelect.disabled = false;
+        depSelect.classList.remove('bg-slate-200', 'cursor-not-allowed');
+      } else if (u.dependencia && u.dependencia !== 'Dirección General / Administración') {
+        depSelect.value = u.dependencia;
+        depSelect.disabled = true;
+        depSelect.classList.add('bg-slate-200', 'cursor-not-allowed');
+      }
+    }
 
     if (sedeSelect) {
       // Cada usuario puede ver todo: navegación abierta sin deshabilitar selector de sede
@@ -2619,6 +2712,12 @@ const App = {
     setVal('modalObraSede', item.sede || 'Central');
     setVal('modalObraTipo', item.tipo || 'Obra Civil');
     setVal('modalObraEstado', item.estado || 'Estudio de Factibilidad');
+    const depVal = item.dependencia || DataStore.getObraDependencia(item);
+    setVal('modalObraDependenciaSelect', depVal);
+    const depBadge = document.getElementById('modalObraDepBadge');
+    if (depBadge) {
+      depBadge.innerText = (depVal || '').replace('Departamento de ', 'Dpto. ');
+    }
     setVal('modalObraPartida', item.partida || '');
     setVal('modalObraMontoPartida', item.monto_partida_usd || (item.partida ? item.monto_total_usd : '') || '');
     setVal('modalObraCategoria', item.categoria || 'Obra Civil');
@@ -2790,6 +2889,7 @@ const App = {
       'modalObraCategoria',
       'modalObraPrioridadTec',
       'modalObraPrioridadMed',
+      'modalObraDependenciaSelect',
       'modalObraObservaciones'
     ];
 
@@ -2881,19 +2981,38 @@ const App = {
       btnAsignarPartida.classList.toggle('hidden', !showPartidaBtn);
     }
 
-    // Advertencia de restricción de sede si aplica
+    // Advertencia de restricción o consulta departamental si aplica
     const warningRestr = document.getElementById('modalSedeRestrWarning');
-    if (warningRestr) {
-      if (isAdmin) {
-        warningRestr.classList.add('hidden');
-      } else if (u && (u.solo_lectura || u.rol === 'visualizador')) {
+    const deptNotice = document.getElementById('modalDeptReadOnlyNotice');
+    const deptNoticeText = document.getElementById('modalDeptReadOnlyNoticeText');
+
+    if (warningRestr) warningRestr.classList.add('hidden');
+    if (deptNotice) deptNotice.classList.add('hidden');
+
+    const itemDep = item.dependencia || DataStore.getObraDependencia(item);
+    const userDep = u ? (u.dependencia || '') : '';
+
+    if (isAdmin) {
+      // Control total de Administrador
+    } else if (u && (u.solo_lectura || u.rol === 'visualizador')) {
+      if (warningRestr) {
         warningRestr.innerText = '🔒 Perfil de Solo Lectura: Tu usuario cuenta exclusivamente con permisos de visualización.';
         warningRestr.classList.remove('hidden');
-      } else if (!canEdit) {
-        warningRestr.innerText = `🔒 Esta obra pertenece a otra sede (${item.sede}). Tu usuario solo tiene permisos sobre su sede asignada.`;
+      }
+    } else if (canEdit) {
+      // El usuario es el responsable asignado a esta obra dentro de su departamento
+    } else if (userDep && itemDep && userDep.toLowerCase() === itemDep.toLowerCase()) {
+      // Pertenece al mismo departamento pero la obra está a cargo de otro colega
+      if (deptNotice) {
+        if (deptNoticeText) {
+          deptNoticeText.innerHTML = `<strong>Modo Consulta Departamental:</strong> Esta obra pertenece a <strong>${itemDep}</strong>, asignada a <strong>${item.responsable || 'otro profesional'}</strong>. Puedes visualizarla pero solo el responsable asignado o el Administrador pueden editarla.`;
+        }
+        deptNotice.classList.remove('hidden');
+      }
+    } else {
+      if (warningRestr) {
+        warningRestr.innerText = `🔒 Esta obra pertenece a otra dependencia (${itemDep}). Tu usuario solo tiene permisos de visualización.`;
         warningRestr.classList.remove('hidden');
-      } else {
-        warningRestr.classList.add('hidden');
       }
     }
 
@@ -2926,8 +3045,67 @@ const App = {
       }
     }
 
-    // Configurar estado de edición (bloqueado o activo)
-    this.toggleAdminEditMode(Boolean(isAdmin && startInEditMode));
+    // Configurar estado de edición según permisos
+    if (isAdmin) {
+      this.toggleAdminEditMode(Boolean(startInEditMode));
+    } else if (canEdit) {
+      // Responsable a cargo: permitir editar fechas y observaciones
+      this.adminEditModeActive = false;
+      const btnHeaderEdit = document.getElementById('btnHeaderAdminEdit');
+      if (btnHeaderEdit) btnHeaderEdit.classList.add('hidden');
+      const banner = document.getElementById('modalAdminEditBanner');
+      if (banner) banner.classList.add('hidden');
+      const readOnlyNotice = document.getElementById('modalReadOnlyNotice');
+      if (readOnlyNotice) readOnlyNotice.classList.add('hidden');
+
+      const btnEnable = document.getElementById('btnModalAdminEnableEdit');
+      const btnCancel = document.getElementById('btnModalAdminCancelEdit');
+      const btnSave = document.getElementById('btnModalSaveObra');
+      const footerInfo = document.getElementById('modalObraFooterInfo');
+
+      if (btnEnable) btnEnable.classList.add('hidden');
+      if (btnCancel) btnCancel.classList.add('hidden');
+      if (btnSave) btnSave.classList.remove('hidden');
+
+      if (footerInfo) {
+        footerInfo.innerHTML = `
+          <span class="inline-flex items-center space-x-1.5 text-blue-900 font-bold bg-blue-50 px-3 py-1 rounded-lg border border-blue-200">
+            <i data-lucide="calendar" class="w-3.5 h-3.5 text-blue-600"></i>
+            <span>Responsable a cargo: Puedes actualizar fechas de cronograma y observaciones.</span>
+          </span>
+        `;
+      }
+
+      // Bloquear todo excepto fechas y observaciones
+      const lockedFieldIds = [
+        'modalObraTitle', 'modalObraSede', 'modalObraTipo', 'modalObraEstado',
+        'modalObraPartida', 'modalObraMontoPartida', 'modalObraMontoObra', 'modalObraMontoEquip',
+        'modalObraM2', 'modalObraResponsable', 'modalObraResponsableSelect', 'modalObraProveedor',
+        'modalObraCategoria', 'modalObraPrioridadTec', 'modalObraPrioridadMed', 'modalObraDependenciaSelect'
+      ];
+      lockedFieldIds.forEach(fId => {
+        const el = document.getElementById(fId);
+        if (el) {
+          el.disabled = true;
+          el.classList.add('bg-slate-100', 'cursor-not-allowed');
+          el.classList.remove('bg-white', 'border-amber-400');
+        }
+      });
+
+      ['modalObraFechaInicio', 'modalObraFechaFin', 'modalObraFechaFinGlobal', 'modalObraObservaciones'].forEach(fId => {
+        const el = document.getElementById(fId);
+        if (el) {
+          el.disabled = false;
+          el.classList.remove('bg-slate-100', 'cursor-not-allowed');
+          el.classList.add('bg-white');
+        }
+      });
+    } else {
+      // Modo consulta departamental (solo lectura)
+      this.toggleAdminEditMode(false);
+      const btnSave = document.getElementById('btnModalSaveObra');
+      if (btnSave) btnSave.classList.add('hidden');
+    }
 
     document.getElementById('modalObraDetail').classList.remove('hidden');
     if (window.lucide) lucide.createIcons();
@@ -2938,8 +3116,41 @@ const App = {
     const item = DataStore.getItemById(id);
     if (!item) return;
 
-    if (!DataStore.isAdmin()) {
-      alert("⛔ Acceso Denegado: Exclusivo para el Administrador. No tienes autorización para modificar los datos maestros de proyectos.");
+    const isAdmin = DataStore.isAdmin();
+    const canEdit = DataStore.canUserEditObra(item);
+
+    if (!isAdmin && !canEdit) {
+      alert("⛔ Acceso Denegado: Solo el Administrador o el responsable asignado pueden editar esta obra.");
+      return;
+    }
+
+    const u = DataStore.currentUser;
+
+    if (!isAdmin && canEdit) {
+      // Edición por parte del profesional responsable a cargo
+      const newFechaInicio = document.getElementById('modalObraFechaInicio').value;
+      const newFechaFin = document.getElementById('modalObraFechaFin').value;
+      const newFechaFinGlobal = document.getElementById('modalObraFechaFinGlobal').value;
+      const newObs = document.getElementById('modalObraObservaciones').value;
+
+      item.fecha_inicio_etapa = newFechaInicio;
+      item.fecha_fin_etapa = newFechaFin;
+      item.fecha_fin_obra = newFechaFinGlobal;
+      item.observaciones = newObs;
+
+      if (!item.historial) item.historial = [];
+      item.historial.unshift({
+        fecha: new Date().toLocaleDateString('es-AR') + ' ' + new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }),
+        usuario: `${u.nombre} (Responsable a cargo)`,
+        estado_anterior: item.estado,
+        estado_nuevo: item.estado,
+        observaciones: `✏️ Actualización de fechas / notas por responsable a cargo.`
+      });
+
+      DataStore.saveItem(item);
+      this.render();
+      this.closeObraModal();
+      this.showToast(`✅ Cambios guardados por ${u.nombre} en "${item.nombre}".`);
       return;
     }
 
@@ -3016,6 +3227,16 @@ const App = {
     if ((oldFechaFin || '') !== newFechaFin) changes.push(`Fecha Fin: "${oldFechaFin || 'S/D'}" ➔ "${newFechaFin || 'S/D'}"`);
     if (oldEstado !== newEstado) changes.push(`Estado: "${oldEstado}" ➔ "${newEstado}"`);
     if (oldPartida !== newPartida) changes.push(`Partida: "${oldPartida || 'Pendiente'}" ➔ "${newPartida || 'Pendiente'}"`);
+
+    const selDep = document.getElementById('modalObraDependenciaSelect');
+    const newDep = selDep ? selDep.value : (item.dependencia || DataStore.getObraDependencia(item));
+    const oldDep = item.dependencia || DataStore.getObraDependencia(item);
+    if (newDep && oldDep !== newDep) {
+      changes.push(`Dependencia: "${oldDep}" ➔ "${newDep}"`);
+      item.dependencia = newDep;
+    } else if (!item.dependencia) {
+      item.dependencia = newDep;
+    }
 
     item.nombre = newTitle;
     item.sede = newSede;

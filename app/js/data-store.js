@@ -125,6 +125,7 @@ const DEFAULT_USERS = [
     password_hash: DEFAULT_ADMIN_HASH,
     debe_cambiar_clave: false,
     sede: 'Todas',
+    dependencia: 'Dirección General / Administración',
     rol: 'admin',
     activo: true,
     puede_crear: true,
@@ -142,6 +143,7 @@ const DEFAULT_USERS = [
     password_hash: DEFAULT_ADMIN_HASH,
     debe_cambiar_clave: false,
     sede: 'Todas',
+    dependencia: 'Dirección General / Administración',
     rol: 'admin',
     activo: true,
     puede_crear: true,
@@ -159,6 +161,7 @@ const DEFAULT_USERS = [
     password_hash: DEFAULT_ADMIN_HASH,
     debe_cambiar_clave: false,
     sede: 'Todas',
+    dependencia: 'Dirección General / Administración',
     rol: 'direccion_medica',
     activo: true,
     puede_crear: false,
@@ -176,6 +179,7 @@ const DEFAULT_USERS = [
     password_hash: DEFAULT_ADMIN_HASH,
     debe_cambiar_clave: false,
     sede: 'Central',
+    dependencia: 'Departamento de Proyectos Central',
     rol: 'pm_obra',
     activo: true,
     puede_crear: true,
@@ -193,6 +197,7 @@ const DEFAULT_USERS = [
     password_hash: DEFAULT_ADMIN_HASH,
     debe_cambiar_clave: false,
     sede: 'San Justo',
+    dependencia: 'Departamento de Proyectos San Justo',
     rol: 'pm_obra',
     activo: true,
     puede_crear: true,
@@ -210,6 +215,7 @@ const DEFAULT_USERS = [
     password_hash: DEFAULT_ADMIN_HASH,
     debe_cambiar_clave: false,
     sede: 'Periféricos',
+    dependencia: 'Departamento de Instalaciones',
     rol: 'pm_obra',
     activo: true,
     puede_crear: true,
@@ -227,6 +233,7 @@ const DEFAULT_USERS = [
     password_hash: DEFAULT_ADMIN_HASH,
     debe_cambiar_clave: false,
     sede: 'Central',
+    dependencia: 'Departamento de Mantenimiento Central',
     rol: 'pm_obra',
     activo: true,
     puede_crear: true,
@@ -244,6 +251,7 @@ const DEFAULT_USERS = [
     password_hash: DEFAULT_ADMIN_HASH,
     debe_cambiar_clave: false,
     sede: 'Central',
+    dependencia: 'Departamento de Mantenimiento San Justo',
     rol: 'pm_obra',
     activo: true,
     puede_crear: true,
@@ -261,6 +269,7 @@ const DEFAULT_USERS = [
     password_hash: DEFAULT_ADMIN_HASH,
     debe_cambiar_clave: false,
     sede: 'Central',
+    dependencia: 'Departamento de Mantenimiento Central',
     rol: 'pm_obra',
     activo: true,
     puede_crear: true,
@@ -278,6 +287,7 @@ const DEFAULT_USERS = [
     password_hash: DEFAULT_ADMIN_HASH,
     debe_cambiar_clave: false,
     sede: 'Central',
+    dependencia: 'Departamento de Mantenimiento Central',
     rol: 'pm_obra',
     activo: true,
     puede_crear: true,
@@ -295,6 +305,7 @@ const DEFAULT_USERS = [
     password_hash: DEFAULT_ADMIN_HASH,
     debe_cambiar_clave: false,
     sede: 'Central',
+    dependencia: 'Departamento de Proyectos Central',
     rol: 'pm_obra',
     activo: true,
     puede_crear: true,
@@ -312,6 +323,7 @@ const DEFAULT_USERS = [
     password_hash: DEFAULT_ADMIN_HASH,
     debe_cambiar_clave: false,
     sede: 'Central',
+    dependencia: 'Departamento de Proyectos Central',
     rol: 'pm_obra',
     activo: true,
     puede_crear: true,
@@ -329,6 +341,7 @@ const DEFAULT_USERS = [
     password_hash: DEFAULT_ADMIN_HASH,
     debe_cambiar_clave: false,
     sede: 'Central',
+    dependencia: 'Departamento de Instalaciones',
     rol: 'pm_obra',
     activo: true,
     puede_crear: true,
@@ -346,6 +359,7 @@ const DEFAULT_USERS = [
     password_hash: DEFAULT_ADMIN_HASH,
     debe_cambiar_clave: false,
     sede: 'Todas',
+    dependencia: 'Dirección General / Administración',
     rol: 'licitaciones',
     activo: true,
     puede_crear: false,
@@ -363,6 +377,7 @@ const DEFAULT_USERS = [
     password_hash: DEFAULT_ADMIN_HASH,
     debe_cambiar_clave: false,
     sede: 'Todas',
+    dependencia: 'Dirección General / Administración',
     rol: 'visualizador',
     activo: true,
     puede_crear: false,
@@ -377,6 +392,14 @@ const DataStore = {
   items: [],
   users: [],
   currentUser: null,
+
+  DEPENDENCIAS: [
+    'Departamento de Mantenimiento Central',
+    'Departamento de Mantenimiento San Justo',
+    'Departamento de Proyectos Central',
+    'Departamento de Proyectos San Justo',
+    'Departamento de Instalaciones'
+  ],
 
   init() {
     // 1. Cargar Usuarios
@@ -419,6 +442,7 @@ const DataStore = {
             existing.nombre = existing.nombre || defU.nombre;
             existing.email = existing.email || defU.email;
             existing.sede = existing.sede || defU.sede;
+            existing.dependencia = existing.dependencia || defU.dependencia;
             existing.rol = existing.rol || defU.rol;
             if (existing.activo === undefined) existing.activo = true;
 
@@ -517,6 +541,10 @@ const DataStore = {
       if (item.sede === 'Periférico') item.sede = 'Periféricos';
       if (item.estado === 'Ante Proyecto') item.estado = 'Estudio de Factibilidad';
 
+      if (!item.dependencia) {
+        item.dependencia = this.getObraDependencia(item);
+      }
+
       if (!item.historial) {
         item.historial = [{
           fecha: new Date().toISOString().split('T')[0],
@@ -599,6 +627,11 @@ const DataStore = {
       throw new Error('⛔ Acceso Denegado: Tu perfil no tiene autorización para crear obras ni solicitudes de factibilidad.');
     }
     const userSede = this.currentUser.sede !== 'Todas' ? this.currentUser.sede : (data.sede || 'Central');
+    const u = this.currentUser;
+    const userDep = data.dependencia || u.dependencia || this.getObraDependencia({ sede: userSede, tipo: data.tipo || 'Obra Civil' });
+    const isAssignedToMe = (data.responsable === u.nombre) || (!data.responsable && u.rol === 'pm_obra');
+    const respName = data.responsable || u.nombre || 'Sin Asignar';
+    const respId = isAssignedToMe ? u.id : null;
     const newId = `OBRA-${(this.items.length + 1).toString().padStart(3, '0')}`;
     const pTec = parseFloat(data.prioridad_tecnica) || 3;
     const monto = parseFloat(data.monto_estimado) || 0;
@@ -606,6 +639,10 @@ const DataStore = {
     const newItem = {
       id: newId,
       tipo: data.tipo || 'Obra Civil',
+      dependencia: userDep,
+      creado_por: u.username,
+      creado_por_nombre: u.nombre,
+      creado_por_dependencia: u.dependencia || userDep,
       partida: '', // Pendiente de asignación formal
       nombre: data.nombre.trim(),
       sede: userSede,
@@ -619,7 +656,8 @@ const DataStore = {
       prioridad_tecnica: pTec,
       prioridad_medica: null, // Pendiente de dirección
       prioridad_final: pTec,
-      responsable: data.responsable || this.currentUser.nombre || 'Sin Asignar',
+      responsable: respName,
+      responsable_id: respId,
       categoria: data.categoria || 'Obra Civil',
       clasificacion: 'Nueva Solicitud',
       observaciones: `Sector: ${data.sector_solicitante || 'S/D'} | Motivo: ${data.motivo || 'S/D'}`,
@@ -1033,13 +1071,16 @@ const DataStore = {
         if (item.responsable_id !== user.id) {
           item.responsable_id = user.id;
           item.responsable = user.nombre;
+          if (user.dependencia && user.dependencia !== 'Dirección General / Administración') {
+            item.dependencia = user.dependencia;
+          }
           if (!item.historial) item.historial = [];
           item.historial.push({
             fecha: nowStr,
             usuario: actor,
             estado_anterior: item.estado,
             estado_nuevo: item.estado,
-            observaciones: `Obra asignada a: ${user.nombre} (@${user.username})`
+            observaciones: `Obra asignada a: ${user.nombre} (@${user.username})${user.dependencia ? ` [${user.dependencia}]` : ''}`
           });
         }
         assignedCount++;
@@ -1092,20 +1133,152 @@ const DataStore = {
     return { success: true, item: item };
   },
 
+  // ================= DERIVACIÓN Y GOBIERNO POR DEPENDENCIAS =================
+  getObraDependencia(item) {
+    if (!item) return '';
+    if (item.dependencia && item.dependencia.trim() !== '') {
+      return item.dependencia.trim();
+    }
+    const cat = (item.categoria || '').toLowerCase();
+    const nom = (item.nombre || '').toLowerCase();
+    const tipo = (item.tipo || '').toLowerCase();
+    const sede = (item.sede || '').toLowerCase();
+
+    if (cat.includes('instalaci') || nom.includes('instalaci') || nom.includes('clima') || nom.includes('termo') || nom.includes('electr')) {
+      return 'Departamento de Instalaciones';
+    }
+    if (tipo.includes('infra') || nom.includes('mantenimiento')) {
+      if (sede.includes('justo')) {
+        return 'Departamento de Mantenimiento San Justo';
+      }
+      return 'Departamento de Mantenimiento Central';
+    }
+    // Obra Civil / Proyectos
+    if (sede.includes('justo')) {
+      return 'Departamento de Proyectos San Justo';
+    }
+    return 'Departamento de Proyectos Central';
+  },
+
+  deriveObraToDependencia(obraId, dependencia, responsableId = null) {
+    const item = this.getItemById(obraId);
+    if (!item) return { success: false, msg: 'Obra no encontrada' };
+
+    const oldDep = item.dependencia || this.getObraDependencia(item);
+    item.dependencia = dependencia;
+
+    const actor = this.currentUser ? this.currentUser.nombre : 'Administrador';
+    const nowStr = new Date().toISOString().split('T')[0];
+
+    if (responsableId && responsableId !== 'sin_asignar') {
+      const user = this.users.find(u => u.id === responsableId);
+      if (user) {
+        item.responsable_id = user.id;
+        item.responsable = user.nombre;
+      }
+    } else if (responsableId === 'sin_asignar') {
+      item.responsable_id = null;
+      item.responsable = 'Sin Asignar';
+    }
+
+    if (!item.historial) item.historial = [];
+    item.historial.unshift({
+      fecha: nowStr,
+      usuario: `${actor} (Administrador)`,
+      estado_anterior: item.estado,
+      estado_nuevo: item.estado,
+      observaciones: `🔄 Derivación a Dependencia: "${oldDep}" ➔ "${dependencia}"${responsableId ? ` (Asignado a: ${item.responsable})` : ''}`
+    });
+
+    this.persist();
+    return { success: true, item: item };
+  },
+
+  deriveMultipleObrasToDependencia(obraIds = [], dependencia) {
+    if (!obraIds.length) return { success: false, msg: 'No se seleccionaron obras' };
+    const actor = this.currentUser ? this.currentUser.nombre : 'Administrador';
+    const nowStr = new Date().toISOString().split('T')[0];
+    let count = 0;
+
+    this.items.forEach(item => {
+      if (obraIds.includes(item.id)) {
+        const oldDep = item.dependencia || this.getObraDependencia(item);
+        item.dependencia = dependencia;
+        if (!item.historial) item.historial = [];
+        item.historial.unshift({
+          fecha: nowStr,
+          usuario: `${actor} (Administrador)`,
+          estado_anterior: item.estado,
+          estado_nuevo: item.estado,
+          observaciones: `🔄 Derivación masiva a Dependencia: "${oldDep}" ➔ "${dependencia}"`
+        });
+        count++;
+      }
+    });
+
+    this.persist();
+    return { success: true, count: count, dependencia: dependencia };
+  },
+
+  canUserViewObra(item) {
+    if (!this.currentUser || !item) return false;
+    const u = this.currentUser;
+
+    // 1. Administrador General ve todo el hospital
+    if (this.isAdmin()) return true;
+
+    // 2. Roles transversales de consulta institucional (Dirección Médica, Auditoría)
+    if (u.rol === 'direccion_medica' || u.rol === 'auditor' || u.dependencia === 'Dirección General / Administración') {
+      return true;
+    }
+
+    const uDep = (u.dependencia || '').trim().toLowerCase();
+    const itemDep = (item.dependencia || this.getObraDependencia(item) || '').trim().toLowerCase();
+
+    // 3. Aislamiento Departamental: Ve todo lo derivado a su departamento
+    if (uDep && itemDep && uDep === itemDep) {
+      return true;
+    }
+
+    // 4. Ve todo lo que hayan generado ellos mismos desde su departamento como factibilidad
+    if (item.creado_por_dependencia && (item.creado_por_dependencia.trim().toLowerCase() === uDep)) {
+      return true;
+    }
+    const normalizeStr = s => (s || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    if (item.creado_por && (normalizeStr(item.creado_por) === normalizeStr(u.username) || normalizeStr(item.creado_por) === normalizeStr(u.nombre))) {
+      return true;
+    }
+
+    // 5. Ve obras asignadas formalmente a su nombre
+    if (this.isUserAssignedToObra(item)) {
+      return true;
+    }
+
+    // 6. Si no tiene dependencia cargada, fallback por sede
+    if (!uDep) {
+      if (u.sede === 'Todas') return true;
+      return (item.sede || '').toLowerCase() === (u.sede || '').toLowerCase();
+    }
+
+    // El resto de los departamentos no lo tienen que poder ver
+    return false;
+  },
+
   canUserAdvanceItem(item) {
-    if (!this.currentUser) return false;
+    if (!this.currentUser || !item) return false;
     if (this.currentUser.solo_lectura || this.currentUser.rol === 'visualizador') return false;
     if (this.currentUser.puede_avanzar === false) return false;
     if (this.isAdmin()) return true;
+    // Solo puede avanzar si la obra está asignada a su nombre
     return this.isUserAssignedToObra(item);
   },
 
   canUserEditObra(item) {
-    if (!this.currentUser) return false;
+    if (!this.currentUser || !item) return false;
     if (this.currentUser.solo_lectura || this.currentUser.rol === 'visualizador') return false;
-    if (this.currentUser.rol === 'admin') return true;
-    if (this.currentUser.sede === 'Todas') return true;
-    return this.isUserAssignedToObra(item) || (item.sede || '').toLowerCase() === (this.currentUser.sede || '').toLowerCase();
+    if (this.isAdmin()) return true;
+    // Solo pueden editar aquellas obras dentro de su departamento que tienen asignadas a su nombre
+    return this.isUserAssignedToObra(item);
   },
 
   canUserCreateInSede(sede) {
@@ -1120,17 +1293,19 @@ const DataStore = {
     const isAdm = this.isAdmin();
     const u = this.currentUser;
 
-    // Los usuarios responsables de obras deben ver y operar únicamente las obras que tienen a su cargo.
-    // El Administrador ve todo el universo del hospital. Perfiles de consulta/auditoría ven todo en solo lectura.
-    const isRestrictedToAssigned = Boolean(u && !isAdm && !u.solo_lectura && u.rol !== 'visualizador');
-
     return this.items.filter(item => {
-      // 1. Restricción estricta de asignación a cargo
-      if (isRestrictedToAssigned) {
-        if (!this.isUserAssignedToObra(item)) return false;
+      // 1. Aislamiento Departamental Estricto (Los miembros de un departamento ven todo lo de su departamento)
+      if (!isAdm) {
+        if (!this.canUserViewObra(item)) return false;
       }
 
-      // 2. Filtro Sede explícito (cuando el usuario selecciona en la barra superior Central, San Justo o Periféricos)
+      // 2. Filtro Dependencia explícito
+      if (filters.dependencia && filters.dependencia !== 'TODAS') {
+        const itemDep = item.dependencia || this.getObraDependencia(item);
+        if (itemDep !== filters.dependencia) return false;
+      }
+
+      // 3. Filtro Sede explícito
       if (filters.sede && filters.sede !== 'TODAS') {
         if ((item.sede || '').toLowerCase() !== filters.sede.toLowerCase()) return false;
       }
@@ -1500,10 +1675,18 @@ const DataStore = {
     deletedList = deletedList.filter(item => !identifiersToRemove.includes(item));
     localStorage.setItem('sigo_deleted_usernames', JSON.stringify(deletedList));
 
+    const apellido = (userData.apellido || '').trim();
+    const nombre = userData.nombre.trim();
+    const fullNombre = apellido && !nombre.includes(apellido) ? `${nombre} ${apellido}` : nombre;
+
+    const uniqueSuffix = Math.random().toString(36).substring(2, 7);
     const newUser = {
-      id: `usr-${Date.now()}`,
+      id: userData.id || `usr-${Date.now()}-${uniqueSuffix}`,
       username: username,
-      nombre: userData.nombre.trim(),
+      nombre: fullNombre,
+      nombre_pila: nombre,
+      apellido: apellido,
+      dependencia: userData.dependencia || 'Departamento de Proyectos Central',
       email: (userData.email || `${username}@hospitalitaliano.org.ar`).trim().toLowerCase(),
       salt: salt,
       password_hash: hashPassword(tempPassword, salt),
@@ -1522,7 +1705,7 @@ const DataStore = {
 
     this.users.push(newUser);
     this.persistUsers();
-    return { user: newUser, tempPassword: tempPassword };
+    return { success: true, user: newUser, tempPassword: tempPassword };
   },
 
   deleteUser(userId) {
@@ -1593,8 +1776,10 @@ const DataStore = {
     if (!user) return { success: false, msg: 'Usuario no encontrado.' };
 
     if (data.nombre) user.nombre = data.nombre.trim();
+    if (data.apellido !== undefined) user.apellido = (data.apellido || '').trim();
     if (data.email) user.email = data.email.trim().toLowerCase();
     if (data.sede) user.sede = data.sede;
+    if (data.dependencia) user.dependencia = data.dependencia;
     if (data.rol) user.rol = data.rol;
     if (data.puede_crear !== undefined) user.puede_crear = Boolean(data.puede_crear);
     if (data.puede_avanzar !== undefined) user.puede_avanzar = Boolean(data.puede_avanzar);
