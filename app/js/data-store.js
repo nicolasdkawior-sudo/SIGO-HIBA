@@ -1326,10 +1326,14 @@ const DataStore = {
         if (!this.canUserViewObra(item)) return false;
       }
 
-      // 2. Filtro Dependencia explícito
-      if (filters.dependencia && filters.dependencia !== 'TODAS') {
-        const itemDep = item.dependencia || this.getObraDependencia(item);
-        if (itemDep !== filters.dependencia) return false;
+      // 2. Filtro Dependencia explícito (bloqueado a la dependencia propia para usuarios no administradores)
+      const depFilter = (!isAdm && u && u.dependencia && u.dependencia !== 'Dirección General / Administración')
+        ? u.dependencia
+        : filters.dependencia;
+
+      if (depFilter && depFilter !== 'TODAS') {
+        const itemDep = this.getObraDependencia(item) || item.dependencia;
+        if (itemDep !== depFilter) return false;
       }
 
       // 3. Filtro Sede explícito

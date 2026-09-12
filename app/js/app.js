@@ -25,6 +25,7 @@ const App = {
   chartsNeedRefresh: false,
 
   init() {
+    this.pipelineSelectedStage = null;
     DataStore.init();
     SupabaseManager.init();
 
@@ -581,13 +582,8 @@ const App = {
     let isFilteredByStage = !!this.pipelineSelectedStage;
 
     if (isFilteredByStage) {
-      // Filtrar todas las obras de la etapa seleccionada respetando filtros generales (Sede, Tipo)
-      itemsToDisplay = DataStore.items.filter(item => {
-        if (item.estado !== this.pipelineSelectedStage) return false;
-        if (this.filters.sede !== 'TODAS' && (item.sede || '').toLowerCase() !== this.filters.sede.toLowerCase()) return false;
-        if (this.filters.tipo !== 'TODOS' && item.tipo !== this.filters.tipo) return false;
-        return true;
-      });
+      // Filtrar todas las obras de la etapa seleccionada respetando estrictamente el aislamiento departamental y los filtros activos
+      itemsToDisplay = DataStore.getFilteredItems(this.filters).filter(item => item.estado === this.pipelineSelectedStage);
 
       const totalStageUsd = itemsToDisplay.reduce((acc, x) => acc + (x.monto_total_usd || x.monto_obra_usd || 0), 0);
 
@@ -2593,6 +2589,7 @@ const App = {
   },
 
   logout() {
+    this.pipelineSelectedStage = null;
     DataStore.logout();
     this.checkAuth();
     this.showToast('Has cerrado sesión correctamente.');
