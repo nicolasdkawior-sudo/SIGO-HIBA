@@ -1503,6 +1503,44 @@ const App = {
       alertFinal.classList.toggle('hidden', nextStage !== 'Obras Finalizadas');
     }
 
+    // Aviso dinámico si avanza a Proyecto para licitar (Pase a Compras)
+    const warnPaseLicitaciones = document.getElementById('transLicitacionesPaseNotice');
+    if (warnPaseLicitaciones) {
+      warnPaseLicitaciones.classList.toggle('hidden', nextStage !== 'Proyecto para licitar');
+    }
+
+    // Contenedor Compulsa (cuando avanza a En licitación)
+    const containerCompulsa = document.getElementById('transCompulsaContainer');
+    const inputFechaCompulsa = document.getElementById('transFechaCompulsaInput');
+    if (containerCompulsa) {
+      if (nextStage === 'En licitación') {
+        containerCompulsa.classList.remove('hidden');
+        if (inputFechaCompulsa) {
+          inputFechaCompulsa.value = item.fecha_fin_compulsa || defaultDeadline;
+          inputFechaCompulsa.min = maxDateStr;
+        }
+      } else {
+        containerCompulsa.classList.add('hidden');
+      }
+    }
+
+    // Contenedor Adjudicación (cuando avanza de En licitación a Obras en Curso)
+    const containerAdjudicacion = document.getElementById('transAdjudicacionContainer');
+    const inputProveedor = document.getElementById('transProveedorAdjudicadoInput');
+    const inputMontoAdj = document.getElementById('transMontoAdjudicadoInput');
+    const inputFechaFinObra = document.getElementById('transFechaFinObraInput');
+    if (containerAdjudicacion) {
+      if (currentStage === 'En licitación' && nextStage === 'Obras en Curso') {
+        containerAdjudicacion.classList.remove('hidden');
+        if (inputProveedor) inputProveedor.value = item.proveedor || '';
+        const defMontoAdj = item.monto_adjudicado_usd || item.monto_total_usd || item.monto_obra_usd || '';
+        if (inputMontoAdj) inputMontoAdj.value = defMontoAdj > 0 ? defMontoAdj : '';
+        if (inputFechaFinObra) inputFechaFinObra.value = item.fecha_fin_obra || '';
+      } else {
+        containerAdjudicacion.classList.add('hidden');
+      }
+    }
+
     document.getElementById('modalTransition').classList.remove('hidden');
     if (window.lucide) lucide.createIcons();
   },
@@ -1604,7 +1642,40 @@ const App = {
       }
     }
 
-    const res = DataStore.confirmAndAdvanceStage(id, compDate, newDeadline, notes);
+    // Captura y validaciones de licitaciones / compulsa / adjudicación
+    const extraData = {};
+
+    if (nextStage === 'En licitación') {
+      const fechaCompulsa = document.getElementById('transFechaCompulsaInput')?.value;
+      if (!fechaCompulsa) {
+        alert("⚠️ Debes indicar la Fecha Estimada de Finalización de la Compulsa.");
+        document.getElementById('transFechaCompulsaInput')?.focus();
+        return;
+      }
+      extraData.fechaCompulsa = fechaCompulsa;
+    }
+
+    if (currentStage === 'En licitación' && nextStage === 'Obras en Curso') {
+      const proveedor = (document.getElementById('transProveedorAdjudicadoInput')?.value || '').trim();
+      const montoAdj = parseFloat(document.getElementById('transMontoAdjudicadoInput')?.value) || 0;
+      const fechaFinObra = document.getElementById('transFechaFinObraInput')?.value;
+
+      if (!proveedor) {
+        alert("⚠️ Debes indicar el Proveedor Adjudicado para avanzar a 'Obras en Curso'.");
+        document.getElementById('transProveedorAdjudicadoInput')?.focus();
+        return;
+      }
+      if (montoAdj <= 0) {
+        alert("⚠️ Debes indicar el Monto Total de la Adjudicación (USD mayor a 0).");
+        document.getElementById('transMontoAdjudicadoInput')?.focus();
+        return;
+      }
+      extraData.proveedor = proveedor;
+      extraData.montoAdjudicado = montoAdj;
+      if (fechaFinObra) extraData.fechaFinObra = fechaFinObra;
+    }
+
+    const res = DataStore.confirmAndAdvanceStage(id, compDate, newDeadline, notes, extraData);
     if (res.success) {
       this.closeTransitionModal();
       this.render();
@@ -3117,8 +3188,38 @@ const App = {
       if (btnSave) btnSave.classList.add('hidden');
     }
 
+    // Configurar botón de Avanzar Etapa en el modal
+    const nextStage = DataStore.getNextStage(item.estado);
+    const canAdvanceThis = DataStore.canUserAdvanceItem(item);
+    const canAvanzar = canAdvanceThis && u && !u.solo_lectura && u.rol !== 'visualizador';
+    const btnAvanzarModal = document.getElementById('btnModalAvanzarEtapa');
+    if (btnAvanzarModal) {
+      if (nextStage && canAvanzar) {
+        btnAvanzarModal.classList.remove('hidden');
+        btnAvanzarModal.title = `Avanzar obra a "${nextStage}"`;
+        btnAvanzarModal.innerHTML = `<span>Avanzar a ${nextStage}</span><i data-lucide="arrow-right" class="w-4 h-4"></i>`;
+      } else {
+        btnAvanzarModal.classList.add('hidden');
+      }
+    }
+
+    // Alerta de ingreso de fecha estimada para el proyectista en Obras en Curso
+    const noticeEnCurso = document.getElementById('modalObraEnCursoFechaNotice');
+    if (noticeEnCurso) {
+      const isEnCurso = (item.estado === 'Obras en Curso');
+      const needsDate = !item.fecha_fin_obra || item.fecha_fin_obra === '';
+      noticeEnCurso.classList.toggle('hidden', !(isEnCurso && canEdit && needsDate));
+    }
+
     document.getElementById('modalObraDetail').classList.remove('hidden');
     if (window.lucide) lucide.createIcons();
+  },
+
+  handleModalAvanzarEtapa() {
+    const id = document.getElementById('modalObraId')?.innerText;
+    if (!id) return;
+    this.closeObraModal();
+    this.openTransitionModal(id);
   },
 
   saveObraModal() {

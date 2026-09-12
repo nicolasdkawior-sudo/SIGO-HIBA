@@ -541,8 +541,22 @@ const DataStore = {
       if (item.sede === 'Periférico') item.sede = 'Periféricos';
       if (item.estado === 'Ante Proyecto') item.estado = 'Estudio de Factibilidad';
 
-      // Sincronizar dependencia canónica (repara automáticamente discrepancias en localStorage)
+      // Sincronizar dependencia canónica primero (repara automáticamente discrepancias en localStorage)
       item.dependencia = this.getObraDependencia(item);
+
+      // Sincronizar asignación de usuario si tiene nombre de responsable pero falta ID
+      if (!item.responsable_id && item.responsable) {
+        const uFound = this.getObraAssignedUser(item);
+        if (uFound) {
+          item.responsable_id = uFound.id;
+          item.responsable = uFound.nombre;
+        }
+      } else if (item.responsable_id) {
+        const uFound = this.users.find(u => u.id === item.responsable_id);
+        if (uFound) {
+          item.responsable = uFound.nombre;
+        }
+      }
 
       if (!item.historial) {
         item.historial = [{
@@ -751,7 +765,7 @@ const DataStore = {
       observaciones: `Partida presupuestaria N° ${item.partida} asignada por ${this.formatUSD(montoVal)} por ${this.currentUser.nombre}. Habilita avance a etapa de Proyecto.`
     });
 
-    this.saveItem(item);
+    this.saveItem(item, true);
     return { success: true, partida: item.partida, monto_partida_usd: item.monto_partida_usd };
   },
 
@@ -813,14 +827,14 @@ const DataStore = {
     return d.toISOString().split('T')[0];
   },
 
-  confirmAndAdvanceStage(itemId, completionDate, nextDeadline, notes) {
+  confirmAndAdvanceStage(itemId, completionDate, nextDeadline, notes, extraData = {}) {
     const item = this.getItemById(itemId);
     if (!item) return { success: false, msg: 'Obra no encontrada' };
 
     if (!this.canUserAdvanceItem(item)) {
       return { 
         success: false, 
-        msg: `⛔ Acceso Denegado: Solo puedes avanzar etapas de las obras asignadas a tu usuario. Esta obra está asignada a: ${item.responsable || 'Sin Asignar'}.` 
+        msg: `⛔ Acceso Denegado: No tienes autorización para avanzar esta obra en su etapa actual.` 
       };
     }
     if (this.currentUser.solo_lectura || this.currentUser.rol === 'visualizador' || !this.currentUser.puede_avanzar) {
@@ -862,6 +876,35 @@ const DataStore = {
       }
     }
 
+    // VALIDACIÓN CRÍTICA: Al pasar a En licitación, se requiere fecha estimada de término de la compulsa
+    if (nextStage === 'En licitación') {
+      const fechaCompulsa = extraData?.fechaCompulsa || nextDeadline;
+      if (!fechaCompulsa) {
+        return { success: false, msg: '⛔ Para iniciar la licitación debes indicar la Fecha Estimada de Término de la Compulsa.' };
+      }
+      item.fecha_fin_compulsa = fechaCompulsa;
+      nextDeadline = fechaCompulsa;
+    }
+
+    // VALIDACIÓN CRÍTICA: Al pasar de En licitación a Obras en Curso (Adjudicación)
+    if (currentStage === 'En licitación' && nextStage === 'Obras en Curso') {
+      const proveedor = (extraData?.proveedor || '').trim();
+      const montoAdj = parseFloat(extraData?.montoAdjudicado) || 0;
+      if (!proveedor) {
+        return { success: false, msg: '⛔ Para avanzar a "Obras en Curso" debes indicar el Proveedor Adjudicado.' };
+      }
+      if (montoAdj <= 0) {
+        return { success: false, msg: '⛔ Para avanzar a "Obras en Curso" debes indicar el Monto Total de la Adjudicación (USD mayor a 0).' };
+      }
+      item.proveedor = proveedor;
+      item.monto_adjudicado_usd = montoAdj;
+      item.monto_total_usd = montoAdj;
+      item.monto_obra_usd = montoAdj;
+      if (extraData?.fechaFinObra) {
+        item.fecha_fin_obra = extraData.fechaFinObra;
+      }
+    }
+
     // Validación de fecha de finalización: Hoy y hasta 7 días hacia atrás máximo
     const now = new Date();
     const maxDateStr = now.toISOString().split('T')[0];
@@ -877,13 +920,36 @@ const DataStore = {
       return { success: false, msg: `⛔ La fecha de finalización no puede tener más de 7 días de antigüedad (rango permitido: ${minDateStr} a ${maxDateStr}).` };
     }
 
+    // Si avanza a Proyecto para licitar, resguardar proyectista original y dependencia de origen
+    if (nextStage === 'Proyecto para licitar') {
+      item.proyectista_id = item.responsable_id || (this.currentUser ? this.currentUser.id : null);
+      item.proyectista_nombre = item.responsable || (this.currentUser ? this.currentUser.nombre : 'Proyectista');
+      item.proyectista_dependencia = item.dependencia || this.getObraDependencia(item);
+    }
+
+    // Si avanza a Obras en Curso, retornar la obra al proyectista original
+    if (nextStage === 'Obras en Curso') {
+      if (item.proyectista_id) item.responsable_id = item.proyectista_id;
+      if (item.proyectista_nombre) item.responsable = item.proyectista_nombre;
+      if (item.proyectista_dependencia) item.dependencia = item.proyectista_dependencia;
+    }
+
+    let defaultObs = `Etapa '${currentStage}' finalizada y certificada el ${compDate} por ${this.currentUser.nombre}. Avanza a '${nextStage}'.`;
+    if (nextStage === 'Proyecto para licitar') {
+      defaultObs = `Proyecto aprobado por ${this.currentUser.nombre}. Se deriva a Compras y Licitaciones para compulsa de precios.`;
+    } else if (nextStage === 'En licitación') {
+      defaultObs = `Apertura de compulsa licitatoria. Fecha estimada de cierre de compulsa: ${item.fecha_fin_compulsa || nextDeadline}.`;
+    } else if (nextStage === 'Obras en Curso') {
+      defaultObs = `Compulsa finalizada y adjudicada a '${item.proveedor}' por USD ${this.formatUSD(item.monto_adjudicado_usd)}. Retorna al proyectista ${item.responsable} en Obras en Curso.`;
+    }
+
     item.historial.unshift({
       fecha: compDate,
       usuario: `${this.currentUser.nombre} (${this.currentUser.rol})`,
       estado_anterior: currentStage,
       estado_nuevo: nextStage,
       fecha_limite: nextDeadline,
-      observaciones: notes ? `Etapa '${currentStage}' completada el ${compDate} por ${this.currentUser.nombre}. ${notes}` : `Etapa '${currentStage}' finalizada y certificada el ${compDate} por ${this.currentUser.nombre}. Avanza a '${nextStage}'.`
+      observaciones: notes ? `${defaultObs} ${notes}` : defaultObs
     });
 
     item.estado = nextStage;
@@ -894,8 +960,8 @@ const DataStore = {
       item.fecha_real_finalizada = compDate;
     }
 
-    this.saveItem(item);
-    return { success: true, nextStage: nextStage };
+    this.saveItem(item, true);
+    return { success: true, nextStage: nextStage, item: item };
   },
 
   // ================= SEMÁFOROS Y PLAZOS =================
@@ -958,6 +1024,12 @@ const DataStore = {
     if (this.currentUser.rol === 'admin') return true;
     if (this.currentUser.solo_lectura || this.currentUser.rol === 'visualizador') return false;
 
+    // Si la obra está en etapa de licitación ('Proyecto para licitar' o 'En licitación'):
+    // El comprador / licitaciones es quien tiene la obra a su cargo para operarla
+    if (this.currentUser.rol === 'licitaciones' && (item.estado === 'Proyecto para licitar' || item.estado === 'En licitación')) {
+      return true;
+    }
+
     // 1. Coincidencia directa por ID de usuario asignado
     if (item.responsable_id && item.responsable_id === this.currentUser.id) return true;
 
@@ -967,9 +1039,9 @@ const DataStore = {
       if (otherUser && otherUser.activo) return false;
     }
 
-    // 3. Usuarios dados de alta por el Administrador (arrancan en 0 obras a cargo):
-    // Solo tienen asignadas las obras que el Administrador les asigne explícitamente.
-    if (this.currentUser.arranca_en_cero || this.currentUser.origen === 'creado_admin' || (this.currentUser.id && this.currentUser.id.startsWith('usr-'))) {
+    // 3. Usuarios dados de alta expresamente con bandera 'arranca_en_cero':
+    // Solo tienen asignadas las obras que se les asigne explícitamente por ID
+    if (this.currentUser.arranca_en_cero) {
       return false;
     }
 
@@ -984,7 +1056,7 @@ const DataStore = {
     if (uUser && (resp === uUser || resp.includes(uUser) || uUser.includes(resp))) return true;
     if (uName && (resp.includes(uName) || uName.includes(resp))) return true;
 
-    // Tokens identificatorios significativos del nombre de usuario (ej: "palmioli", "waldemar", "boselli", "lopez", "vasquez")
+    // Tokens identificatorios significativos del nombre de usuario (ej: "palmioli", "waldemar", "boselli", "lopez", "vasquez", "kawior", "nicolas")
     const stopwords = ['arq', 'ing', 'dr', 'dra', 'pm', 'central', 'san', 'justo', 'perifericos', 'de', 'la', 'el', 'compras', 'licitaciones', 'obras', 'infraestructura'];
     const tokens = uName.replace(/[^a-z0-9]/g, ' ').split(/\s+/).filter(t => t.length > 2 && !stopwords.includes(t));
     for (const token of tokens) {
@@ -1026,9 +1098,18 @@ const DataStore = {
     const resp = normalizeStr(item.responsable);
     if (!resp || resp === 'sin asignar' || resp === 's/d' || resp === 'pendiente' || resp === 'a designar') return null;
 
+    const obraDep = normalizeStr(item.dependencia);
+
     return this.users.find(u => {
-      // Si el usuario fue dado de alta por administrador / arranca en cero, solo se asocia por ID
-      if (u.arranca_en_cero || u.origen === 'creado_admin' || (u.id && u.id.startsWith('usr-'))) return false;
+      if (u.arranca_en_cero) return false;
+
+      // Si la obra tiene dependencia definida, el usuario debe pertenecer a la misma dependencia (salvo Administrador General)
+      if (obraDep && u.dependencia) {
+        const uDep = normalizeStr(u.dependencia);
+        if (uDep !== obraDep && u.rol !== 'admin' && uDep !== 'direccion general / administracion') {
+          return false;
+        }
+      }
 
       const uUser = normalizeStr(u.username);
       const uName = normalizeStr(u.nombre);
@@ -1036,7 +1117,9 @@ const DataStore = {
       if (uName && (resp.includes(uName) || uName.includes(resp))) return true;
       const stopwords = ['arq', 'ing', 'dr', 'dra', 'pm', 'central', 'san', 'justo', 'perifericos'];
       const tokens = uName.replace(/[^a-z0-9]/g, ' ').split(/\s+/).filter(t => t.length > 2 && !stopwords.includes(t));
-      return tokens.some(t => resp.includes(t));
+      if (tokens.some(t => resp.includes(t))) return true;
+      const uTokens = uUser.replace(/[^a-z0-9]/g, ' ').split(/\s+/).filter(t => t.length > 2 && !stopwords.includes(t));
+      return uTokens.some(t => resp.includes(t));
     }) || null;
   },
 
@@ -1139,7 +1222,12 @@ const DataStore = {
   getObraDependencia(item) {
     if (!item) return '';
 
-    // 1. Si la obra está asignada formalmente a un usuario, la obra pertenece indefectiblemente a la dependencia del responsable
+    // 1. Si tiene dependencia explícita válida asignada o derivada, esa es su dependencia canónica
+    if (item.dependencia && item.dependencia.trim() !== '' && item.dependencia !== 'Dirección General / Administración') {
+      return item.dependencia.trim();
+    }
+
+    // 2. Si la obra está asignada formalmente a un usuario con ID
     if (item.responsable_id) {
       const respUser = this.users.find(u => u.id === item.responsable_id);
       if (respUser && respUser.dependencia && respUser.dependencia !== 'Dirección General / Administración') {
@@ -1151,7 +1239,7 @@ const DataStore = {
       return respObj.dependencia.trim();
     }
 
-    // 2. Si tiene dependencia explícita asignada o derivada
+    // Si tiene dependencia explícita aunque sea Dirección General
     if (item.dependencia && item.dependencia.trim() !== '') {
       return item.dependencia.trim();
     }
@@ -1267,9 +1355,22 @@ const DataStore = {
     // 1. Administrador General ve todo el hospital
     if (this.isAdmin()) return true;
 
-    // 2. Roles transversales de consulta institucional (Dirección Médica, Auditoría)
-    if (u.rol === 'direccion_medica' || u.rol === 'auditor' || u.dependencia === 'Dirección General / Administración') {
+    // 2. Flujo Licitatorio ('Proyecto para licitar' y 'En licitación'):
+    // El comprador / departamento de compras ve todas las obras en etapa licitatoria EXCLUSIVAMENTE
+    const esEtapaLicitatoria = (item.estado === 'Proyecto para licitar' || item.estado === 'En licitación');
+    if (u.rol === 'licitaciones' || u.dependencia === 'Compras & Licitaciones') {
+      return esEtapaLicitatoria;
+    }
+
+    // 3. Roles transversales de consulta institucional (Dirección Médica, Auditoría)
+    if (u.rol === 'direccion_medica' || u.rol === 'auditor' || (u.dependencia === 'Dirección General / Administración' && u.rol !== 'licitaciones')) {
       return true;
+    }
+
+    // Si la obra está en etapa licitatoria y el usuario es proyectista / técnico departamental:
+    // La obra le cae al comprador y desaparece temporalmente del panel del proyectista hasta que se adjudique
+    if (esEtapaLicitatoria) {
+      return false;
     }
 
     const uDep = (u.dependencia || '').trim().toLowerCase();
@@ -1278,7 +1379,7 @@ const DataStore = {
       return (item.sede || '').toLowerCase() === (u.sede || '').toLowerCase();
     }
 
-    // 3. Aislamiento Departamental Estricto:
+    // 4. Aislamiento Departamental Estricto:
     // La obra pertenece a UNA SOLA dependencia canónica.
     const canonicalDep = (this.getObraDependencia(item) || item.dependencia || '').trim().toLowerCase();
 
@@ -1296,6 +1397,14 @@ const DataStore = {
     if (this.currentUser.solo_lectura || this.currentUser.rol === 'visualizador') return false;
     if (this.currentUser.puede_avanzar === false) return false;
     if (this.isAdmin()) return true;
+
+    // Si la obra está en etapa de licitación ('Proyecto para licitar' o 'En licitación'):
+    // Solo el comprador (rol 'licitaciones') o el Admin pueden certificar el avance
+    if (item.estado === 'Proyecto para licitar' || item.estado === 'En licitación') {
+      return this.currentUser.rol === 'licitaciones';
+    }
+
+    // Para el resto de etapas (Factibilidad, Proyecto, En Curso, etc.):
     // Solo puede avanzar si la obra está asignada a su nombre
     return this.isUserAssignedToObra(item);
   },
@@ -1304,6 +1413,12 @@ const DataStore = {
     if (!this.currentUser || !item) return false;
     if (this.currentUser.solo_lectura || this.currentUser.rol === 'visualizador') return false;
     if (this.isAdmin()) return true;
+
+    // En etapa licitatoria, el comprador puede editar fechas y plazos de compulsa
+    if ((item.estado === 'Proyecto para licitar' || item.estado === 'En licitación') && this.currentUser.rol === 'licitaciones') {
+      return true;
+    }
+
     // Solo pueden editar aquellas obras dentro de su departamento que tienen asignadas a su nombre
     return this.isUserAssignedToObra(item);
   },
@@ -1680,7 +1795,7 @@ const DataStore = {
       observaciones: `Prioridad Médica asignada: ${priorityVal}★ por Dirección. Ponderación final resultante: ${item.prioridad_final}.`
     });
 
-    this.saveItem(item);
+    this.saveItem(item, true);
     return true;
   },
 
@@ -1972,8 +2087,8 @@ const DataStore = {
     return this.items.find(x => x.id === id);
   },
 
-  saveItem(item) {
-    if (this.currentUser && !this.canUserEditObra(item)) {
+  saveItem(item, force = false) {
+    if (!force && this.currentUser && !this.canUserEditObra(item)) {
       (console.warn || console.log)('⛔ Bloqueado: Usuario sin permisos de edición para la obra', item.id);
       return false;
     }

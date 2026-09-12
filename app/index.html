@@ -846,6 +846,51 @@
           <p class="text-[10px] text-amber-800 font-semibold">Si no dispones de partida y monto presupuestario, el sistema no te permitirá avanzar a Proyecto.</p>
         </div>
 
+        <!-- Aviso si avanza a Proyecto para Licitar (Pase a Compras) -->
+        <div id="transLicitacionesPaseNotice" class="hidden bg-blue-50 border border-blue-200 text-blue-900 p-3 rounded-xl text-xs font-semibold">
+          📦 <strong>Pase a Compras y Licitaciones:</strong> Al confirmar, la obra pasará a la bandeja del Departamento de Compras para la compulsa de precios, saliendo temporalmente del panel de proyectos técnicos.
+        </div>
+
+        <!-- Contenedor Compulsa (Cuando avanza a En licitación) -->
+        <div id="transCompulsaContainer" class="hidden space-y-2 bg-indigo-50/70 p-3.5 rounded-xl border border-indigo-200">
+          <div class="font-bold text-indigo-900 text-xs flex items-center space-x-1.5">
+            <i data-lucide="calendar-clock" class="w-4 h-4 text-indigo-600"></i>
+            <span>Plazo de la Compulsa de Precios (Licitación)</span>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Fecha Estimada de Finalización de la Compulsa <span class="text-red-500">*</span>:</label>
+            <input type="date" id="transFechaCompulsaInput" class="w-full border-2 border-indigo-400 rounded-lg p-2 font-semibold text-slate-900 bg-white">
+            <p class="text-[10px] text-slate-500 mt-1">Fecha estimada en la que se cerrará la compulsa de precios para la adjudicación.</p>
+          </div>
+        </div>
+
+        <!-- Contenedor Adjudicación (Cuando avanza de En licitación a Obras en Curso) -->
+        <div id="transAdjudicacionContainer" class="hidden space-y-3 bg-emerald-50/70 p-3.5 rounded-xl border border-emerald-200">
+          <div class="font-bold text-emerald-900 text-xs flex items-center space-x-1.5">
+            <i data-lucide="award" class="w-4 h-4 text-emerald-600"></i>
+            <span>Adjudicación de la Compulsa</span>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Proveedor Adjudicado <span class="text-red-500">*</span>:</label>
+            <input type="text" id="transProveedorAdjudicadoInput" placeholder="Ej: Techint S.A. / Constructora Central" class="w-full border-2 border-emerald-500 rounded-lg p-2 font-medium text-slate-900 bg-white">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Monto Total de la Adjudicación (USD) <span class="text-red-500">*</span>:</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center font-bold text-slate-400">USD</span>
+              <input type="number" step="0.01" min="1" id="transMontoAdjudicadoInput" placeholder="0.00" class="w-full pl-12 border-2 border-emerald-500 rounded-lg p-2 font-mono font-bold text-emerald-900 bg-white">
+            </div>
+            <p class="text-[10px] text-emerald-800 font-semibold mt-1">Este monto actualizará el costo adjudicado oficial de la obra.</p>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Fecha Estimada de Finalización de la Obra (Plazo de Ejecución):</label>
+            <input type="date" id="transFechaFinObraInput" class="w-full border border-slate-300 rounded-lg p-2 font-semibold text-slate-900 bg-white">
+          </div>
+          <div class="p-2 bg-blue-50 border border-blue-200 rounded text-[11px] text-blue-800">
+            🔁 Al confirmar la adjudicación, la obra <strong>retornará automáticamente al proyectista original</strong> en estado <strong>Obras en Curso</strong>.
+          </div>
+        </div>
+
         <!-- Aviso si pasa a Finalizada -->
         <div id="transFinalNotice" class="hidden bg-emerald-50 border border-emerald-200 text-emerald-800 p-3 rounded-xl text-xs font-semibold">
           🏁 Al confirmar, la obra quedará registrada como <strong>TERMINADA / FINALIZADA</strong> definitivamente.
@@ -1351,6 +1396,15 @@
           🔒 Esta obra pertenece a otra sede. Tu usuario solo tiene permisos de visualización sobre ella.
         </div>
 
+        <!-- Alerta de asignación de fecha de finalización para el proyectista en Obras en Curso -->
+        <div id="modalObraEnCursoFechaNotice" class="hidden bg-blue-50 border border-blue-300 text-blue-900 p-3.5 rounded-xl text-xs flex items-start space-x-2.5 shadow-2xs">
+          <i data-lucide="calendar-clock" class="w-5 h-5 text-blue-600 shrink-0 mt-0.5"></i>
+          <div>
+            <div class="font-bold text-blue-950">Obra Adjudicada en Curso: Asignación de Plazo de Terminación</div>
+            <div class="text-blue-800 mt-0.5">Esta obra ha concluido su compulsa licitatoria y regresa a tu cargo para su ejecución. Como proyectista responsable, define en los campos inferiores la <strong>Fecha Estimada de Finalización de la Obra</strong>.</div>
+          </div>
+        </div>
+
         <div>
           <label class="block font-semibold text-slate-700 mb-1">Nombre de la Tarea / Inversión / Obra</label>
           <input type="text" id="modalObraTitle" class="w-full text-sm font-semibold border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
@@ -1589,6 +1643,12 @@
           <button type="button" id="btnModalAdminCancelEdit" onclick="App.toggleAdminEditMode(false)" 
                   class="hidden px-3.5 py-2 border border-slate-300 text-slate-600 hover:bg-slate-200 font-semibold rounded-lg transition cursor-pointer">
             Cancelar Edición
+          </button>
+          <!-- Botón de Avanzar Etapa para el usuario responsable o admin -->
+          <button type="button" id="btnModalAvanzarEtapa" onclick="App.handleModalAvanzarEtapa()" 
+                  class="hidden px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm transition flex items-center space-x-1.5 cursor-pointer">
+            <span>Avanzar Etapa</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
           </button>
           <button type="button" onclick="App.closeObraModal()" class="px-4 py-2 border border-slate-300 rounded-lg font-semibold text-slate-700 hover:bg-slate-200 transition cursor-pointer">Cerrar</button>
           <button type="button" id="btnModalSaveObra" onclick="App.saveObraModal()" class="hidden px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-2xs transition flex items-center space-x-1.5 cursor-pointer">
