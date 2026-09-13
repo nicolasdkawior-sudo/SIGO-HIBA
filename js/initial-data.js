@@ -121,7 +121,7 @@ window.INITIAL_DATA = {
       "clasificacion": "Mejora general",
       "categoria": "Obra Civil",
       "motivo": "PLAN MAESTRO",
-      "responsable": "Sulpis",
+      "responsable": "Sin Asignar",
       "observaciones": "SIN PARTIDA",
       "superficie_m2": 750.0,
       "costo_usd_m2": 3000.0,
@@ -141,7 +141,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 0.0,
         "cashflow_2028": 1763736.0,
         "cashflow_2029": 486264.0
-      }
+      },
+      "creado_por": "Sulpis"
     },
     {
       "id": "OBRA-005",
@@ -205,7 +206,7 @@ window.INITIAL_DATA = {
       "clasificacion": "Mejora general",
       "categoria": "Obra Civil",
       "motivo": "RESTILING",
-      "responsable": "Palmioli",
+      "responsable": "Sin Asignar",
       "observaciones": "",
       "superficie_m2": 600.0,
       "costo_usd_m2": 2500.0,
@@ -217,7 +218,8 @@ window.INITIAL_DATA = {
         "impacto_produccion": 0.0,
         "criterio_tec_final": 0.0
       },
-      "cashflow": {}
+      "cashflow": {},
+      "creado_por": "Palmioli"
     },
     {
       "id": "OBRA-007",
@@ -281,7 +283,7 @@ window.INITIAL_DATA = {
       "clasificacion": "Ampliación",
       "categoria": "Obra Civil",
       "motivo": "AUMENTO PRODUCC",
-      "responsable": "Palmioli",
+      "responsable": "Sin Asignar",
       "observaciones": "",
       "superficie_m2": 500.0,
       "costo_usd_m2": 4300.0,
@@ -301,7 +303,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 1297049.0,
         "cashflow_2028": 852951.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "creado_por": "Palmioli"
     },
     {
       "id": "OBRA-009",
@@ -323,7 +326,7 @@ window.INITIAL_DATA = {
       "clasificacion": "Mejora general",
       "categoria": "Obra Civil",
       "motivo": "MEJORA FUNCIONAL",
-      "responsable": "Palmioli",
+      "responsable": "Sin Asignar",
       "observaciones": "",
       "superficie_m2": 300.0,
       "costo_usd_m2": 1288.0,
@@ -335,7 +338,8 @@ window.INITIAL_DATA = {
         "impacto_produccion": 0.0,
         "criterio_tec_final": 0.0
       },
-      "cashflow": {}
+      "cashflow": {},
+      "creado_por": "Palmioli"
     },
     {
       "id": "OBRA-010",
@@ -399,7 +403,7 @@ window.INITIAL_DATA = {
       "clasificacion": "Instalacion de equipo",
       "categoria": "Equipos c/obra",
       "motivo": "INSTALAC EQUIPO",
-      "responsable": "Sulpis",
+      "responsable": "Sin Asignar",
       "observaciones": "Falta definición de Equipo para avanzar con documentación",
       "superficie_m2": 50.0,
       "costo_usd_m2": 3300.0,
@@ -411,7 +415,8 @@ window.INITIAL_DATA = {
         "impacto_produccion": 3.0,
         "criterio_tec_final": 0.0
       },
-      "cashflow": {}
+      "cashflow": {},
+      "creado_por": "Sulpis"
     },
     {
       "id": "OBRA-012",
@@ -551,7 +556,7 @@ window.INITIAL_DATA = {
       "clasificacion": "Nuevo Layout",
       "categoria": "Obra Civil",
       "motivo": "",
-      "responsable": "Acerbi",
+      "responsable": "Sin Asignar",
       "observaciones": "",
       "superficie_m2": 50.0,
       "costo_usd_m2": 2000.0,
@@ -563,7 +568,8 @@ window.INITIAL_DATA = {
         "impacto_produccion": 0.0,
         "criterio_tec_final": 0.0
       },
-      "cashflow": {}
+      "cashflow": {},
+      "creado_por": "Acerbi"
     },
     {
       "id": "OBRA-016",
@@ -585,7 +591,7 @@ window.INITIAL_DATA = {
       "clasificacion": "Nuevo Layout",
       "categoria": "Obra Civil",
       "motivo": "",
-      "responsable": "Palmioli",
+      "responsable": "Sin Asignar",
       "observaciones": "",
       "superficie_m2": 140.0,
       "costo_usd_m2": 3500.0,
@@ -597,7 +603,8 @@ window.INITIAL_DATA = {
         "impacto_produccion": 0.0,
         "criterio_tec_final": 0.0
       },
-      "cashflow": {}
+      "cashflow": {},
+      "creado_por": "Palmioli"
     },
     {
       "id": "OBRA-017",
@@ -619,7 +626,7 @@ window.INITIAL_DATA = {
       "clasificacion": "Mejora general",
       "categoria": "Terminaciones",
       "motivo": "",
-      "responsable": "Palmioli",
+      "responsable": "Sin Asignar",
       "observaciones": "",
       "superficie_m2": 330.0,
       "costo_usd_m2": 210.0,
@@ -631,7 +638,8 @@ window.INITIAL_DATA = {
         "impacto_produccion": 0.0,
         "criterio_tec_final": 0.0
       },
-      "cashflow": {}
+      "cashflow": {},
+      "creado_por": "Palmioli"
     },
     {
       "id": "OBRA-018",
@@ -707,7 +715,7 @@ window.INITIAL_DATA = {
       "clasificacion": "Nuevo Layout",
       "categoria": "Obra Civil",
       "motivo": "",
-      "responsable": "Cotos/ Palmioli",
+      "responsable": "Sin Asignar",
       "observaciones": "",
       "superficie_m2": 240.0,
       "costo_usd_m2": 3500.0,
@@ -719,7 +727,8 @@ window.INITIAL_DATA = {
         "impacto_produccion": 0.0,
         "criterio_tec_final": 0.0
       },
-      "cashflow": {}
+      "cashflow": {},
+      "creado_por": "Cotos/ Palmioli"
     },
     {
       "id": "OBRA-021",
@@ -928,7 +937,7 @@ window.INITIAL_DATA = {
       "clasificacion": "Nuevas oficinas",
       "categoria": "Obra Civil",
       "motivo": "",
-      "responsable": "Oshiro",
+      "responsable": "Sin Asignar",
       "observaciones": "",
       "superficie_m2": 200.0,
       "costo_usd_m2": 2000.0,
@@ -940,7 +949,8 @@ window.INITIAL_DATA = {
         "impacto_produccion": 0.0,
         "criterio_tec_final": 0.0
       },
-      "cashflow": {}
+      "cashflow": {},
+      "creado_por": "Oshiro"
     },
     {
       "id": "OBRA-027",
@@ -962,7 +972,7 @@ window.INITIAL_DATA = {
       "clasificacion": "Nuevas oficinas",
       "categoria": "Obra Civil",
       "motivo": "",
-      "responsable": "Palmioli",
+      "responsable": "Sin Asignar",
       "observaciones": "",
       "superficie_m2": 150.0,
       "costo_usd_m2": 3000.0,
@@ -974,7 +984,8 @@ window.INITIAL_DATA = {
         "impacto_produccion": 0.0,
         "criterio_tec_final": 0.0
       },
-      "cashflow": {}
+      "cashflow": {},
+      "creado_por": "Palmioli"
     },
     {
       "id": "OBRA-028",
@@ -996,7 +1007,7 @@ window.INITIAL_DATA = {
       "clasificacion": "Mejora general",
       "categoria": "Terminaciones",
       "motivo": "",
-      "responsable": "Palmioli",
+      "responsable": "Sin Asignar",
       "observaciones": "",
       "superficie_m2": 200.0,
       "costo_usd_m2": 210.0,
@@ -1008,7 +1019,8 @@ window.INITIAL_DATA = {
         "impacto_produccion": 0.0,
         "criterio_tec_final": 0.0
       },
-      "cashflow": {}
+      "cashflow": {},
+      "creado_por": "Palmioli"
     },
     {
       "id": "OBRA-029",
@@ -1153,12 +1165,13 @@ window.INITIAL_DATA = {
       "clasificacion": "Mejora general",
       "categoria": "Terminaciones",
       "motivo": "MEJORA FUNCIONAL",
-      "responsable": "Oshiro",
+      "responsable": "Sin Asignar",
       "observaciones": "",
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "creado_por": "Oshiro"
     },
     {
       "id": "OBRA-034",
@@ -1427,7 +1440,7 @@ window.INITIAL_DATA = {
       "clasificacion": "Nuevo Layout",
       "categoria": "Obra Civil",
       "motivo": "PLAN MAESTRO",
-      "responsable": "Cossano",
+      "responsable": "Sin Asignar",
       "observaciones": "",
       "superficie_m2": 600.0,
       "costo_usd_m2": 2800.0,
@@ -1447,7 +1460,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 1680000.0,
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "creado_por": "Cossano"
     },
     {
       "id": "OBRA-042",
@@ -1469,7 +1483,7 @@ window.INITIAL_DATA = {
       "clasificacion": "Nueva Ubicación",
       "categoria": "Obra Civil",
       "motivo": "PLAN MAESTRO",
-      "responsable": "Waldemar",
+      "responsable": "Sin Asignar",
       "observaciones": "",
       "superficie_m2": 300.0,
       "costo_usd_m2": 2900.0,
@@ -1482,7 +1496,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 721813.0,
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "creado_por": "Waldemar"
     },
     {
       "id": "OBRA-043",
@@ -1531,7 +1546,7 @@ window.INITIAL_DATA = {
       "clasificacion": "Mejora general",
       "categoria": "Obra Civil",
       "motivo": "MEJORA FUNCIONAL",
-      "responsable": "Waldemar",
+      "responsable": "Sin Asignar",
       "observaciones": "",
       "superficie_m2": 47.0,
       "costo_usd_m2": 800.0,
@@ -1544,7 +1559,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 0.0,
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "creado_por": "Waldemar"
     },
     {
       "id": "OBRA-045",
@@ -1655,12 +1671,13 @@ window.INITIAL_DATA = {
       "clasificacion": "Mejora general/Ampliacion",
       "categoria": "Obra Civil",
       "motivo": "MEJORA FUNCIONAL",
-      "responsable": "Waldemar",
+      "responsable": "Sin Asignar",
       "observaciones": "",
       "superficie_m2": 43.0,
       "costo_usd_m2": 1100.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "creado_por": "Waldemar"
     },
     {
       "id": "OBRA-049",
@@ -1682,7 +1699,7 @@ window.INITIAL_DATA = {
       "clasificacion": "Mejora general/Ampliacion",
       "categoria": "Obra Civil",
       "motivo": "MEJORA FUNCIONAL",
-      "responsable": "Waldemar",
+      "responsable": "Sin Asignar",
       "observaciones": "",
       "superficie_m2": 0.0,
       "costo_usd_m2": 1100.0,
@@ -1694,7 +1711,8 @@ window.INITIAL_DATA = {
         "impacto_produccion": 3.0,
         "criterio_tec_final": 3.0
       },
-      "cashflow": {}
+      "cashflow": {},
+      "creado_por": "Waldemar"
     },
     {
       "id": "OBRA-050",
@@ -1716,12 +1734,13 @@ window.INITIAL_DATA = {
       "clasificacion": "Nuevas oficinas",
       "categoria": "Obra Civil",
       "motivo": "MEJORA FUNCIONAL",
-      "responsable": "Waldemar",
+      "responsable": "Sin Asignar",
       "observaciones": "",
       "superficie_m2": 54.0,
       "costo_usd_m2": 1300.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "creado_por": "Waldemar"
     },
     {
       "id": "OBRA-051",
@@ -1797,12 +1816,13 @@ window.INITIAL_DATA = {
       "clasificacion": "Producción",
       "categoria": "Obra Civil",
       "motivo": "RESTYLING",
-      "responsable": "Waldemar",
+      "responsable": "Sin Asignar",
       "observaciones": "",
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "creado_por": "Waldemar"
     },
     {
       "id": "OBRA-054",
@@ -2474,12 +2494,13 @@ window.INITIAL_DATA = {
       "clasificacion": "Administrativo",
       "categoria": "Terminaciones",
       "motivo": "MEJORA FUNCIONAL",
-      "responsable": "Corbalán",
+      "responsable": "Sin Asignar",
       "observaciones": "Mobiliario",
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "creado_por": "Corbalán"
     },
     {
       "id": "OBRA-078",

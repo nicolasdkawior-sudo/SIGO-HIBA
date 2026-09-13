@@ -544,17 +544,29 @@ const DataStore = {
       // Sincronizar dependencia canónica primero (repara automáticamente discrepancias en localStorage)
       item.dependencia = this.getObraDependencia(item);
 
-      // Sincronizar asignación de usuario si tiene nombre de responsable pero falta ID
-      if (!item.responsable_id && item.responsable) {
-        const uFound = this.getObraAssignedUser(item);
-        if (uFound) {
-          item.responsable_id = uFound.id;
-          item.responsable = uFound.nombre;
+      // Si la obra está en Estudio de Factibilidad y no tiene partida válida:
+      // No puede estar asignada a nadie. Debe figurar como Sin Asignar y preservar creado_por.
+      if ((item.estado === 'Estudio de Factibilidad' || item.estado === 'Ante Proyecto') && !this.hasValidPartida(item)) {
+        if (!item.creado_por && item.responsable && item.responsable !== 'Sin Asignar' && item.responsable !== 'S/D' && item.responsable !== 'Pendiente') {
+          item.creado_por = item.responsable;
         }
-      } else if (item.responsable_id) {
-        const uFound = this.users.find(u => u.id === item.responsable_id);
-        if (uFound) {
-          item.responsable = uFound.nombre;
+        item.responsable = 'Sin Asignar';
+        item.responsable_id = null;
+      }
+
+      // Sincronizar asignación de usuario si tiene nombre de responsable pero falta ID (solo si no es Factibilidad sin partida)
+      if ((item.estado !== 'Estudio de Factibilidad' && item.estado !== 'Ante Proyecto') || this.hasValidPartida(item)) {
+        if (!item.responsable_id && item.responsable) {
+          const uFound = this.getObraAssignedUser(item);
+          if (uFound) {
+            item.responsable_id = uFound.id;
+            item.responsable = uFound.nombre;
+          }
+        } else if (item.responsable_id) {
+          const uFound = this.users.find(u => u.id === item.responsable_id);
+          if (uFound) {
+            item.responsable = uFound.nombre;
+          }
         }
       }
 
@@ -642,9 +654,6 @@ const DataStore = {
     const userSede = this.currentUser.sede !== 'Todas' ? this.currentUser.sede : (data.sede || 'Central');
     const u = this.currentUser;
     const userDep = data.dependencia || u.dependencia || this.getObraDependencia({ sede: userSede, tipo: data.tipo || 'Obra Civil' });
-    const isAssignedToMe = (data.responsable === u.nombre) || (!data.responsable && u.rol === 'pm_obra');
-    const respName = data.responsable || u.nombre || 'Sin Asignar';
-    const respId = isAssignedToMe ? u.id : null;
     const newId = `OBRA-${(this.items.length + 1).toString().padStart(3, '0')}`;
     const pTec = parseFloat(data.prioridad_tecnica) || 3;
     const monto = parseFloat(data.monto_estimado) || 0;
@@ -653,10 +662,12 @@ const DataStore = {
       id: newId,
       tipo: data.tipo || 'Obra Civil',
       dependencia: userDep,
-      creado_por: u.username,
+      creado_por: u.nombre,
+      creado_por_id: u.id,
+      creado_por_username: u.username,
       creado_por_nombre: u.nombre,
       creado_por_dependencia: u.dependencia || userDep,
-      partida: '', // Pendiente de asignación formal
+      partida: '', // Pendiente de asignación formal por Dirección/Administración
       nombre: data.nombre.trim(),
       sede: userSede,
       sector_solicitante: data.sector_solicitante || '',
@@ -669,8 +680,8 @@ const DataStore = {
       prioridad_tecnica: pTec,
       prioridad_medica: null, // Pendiente de dirección
       prioridad_final: pTec,
-      responsable: respName,
-      responsable_id: respId,
+      responsable: 'Sin Asignar', // En Factibilidad sin partida no puede estar asignada
+      responsable_id: null,
       categoria: data.categoria || 'Obra Civil',
       clasificacion: 'Nueva Solicitud',
       observaciones: `Sector: ${data.sector_solicitante || 'S/D'} | Motivo: ${data.motivo || 'S/D'}`,
@@ -918,6 +929,21 @@ const DataStore = {
       return { success: false, msg: `⛔ La fecha de finalización no puede tener más de 7 días de antigüedad (rango permitido: ${minDateStr} a ${maxDateStr}).` };
     }
 
+    // Al pasar de Estudio de Factibilidad a Proyecto:
+    // Si no tiene responsable asignado formalmente pero tiene un creador identificado en el departamento, asignar al creador
+    if ((currentStage === 'Estudio de Factibilidad' || currentStage === 'Ante Proyecto') && nextStage === 'Proyecto') {
+      if ((!item.responsable_id || item.responsable === 'Sin Asignar') && item.creado_por) {
+        const uCreator = this.users.find(u => 
+          (u.nombre && u.nombre.toLowerCase() === item.creado_por.toLowerCase()) || 
+          (u.username && u.username.toLowerCase() === item.creado_por.toLowerCase())
+        );
+        if (uCreator) {
+          item.responsable_id = uCreator.id;
+          item.responsable = uCreator.nombre;
+        }
+      }
+    }
+
     // Si avanza a En licitación, resguardar proyectista original y dependencia de origen
     if (nextStage === 'En licitación' || nextStage === 'Proyecto para licitar') {
       item.proyectista_id = item.responsable_id || (this.currentUser ? this.currentUser.id : null);
@@ -1023,6 +1049,11 @@ const DataStore = {
     if (this.currentUser.rol === 'admin') return true;
     if (this.currentUser.solo_lectura || this.currentUser.rol === 'visualizador') return false;
 
+    // Si la obra está en Estudio de Factibilidad y no tiene partida válida, NO puede estar asignada a nadie
+    if ((item.estado === 'Estudio de Factibilidad' || item.estado === 'Ante Proyecto') && !this.hasValidPartida(item)) {
+      return false;
+    }
+
     // Si la obra está en etapa de licitación ('Proyecto para licitar' o 'En licitación'):
     // El comprador / licitaciones es quien tiene la obra a su cargo para operarla
     if (this.currentUser.rol === 'licitaciones' && (item.estado === 'Proyecto para licitar' || item.estado === 'En licitación')) {
@@ -1067,16 +1098,15 @@ const DataStore = {
       if (resp.includes(token)) return true;
     }
 
-    // Si fue creada por este usuario
-    if (item.creado_por && (normalizeStr(item.creado_por) === uUser || normalizeStr(item.creado_por) === uName)) {
-      return true;
-    }
-
     return false;
   },
 
   isObraAssigned(item) {
     if (!item) return false;
+    // Obras en factibilidad sin partida válida NO pueden figurar asignadas
+    if ((item.estado === 'Estudio de Factibilidad' || item.estado === 'Ante Proyecto') && !this.hasValidPartida(item)) {
+      return false;
+    }
     if (item.responsable_id) {
       const user = this.users.find(u => u.id === item.responsable_id);
       if (user && user.activo) return true;
@@ -1088,6 +1118,10 @@ const DataStore = {
 
   getObraAssignedUser(item) {
     if (!item) return null;
+    // Obras en factibilidad sin partida válida NO tienen responsable asignado
+    if ((item.estado === 'Estudio de Factibilidad' || item.estado === 'Ante Proyecto') && !this.hasValidPartida(item)) {
+      return null;
+    }
     if (item.responsable_id) {
       const u = this.users.find(user => user.id === item.responsable_id);
       if (u) return u;
@@ -1371,6 +1405,13 @@ const DataStore = {
       return false;
     }
 
+    // 4. Si la obra está en Estudio de Factibilidad y fue creada por este usuario:
+    // Quien la presentó tiene que tenerla visible en factibilidad para saber qué presentó y tenerla representada
+    if (item.estado === 'Estudio de Factibilidad' || item.estado === 'Ante Proyecto') {
+      if (item.creado_por_id && item.creado_por_id === u.id) return true;
+      if (item.creado_por && (item.creado_por === u.nombre || item.creado_por === u.username)) return true;
+    }
+
     const uDep = (u.dependencia || '').trim().toLowerCase();
     if (!uDep) {
       if (u.sede === 'Todas') return true;
@@ -1396,13 +1437,19 @@ const DataStore = {
     if (this.currentUser.puede_avanzar === false) return false;
     if (this.isAdmin()) return true;
 
+    // Si la obra está en Estudio de Factibilidad:
+    // Solo la Dirección o Admin con permiso de partida puede asignarle partida y avanzarla a Proyecto
+    if (item.estado === 'Estudio de Factibilidad' || item.estado === 'Ante Proyecto') {
+      return Boolean(this.currentUser.puede_asignar_partida || this.currentUser.rol === 'admin' || this.currentUser.rol === 'direccion_medica');
+    }
+
     // Si la obra está en etapa 'En licitación':
     // Solo el comprador (rol 'licitaciones') o el Admin pueden certificar la adjudicación
     if (item.estado === 'En licitación') {
       return this.currentUser.rol === 'licitaciones';
     }
 
-    // Para el resto de etapas (Factibilidad, Proyecto, En Curso, etc.):
+    // Para el resto de etapas (Proyecto, En Curso, etc.):
     // Solo puede avanzar si la obra está asignada a su nombre
     return this.isUserAssignedToObra(item);
   },
@@ -1580,13 +1627,14 @@ const DataStore = {
       }
 
       // Cómputo de Inversión por Sede:
-      // Excluye Estudio de Factibilidad (es anteproyecto en estudio sin inversión firme), Suspendidas y Finalizadas.
-      // Computa estrictamente: Proyecto + En licitación + Obras en Curso.
+      // Excluye Estudio de Factibilidad (es anteproyecto en estudio sin inversión firme) y Suspendidas.
+      // Computa estrictamente: Proyecto + En licitación + Obras en Curso + Obras Finalizadas.
       const esEtapaInversion = (
         item.estado === 'Proyecto' ||
         item.estado === 'Proyecto para licitar' ||
         item.estado === 'En licitación' ||
-        item.estado === 'Obras en Curso'
+        item.estado === 'Obras en Curso' ||
+        item.estado === 'Obras Finalizadas'
       );
 
       if (esEtapaInversion) {

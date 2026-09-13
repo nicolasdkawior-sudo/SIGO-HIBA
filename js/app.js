@@ -714,6 +714,12 @@ const App = {
                     <i data-lucide="alert-circle" class="w-3 h-3 text-amber-600"></i>
                     <span>⚠️ Sin Asignar</span>
                   </span>
+                  ${item.creado_por ? `
+                    <span class="bg-slate-100 text-slate-700 border border-slate-300 text-[10px] px-2 py-0.5 rounded-full font-medium inline-flex items-center space-x-1" title="Presentada por ${item.creado_por}">
+                      <i data-lucide="user" class="w-3 h-3 text-slate-500"></i>
+                      <span>Creada por: <strong>${item.creado_por}</strong></span>
+                    </span>
+                  ` : ''}
                 `}
                 ${(!isAdmin && !canAdvanceThis) ? `
                   <span class="bg-slate-100 text-slate-500 border border-slate-200 text-[10px] px-1.5 py-0.5 rounded font-medium inline-flex items-center gap-1" title="Solo lectura departamental"><i data-lucide="eye" class="w-2.5 h-2.5 text-slate-400"></i><span>Consulta</span></span>
@@ -855,10 +861,16 @@ const App = {
                       <span class="truncate">${item.responsable}</span>
                     </span>
                   ` : `
-                    <span class="text-amber-800 bg-amber-100 border border-amber-300 px-1.5 py-0.5 rounded text-[10px] font-bold inline-flex items-center space-x-1" title="Pendiente de asignación">
+                    <span class="text-amber-800 bg-amber-100 border border-amber-300 px-1.5 py-0.5 rounded text-[10px] font-bold inline-flex items-center space-x-1" title="Pendiente de asignación${item.creado_por ? ' (Creada por: ' + item.creado_por + ')' : ''}">
                       <i data-lucide="alert-circle" class="w-2.5 h-2.5 text-amber-600 shrink-0"></i>
                       <span>Sin Asignar</span>
                     </span>
+                    ${item.creado_por ? `
+                      <span class="text-slate-600 bg-slate-100 border border-slate-300 px-1.5 py-0.5 rounded text-[9px] font-medium inline-flex items-center space-x-1 truncate max-w-[110px] ml-1" title="Creada por: ${item.creado_por}">
+                        <i data-lucide="user" class="w-2 h-2 text-slate-400 shrink-0"></i>
+                        <span class="truncate">${item.creado_por}</span>
+                      </span>
+                    ` : ''}
                   `}
                   ${(!isAdmin && !canAdvanceThis) ? `
                     <span class="text-slate-400 text-[10px] ml-1 font-medium" title="Consulta departamental">👁️</span>
@@ -965,10 +977,18 @@ const App = {
                 <span class="truncate max-w-[120px]">${item.responsable}</span>
               </span>
             ` : `
-              <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-bold" title="Obra sin responsable asignado">
-                <i data-lucide="alert-circle" class="w-3 h-3 text-amber-600"></i>
-                <span>Sin Asignar</span>
-              </span>
+              <div>
+                <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-bold" title="Obra sin responsable asignado">
+                  <i data-lucide="alert-circle" class="w-3 h-3 text-amber-600"></i>
+                  <span>Sin Asignar</span>
+                </span>
+                ${item.creado_por ? `
+                  <div class="text-[10px] text-slate-500 font-medium mt-1 flex items-center space-x-1" title="Presentada por ${item.creado_por}">
+                    <i data-lucide="user" class="w-2.5 h-2.5 text-slate-400 shrink-0"></i>
+                    <span class="truncate max-w-[120px]">Por: <strong>${item.creado_por}</strong></span>
+                  </div>
+                ` : ''}
+              </div>
             `}
             ${(!isAdmin && !canAdvanceThis) ? `
               <span class="text-slate-400 text-[10px] ml-1 font-medium" title="Consulta departamental">👁️</span>
@@ -2860,12 +2880,11 @@ const App = {
         selResp.value = assignedUser.id;
       } else if (item.responsable_id) {
         selResp.value = item.responsable_id;
-      } else if (item.responsable && item.responsable.trim() !== '' && item.responsable !== 'S/D' && item.responsable !== 'Sin Asignar') {
-        selResp.value = `custom:${item.responsable}`;
       } else {
         selResp.value = '';
       }
-      this.updateModalAssignmentBadge(selResp.value);
+      this._currentModalItem = item;
+      this.updateModalAssignmentBadge(selResp.value, item);
     }
 
     setVal('modalObraProveedor', item.proveedor || '');
@@ -2904,7 +2923,7 @@ const App = {
         }
       }
     }
-    this.updateModalAssignmentBadge(val);
+    this.updateModalAssignmentBadge(val, this._currentModalItem);
   },
 
   handleModalDependenciaSelectChange(val) {
@@ -2914,11 +2933,16 @@ const App = {
     }
   },
 
-  updateModalAssignmentBadge(val) {
+  updateModalAssignmentBadge(val, item = null) {
+    const itm = item || this._currentModalItem;
     const badge = document.getElementById('modalObraAssignmentBadge');
     if (!badge) return;
     if (!val) {
-      badge.innerHTML = `<span class="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1"><i data-lucide="alert-circle" class="w-3 h-3 text-amber-600"></i><span>Sin Asignar</span></span>`;
+      let html = `<span class="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1"><i data-lucide="alert-circle" class="w-3 h-3 text-amber-600"></i><span>Sin Asignar</span></span>`;
+      if (itm && itm.creado_por) {
+        html += ` <span class="bg-slate-100 text-slate-700 border border-slate-300 text-[10px] px-2 py-0.5 rounded-full font-medium inline-flex items-center gap-1 ml-1" title="Presentada por ${itm.creado_por}"><i data-lucide="user" class="w-2.5 h-2.5 text-slate-500"></i><span>Creada por: <strong>${itm.creado_por}</strong></span></span>`;
+      }
+      badge.innerHTML = html;
     } else if (val.startsWith('custom:')) {
       const customName = val.replace('custom:', '');
       badge.innerHTML = `<span class="bg-slate-100 text-slate-800 border border-slate-300 text-[10px] px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1"><i data-lucide="user" class="w-3 h-3 text-slate-600"></i><span>${customName}</span></span>`;
@@ -3131,7 +3155,12 @@ const App = {
       // Pertenece al mismo departamento pero la obra está a cargo de otro colega
       if (deptNotice) {
         if (deptNoticeText) {
-          deptNoticeText.innerHTML = `<strong>Modo Consulta Departamental:</strong> Esta obra pertenece a <strong>${itemDep}</strong>, asignada a <strong>${item.responsable || 'otro profesional'}</strong>. Puedes visualizarla pero solo el responsable asignado o el Administrador pueden editarla.`;
+          const isItemAssigned = DataStore.isObraAssigned(item);
+          if (!isItemAssigned) {
+            deptNoticeText.innerHTML = `<strong>Modo Consulta Departamental:</strong> Esta obra pertenece a <strong>${itemDep}</strong> y se encuentra <strong class="text-amber-700">Sin Asignar</strong>${item.creado_por ? ` (presentada por <strong>${item.creado_por}</strong>)` : ''}. La Dirección aún no ha habilitado partida presupuestaria para su asignación formal.`;
+          } else {
+            deptNoticeText.innerHTML = `<strong>Modo Consulta Departamental:</strong> Esta obra pertenece a <strong>${itemDep}</strong>, asignada a <strong>${item.responsable || 'otro profesional'}</strong>. Puedes visualizarla pero solo el responsable asignado o el Administrador pueden editarla.`;
+          }
         }
         deptNotice.classList.remove('hidden');
       }
