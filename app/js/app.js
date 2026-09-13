@@ -731,7 +731,7 @@ const App = {
           <div class="flex items-center space-x-2">
             <div class="text-right mr-2">
               <div class="text-sm font-bold text-slate-800">${monto}</div>
-              <div class="text-xs text-slate-400">${item.fecha_fin_etapa ? 'Límite: ' + item.fecha_fin_etapa : 'Sin fecha'}</div>
+              <div class="text-xs text-slate-400">${item.fecha_fin_etapa ? 'Límite: ' + item.fecha_fin_etapa : (sem.status === 'sin_plazo' ? '<span class="text-amber-700 font-bold">⚠️ Plazo pendiente</span>' : 'Sin fecha')}</div>
             </div>
             ${(isAdmin || canAdvanceThis) ? `
               <button onclick="event.stopPropagation(); App.openObraModal('${item.id}', true)" 
@@ -848,8 +848,8 @@ const App = {
 
               <div class="bg-slate-50 p-2 rounded-lg text-[11px] text-slate-500 mb-2.5 flex items-center justify-between">
                 <span>Límite etapa:</span>
-                <span class="font-semibold ${sem.status === 'vencido' ? 'text-red-600 font-bold' : 'text-slate-700'}">
-                  ${item.fecha_fin_etapa || 'Sin fecha'}
+                <span class="font-semibold ${sem.status === 'vencido' ? 'text-red-600 font-bold' : (sem.status === 'sin_plazo' ? 'text-amber-700 font-bold' : 'text-slate-700')}">
+                  ${item.fecha_fin_etapa || (sem.status === 'sin_plazo' ? '⚠️ Por definir' : 'Sin fecha')}
                 </span>
               </div>
 
@@ -994,7 +994,7 @@ const App = {
               <span class="text-slate-400 text-[10px] ml-1 font-medium" title="Consulta departamental">👁️</span>
             ` : ''}
           </td>
-          <td class="py-3 px-4 text-xs text-slate-500">${item.fecha_fin_etapa || '-'}</td>
+          <td class="py-3 px-4 text-xs ${sem.status === 'sin_plazo' ? 'text-amber-700 font-bold' : 'text-slate-500'}">${item.fecha_fin_etapa || (sem.status === 'sin_plazo' ? '⚠️ Por definir' : '-')}</td>
           <td class="py-3 px-4 text-center" onclick="event.stopPropagation()">
             <div class="flex items-center justify-center space-x-1.5">
               ${(isAdmin || canAdvanceThis) ? `
@@ -1434,7 +1434,7 @@ const App = {
     const warnTxt = document.getElementById('partidaCortaWarningText');
     if (!item || !inputMonto || !warnBox) return;
 
-    const montoVal = parseFloat(inputMonto.value) || 0;
+    const montoVal = DataStore.parseCurrency(inputMonto.value) || 0;
     const costoRequerido = item.monto_total_usd || ((item.monto_obra_usd || 0) + (item.monto_equipamiento_usd || 0));
 
     if (montoVal > 0 && costoRequerido > montoVal) {
@@ -1458,7 +1458,8 @@ const App = {
     const num = document.getElementById('inputNumeroPartida').value.trim();
     const monto = document.getElementById('inputMontoPartida').value.trim();
 
-    if (!monto || parseFloat(monto) <= 0) {
+    const montoVal = DataStore.parseCurrency(monto);
+    if (!monto || montoVal <= 0) {
       alert("Debes indicar un monto válido mayor a 0 para la partida presupuestaria (USD).");
       return;
     }
@@ -1498,6 +1499,15 @@ const App = {
       return;
     }
 
+    // Si la obra no tiene definido el plazo de su etapa actual, obligar a fijarlo antes de avanzar
+    if (currentStage !== 'Estudio de Factibilidad' && currentStage !== 'Obras Finalizadas' && currentStage !== 'Suspendida') {
+      if (item.requiere_plazo_etapa || !item.fecha_fin_etapa) {
+        alert("⚠️ Antes de certificar y avanzar la obra, debes haber establecido el plazo estimado de la etapa actual.");
+        this.openDefinirPlazoModal(item.id);
+        return;
+      }
+    }
+
     const hasPartida = DataStore.hasValidPartida(item);
     if (currentStage === 'Estudio de Factibilidad' && nextStage === 'Proyecto') {
       if (!hasPartida && !u.puede_asignar_partida && !isAdmin) {
@@ -1515,15 +1525,6 @@ const App = {
     const certUserEl = document.getElementById('transLoggedUserName');
     if (certUserEl) {
       certUserEl.innerText = `${u.nombre} (${u.rol.toUpperCase()})`;
-    }
-    
-    const defaultDeadline = DataStore.getDefaultDeadlineForStage(nextStage);
-    document.getElementById('transNewDeadline').value = defaultDeadline;
-
-    // Ocultar fecha límite de nueva etapa cuando la obra avanza a Finalizada
-    const containerNewDeadline = document.getElementById('transNewDeadlineContainer');
-    if (containerNewDeadline) {
-      containerNewDeadline.classList.toggle('hidden', nextStage === 'Obras Finalizadas');
     }
 
     // Restricción estricta de fecha: Hoy y hasta 7 días hacia atrás máximo
@@ -1579,34 +1580,16 @@ const App = {
       warnPaseLicitaciones.classList.toggle('hidden', !(nextStage === 'En licitación' && currentStage === 'Proyecto'));
     }
 
-    // Contenedor Compulsa (cuando avanza a En licitación y es Comprador o Admin)
-    const containerCompulsa = document.getElementById('transCompulsaContainer');
-    const inputFechaCompulsa = document.getElementById('transFechaCompulsaInput');
-    if (containerCompulsa) {
-      const isCompradorOrAdmin = Boolean((u && (u.rol === 'licitaciones' || u.dependencia === 'Compras & Licitaciones')) || isAdmin);
-      if (nextStage === 'En licitación' && isCompradorOrAdmin) {
-        containerCompulsa.classList.remove('hidden');
-        if (inputFechaCompulsa) {
-          inputFechaCompulsa.value = item.fecha_fin_compulsa || defaultDeadline;
-          inputFechaCompulsa.min = maxDateStr;
-        }
-      } else {
-        containerCompulsa.classList.add('hidden');
-      }
-    }
-
     // Contenedor Adjudicación (cuando avanza de En licitación a Obras en Curso)
     const containerAdjudicacion = document.getElementById('transAdjudicacionContainer');
     const inputProveedor = document.getElementById('transProveedorAdjudicadoInput');
     const inputMontoAdj = document.getElementById('transMontoAdjudicadoInput');
-    const inputFechaFinObra = document.getElementById('transFechaFinObraInput');
     if (containerAdjudicacion) {
       if (currentStage === 'En licitación' && nextStage === 'Obras en Curso') {
         containerAdjudicacion.classList.remove('hidden');
         if (inputProveedor) inputProveedor.value = item.proveedor || '';
         const defMontoAdj = item.monto_adjudicado_usd || item.monto_total_usd || item.monto_obra_usd || '';
         if (inputMontoAdj) inputMontoAdj.value = defMontoAdj > 0 ? defMontoAdj : '';
-        if (inputFechaFinObra) inputFechaFinObra.value = item.fecha_fin_obra || '';
       } else {
         containerAdjudicacion.classList.add('hidden');
       }
@@ -1642,9 +1625,7 @@ const App = {
     const enteredPartida = quickPartidaInput ? quickPartidaInput.value.trim() : '';
     const enteredMonto = quickMontoInput ? quickMontoInput.value.trim() : '';
 
-
     const compDate = document.getElementById('transCompletionDate').value;
-    const newDeadline = document.getElementById('transNewDeadline').value;
     const notes = document.getElementById('transNotes').value;
 
     // Validación de fecha: Hoy y hasta 7 días hacia atrás máximo
@@ -1691,7 +1672,7 @@ const App = {
       }
 
       const finalPartida = (item.partida || enteredPartida).trim();
-      const finalMonto = item.monto_partida_usd || parseFloat(enteredMonto) || item.monto_total_usd || 0;
+      const finalMonto = item.monto_partida_usd || DataStore.parseCurrency(enteredMonto) || item.monto_total_usd || 0;
       if (!finalPartida || finalPartida === '' || finalPartida === 'S/D' || finalPartida.toUpperCase() === 'PENDIENTE') {
         alert("⛔ No es posible avanzar a la etapa de Proyecto:\n\nEl sistema requiere obligatoriamente que la obra cuente con un Número de Partida Presupuestaria asignado por la Dirección.\n\nSi no existe número de partida, el sistema no te permitirá avanzar.");
         if (quickPartidaInput) {
@@ -1712,18 +1693,11 @@ const App = {
       }
     }
 
-    // Captura y validaciones de licitaciones / compulsa / adjudicación
+    // Captura y validaciones de adjudicación
     const extraData = {};
-
-    if (nextStage === 'En licitación') {
-      const fechaCompulsa = document.getElementById('transFechaCompulsaInput')?.value;
-      extraData.fechaCompulsa = fechaCompulsa || newDeadline;
-    }
-
     if (currentStage === 'En licitación' && nextStage === 'Obras en Curso') {
       const proveedor = (document.getElementById('transProveedorAdjudicadoInput')?.value || '').trim();
-      const montoAdj = parseFloat(document.getElementById('transMontoAdjudicadoInput')?.value) || 0;
-      const fechaFinObra = document.getElementById('transFechaFinObraInput')?.value;
+      const montoAdj = DataStore.parseCurrency(document.getElementById('transMontoAdjudicadoInput')?.value) || 0;
 
       if (!proveedor) {
         alert("⚠️ Debes indicar el Proveedor Adjudicado para avanzar a 'Obras en Curso'.");
@@ -1737,10 +1711,9 @@ const App = {
       }
       extraData.proveedor = proveedor;
       extraData.montoAdjudicado = montoAdj;
-      if (fechaFinObra) extraData.fechaFinObra = fechaFinObra;
     }
 
-    const res = DataStore.confirmAndAdvanceStage(id, compDate, newDeadline, notes, extraData);
+    const res = DataStore.confirmAndAdvanceStage(id, compDate, null, notes, extraData);
     if (res.success) {
       this.closeTransitionModal();
       this.render();
@@ -1752,6 +1725,100 @@ const App = {
 
   closeTransitionModal() {
     document.getElementById('modalTransition').classList.add('hidden');
+  },
+
+  // ================= MODAL DEFINIR PLAZO OBLIGATORIO DE ETAPA =================
+  openDefinirPlazoModal(id) {
+    const item = DataStore.getItemById(id);
+    if (!item) return;
+
+    const u = DataStore.currentUser;
+    const canAdvance = DataStore.canUserAdvanceItem(item) || DataStore.isAdmin();
+    if (!canAdvance) {
+      alert("Solo el responsable asignado o Administrador puede establecer el plazo de esta etapa.");
+      return;
+    }
+
+    const modal = document.getElementById('modalDefinirPlazoEtapa');
+    if (!modal) return;
+
+    document.getElementById('modalPlazoItemId').value = item.id;
+    document.getElementById('modalPlazoItemCodigo').innerText = item.id;
+    document.getElementById('modalPlazoItemEtapa').innerText = item.estado;
+    document.getElementById('modalPlazoItemNombre').innerText = item.nombre;
+    document.getElementById('modalPlazoItemResponsable').innerText = item.responsable || (u ? u.nombre : 'Sin Asignar');
+
+    const tituloEl = document.getElementById('modalPlazoEtapaTitulo');
+    const msgEl = document.getElementById('modalPlazoMensajeObligatorio');
+    const labelFinEl = document.getElementById('modalPlazoFechaFinLabel');
+
+    let labelFin = 'Fecha Estimada de Término *';
+    let msg = `Como responsable asignado de la etapa de <strong>${item.estado}</strong>, debes fijar la fecha estimada de finalización para habilitar el seguimiento del cronograma y los semáforos de avance.`;
+
+    if (item.estado === 'Proyecto') {
+      if (tituloEl) tituloEl.innerText = 'Planificación de Etapa: Proyecto';
+      labelFin = 'Fecha Estimada de Finalización de Proyecto *';
+      msg = `Como proyectista / responsable técnico asignado, debes definir la <strong>Fecha Estimada de Finalización del Proyecto</strong> técnico antes de operar la obra.`;
+    } else if (item.estado === 'En licitación') {
+      if (tituloEl) tituloEl.innerText = 'Planificación de Etapa: Licitación / Compulsa';
+      labelFin = 'Fecha Estimada de Cierre de Compulsa *';
+      msg = `Como responsable de Compras y Licitaciones, debes definir la <strong>Fecha Estimada de Cierre de la Compulsa de Precios</strong> para coordinar el proceso licitatorio.`;
+    } else if (item.estado === 'Obras en Curso') {
+      if (tituloEl) tituloEl.innerText = 'Planificación de Etapa: Obras en Curso';
+      labelFin = 'Fecha Estimada de Finalización de la Obra *';
+      msg = `Como responsable técnico de la obra en ejecución, debes definir la <strong>Fecha Estimada de Finalización de los Trabajos</strong> (plazo de obra contractual).`;
+    } else {
+      if (tituloEl) tituloEl.innerText = `Planificación de Etapa: ${item.estado}`;
+    }
+
+    if (labelFinEl) labelFinEl.innerHTML = `${labelFin} <span class="text-red-500">*</span>`;
+    if (msgEl) msgEl.innerHTML = msg;
+
+    const startDate = item.fecha_inicio_etapa || new Date().toISOString().split('T')[0];
+    const fechaInicioInput = document.getElementById('modalPlazoFechaInicio');
+    if (fechaInicioInput) fechaInicioInput.value = startDate;
+
+    const fechaFinInput = document.getElementById('modalPlazoFechaFinInput');
+    if (fechaFinInput) {
+      fechaFinInput.min = startDate;
+      fechaFinInput.value = item.fecha_fin_etapa || '';
+    }
+
+    const notasInput = document.getElementById('modalPlazoNotasInput');
+    if (notasInput) notasInput.value = '';
+
+    modal.classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+    if (fechaFinInput) setTimeout(() => fechaFinInput.focus(), 150);
+  },
+
+  closeDefinirPlazoModal() {
+    const modal = document.getElementById('modalDefinirPlazoEtapa');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  handleGuardarPlazoEtapa() {
+    const id = document.getElementById('modalPlazoItemId')?.value;
+    const fechaFin = document.getElementById('modalPlazoFechaFinInput')?.value;
+    const notas = document.getElementById('modalPlazoNotasInput')?.value?.trim() || '';
+
+    if (!fechaFin) {
+      alert("⚠️ Es obligatorio ingresar la fecha estimada de término de la etapa para poder continuar.");
+      document.getElementById('modalPlazoFechaFinInput')?.focus();
+      return;
+    }
+
+    const res = DataStore.definirPlazoEtapa(id, fechaFin, notas);
+    if (!res.success) {
+      alert(res.msg);
+      return;
+    }
+
+    this.closeDefinirPlazoModal();
+    this.render();
+    this.showToast(`Plazo de etapa establecido al ${fechaFin} 🎉`);
+    // Abrir automáticamente el modal de la obra para continuar trabajando
+    this.openObraModal(id);
   },
 
   // ================= MODAL DIRECCIÓN MÉDICA =================
@@ -3115,6 +3182,18 @@ const App = {
     if (!item) return;
 
     const isAdmin = DataStore.isAdmin();
+    const canAdvance = DataStore.canUserAdvanceItem(item) || isAdmin;
+
+    // Si la obra requiere definición obligatoria de plazo por el responsable asignado
+    if (canAdvance) {
+      if (item.estado !== 'Estudio de Factibilidad' && item.estado !== 'Obras Finalizadas' && item.estado !== 'Suspendida') {
+        if (item.requiere_plazo_etapa || !item.fecha_fin_etapa) {
+          this.openDefinirPlazoModal(item.id);
+          return;
+        }
+      }
+    }
+
     const canEdit = DataStore.canUserEditObra(item);
     const u = DataStore.currentUser;
 
@@ -3369,7 +3448,7 @@ const App = {
     const newEstado = document.getElementById('modalObraEstado').value;
     const newPartida = document.getElementById('modalObraPartida').value.trim();
     const modalObraMontoPartida = document.getElementById('modalObraMontoPartida');
-    const newMontoPartida = modalObraMontoPartida ? parseFloat(modalObraMontoPartida.value) || 0 : 0;
+    const newMontoPartida = modalObraMontoPartida ? DataStore.parseCurrency(modalObraMontoPartida.value) || 0 : 0;
     const newMontoObra = parseFloat(document.getElementById('modalObraMontoObra').value) || 0;
     const newMontoEquip = parseFloat(document.getElementById('modalObraMontoEquip').value) || 0;
     const newMontoTotal = newMontoObra + newMontoEquip;

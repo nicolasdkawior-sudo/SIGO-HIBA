@@ -762,7 +762,7 @@
           <label class="block font-bold text-slate-700 mb-1">Monto de la Partida Presupuestaria (USD) <span class="text-red-500">*</span></label>
           <div class="relative">
             <span class="absolute inset-y-0 left-0 pl-3 flex items-center font-bold text-slate-400">USD</span>
-            <input type="number" step="0.01" min="1" id="inputMontoPartida" placeholder="0.00" required oninput="App.checkPartidaCortaModalAsignar()"
+            <input type="text" inputmode="decimal" id="inputMontoPartida" placeholder="Ej: 5684,30" required oninput="App.checkPartidaCortaModalAsignar()"
                    class="w-full pl-12 border-2 border-emerald-500 rounded-lg p-2.5 font-mono text-sm font-black text-emerald-800 focus:outline-none">
           </div>
           <p class="text-[11px] text-slate-400 mt-1">Monto presupuestario formal asignado en dólares para esta partida.</p>
@@ -840,28 +840,15 @@
             <label class="block font-bold text-slate-700 mb-1">Monto de la Partida Presupuestaria (USD) <span class="text-red-500">*</span>:</label>
             <div class="relative">
               <span class="absolute inset-y-0 left-0 pl-3 flex items-center font-bold text-slate-400">USD</span>
-              <input type="number" step="0.01" min="1" id="transQuickMontoPartidaInput" placeholder="0.00" class="w-full pl-12 border-2 border-emerald-500 rounded-lg p-2 font-mono font-bold text-emerald-900 bg-white">
+              <input type="text" inputmode="decimal" id="transQuickMontoPartidaInput" placeholder="Ej: 5684,30" class="w-full pl-12 border-2 border-emerald-500 rounded-lg p-2 font-mono font-bold text-emerald-900 bg-white">
             </div>
           </div>
           <p class="text-[10px] text-amber-800 font-semibold">Si no dispones de partida y monto presupuestario, el sistema no te permitirá avanzar a Proyecto.</p>
         </div>
 
-        <!-- Aviso si avanza a Proyecto para Licitar (Pase a Compras) -->
+        <!-- Aviso si avanza a En licitación (Pase a Compras) -->
         <div id="transLicitacionesPaseNotice" class="hidden bg-blue-50 border border-blue-200 text-blue-900 p-3 rounded-xl text-xs font-semibold">
           📦 <strong>Pase a Compras y Licitaciones:</strong> Al confirmar, la obra pasará a la bandeja del Departamento de Compras para la compulsa de precios, saliendo temporalmente del panel de proyectos técnicos.
-        </div>
-
-        <!-- Contenedor Compulsa (Cuando avanza a En licitación) -->
-        <div id="transCompulsaContainer" class="hidden space-y-2 bg-indigo-50/70 p-3.5 rounded-xl border border-indigo-200">
-          <div class="font-bold text-indigo-900 text-xs flex items-center space-x-1.5">
-            <i data-lucide="calendar-clock" class="w-4 h-4 text-indigo-600"></i>
-            <span>Plazo de la Compulsa de Precios (Licitación)</span>
-          </div>
-          <div>
-            <label class="block font-semibold text-slate-700 mb-1">Fecha Estimada de Finalización de la Compulsa <span class="text-red-500">*</span>:</label>
-            <input type="date" id="transFechaCompulsaInput" class="w-full border-2 border-indigo-400 rounded-lg p-2 font-semibold text-slate-900 bg-white">
-            <p class="text-[10px] text-slate-500 mt-1">Fecha estimada en la que se cerrará la compulsa de precios para la adjudicación.</p>
-          </div>
         </div>
 
         <!-- Contenedor Adjudicación (Cuando avanza de En licitación a Obras en Curso) -->
@@ -878,13 +865,9 @@
             <label class="block font-bold text-slate-700 mb-1">Monto Total de la Adjudicación (USD) <span class="text-red-500">*</span>:</label>
             <div class="relative">
               <span class="absolute inset-y-0 left-0 pl-3 flex items-center font-bold text-slate-400">USD</span>
-              <input type="number" step="0.01" min="1" id="transMontoAdjudicadoInput" placeholder="0.00" class="w-full pl-12 border-2 border-emerald-500 rounded-lg p-2 font-mono font-bold text-emerald-900 bg-white">
+              <input type="text" inputmode="decimal" id="transMontoAdjudicadoInput" placeholder="Ej: 72500,50" class="w-full pl-12 border-2 border-emerald-500 rounded-lg p-2 font-mono font-bold text-emerald-900 bg-white">
             </div>
             <p class="text-[10px] text-emerald-800 font-semibold mt-1">Este monto actualizará el costo adjudicado oficial de la obra.</p>
-          </div>
-          <div>
-            <label class="block font-semibold text-slate-700 mb-1">Fecha Estimada de Finalización de la Obra (Plazo de Ejecución):</label>
-            <input type="date" id="transFechaFinObraInput" class="w-full border border-slate-300 rounded-lg p-2 font-semibold text-slate-900 bg-white">
           </div>
           <div class="p-2 bg-blue-50 border border-blue-200 rounded text-[11px] text-blue-800">
             🔁 Al confirmar la adjudicación, la obra <strong>retornará automáticamente al proyectista original</strong> en estado <strong>Obras en Curso</strong>.
@@ -905,11 +888,8 @@
           </p>
         </div>
 
-        <div id="transNewDeadlineContainer">
-          <label class="block font-semibold text-slate-700 mb-1">Fecha Límite Estimada para la Nueva Etapa (Semáforo)</label>
-          <input type="date" id="transNewDeadline" class="w-full border border-slate-300 rounded-lg p-2 font-semibold text-blue-700">
-          <p class="text-[10px] text-slate-400 mt-1">El semáforo se pondrá en Rojo si llega esta fecha y no se confirma su término.</p>
-        </div>
+        <!-- Campo técnico oculto para compatibilidad de variables -->
+        <input type="hidden" id="transNewDeadline">
 
         <div>
           <label class="block font-semibold text-slate-700 mb-1">Observaciones / Notas del Avance</label>
@@ -921,6 +901,84 @@
         <button onclick="App.closeTransitionModal()" class="px-3 py-1.5 border border-slate-300 rounded-lg font-semibold text-slate-600 hover:bg-slate-100">Cancelar</button>
         <button onclick="App.confirmTransition()" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-2xs transition">
           Confirmar y Avanzar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: DEFINIR PLAZO ESTIMADO DE ETAPA (OBLIGATORIO) ================= -->
+  <div id="modalDefinirPlazoEtapa" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200 animate-in fade-in zoom-in duration-150">
+      <div class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white px-5 py-4 flex items-center justify-between">
+        <div class="flex items-center space-x-2.5">
+          <div class="p-2 bg-white/10 rounded-lg">
+            <i data-lucide="calendar-clock" class="w-5 h-5 text-blue-200"></i>
+          </div>
+          <div>
+            <h3 class="font-black text-sm text-white" id="modalPlazoEtapaTitulo">Definir Plazo de la Etapa</h3>
+            <p class="text-[11px] text-blue-200 font-medium" id="modalPlazoEtapaSubtitulo">Planificación obligatoria para la gestión de la obra</p>
+          </div>
+        </div>
+        <button onclick="App.closeDefinirPlazoModal()" class="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4">
+        <input type="hidden" id="modalPlazoItemId">
+
+        <!-- Ficha de la Obra y Responsable -->
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase font-mono" id="modalPlazoItemCodigo">OBRA</span>
+            <span class="text-xs font-black px-2 py-0.5 rounded-md bg-blue-100 text-blue-800" id="modalPlazoItemEtapa">Proyecto</span>
+          </div>
+          <div class="text-sm font-bold text-slate-800 line-clamp-2" id="modalPlazoItemNombre">-</div>
+          <div class="text-xs text-slate-500 flex items-center space-x-1.5 pt-1 border-t border-slate-200/60 mt-1">
+            <i data-lucide="user" class="w-3.5 h-3.5 text-blue-600"></i>
+            <span>Responsable: <strong class="text-slate-700" id="modalPlazoItemResponsable">-</strong></span>
+          </div>
+        </div>
+
+        <!-- Mensaje de Obligatoriedad -->
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 flex items-start space-x-2">
+          <i data-lucide="alert-circle" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
+          <div id="modalPlazoMensajeObligatorio" class="leading-relaxed">
+            Como responsable asignado, debes fijar la <strong>Fecha Estimada de Finalización</strong> para habilitar el seguimiento del cronograma y los semáforos de avance.
+          </div>
+        </div>
+
+        <!-- Fecha de Inicio y Selector de Fecha Límite -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-600 text-xs mb-1">Fecha de Inicio de la Etapa</label>
+            <input type="date" id="modalPlazoFechaInicio" readonly disabled
+                   class="w-full border border-slate-200 bg-slate-100 rounded-lg p-2 font-mono text-xs text-slate-600 cursor-not-allowed">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-800 text-xs mb-1" id="modalPlazoFechaFinLabel">
+              Fecha Estimada de Término <span class="text-red-500">*</span>
+            </label>
+            <input type="date" id="modalPlazoFechaFinInput" required
+                   class="w-full border-2 border-blue-500 rounded-lg p-2 font-semibold text-xs text-slate-900 bg-white focus:ring-2 focus:ring-blue-400 focus:outline-none">
+          </div>
+        </div>
+
+        <!-- Observaciones / Notas -->
+        <div>
+          <label class="block font-semibold text-slate-700 text-xs mb-1">Observaciones / Justificación del Plazo (Opcional)</label>
+          <textarea id="modalPlazoNotasInput" rows="2" placeholder="Ej: Plazo estimado según cronograma preliminar y pliegos de especificaciones..."
+                    class="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"></textarea>
+        </div>
+      </div>
+
+      <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-end space-x-2">
+        <button onclick="App.closeDefinirPlazoModal()" class="px-3.5 py-1.5 border border-slate-300 rounded-lg font-semibold text-xs text-slate-600 hover:bg-slate-100">
+          Cancelar
+        </button>
+        <button onclick="App.handleGuardarPlazoEtapa()" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-xs shadow-sm transition flex items-center space-x-1.5">
+          <i data-lucide="check" class="w-3.5 h-3.5"></i>
+          <span>Establecer Plazo de Etapa</span>
         </button>
       </div>
     </div>
@@ -1449,7 +1507,7 @@
           </div>
           <div>
             <label class="block font-semibold text-slate-700 mb-1">Monto Asignado Partida (USD)</label>
-            <input type="number" step="0.01" min="0" id="modalObraMontoPartida" placeholder="0.00" class="w-full border border-slate-300 rounded-lg px-3 py-2 font-mono font-bold text-emerald-800">
+            <input type="text" inputmode="decimal" id="modalObraMontoPartida" placeholder="Ej: 5684,30" class="w-full border border-slate-300 rounded-lg px-3 py-2 font-mono font-bold text-emerald-800">
           </div>
         </div>
 

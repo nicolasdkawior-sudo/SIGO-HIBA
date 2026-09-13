@@ -523,10 +523,9 @@ const DataStore = {
           if (item.estado === 'Proyecto para licitar') item.estado = 'Proyecto';
           
           if (!item.fecha_fin_etapa) {
-            const days = DEFAULT_STAGE_DAYS[item.estado] || 45;
-            const d = new Date();
-            d.setDate(d.getDate() + days);
-            item.fecha_fin_etapa = d.toISOString().split('T')[0];
+            if (item.estado !== 'Estudio de Factibilidad' && item.estado !== 'Obras Finalizadas' && item.estado !== 'Suspendida') {
+              item.requiere_plazo_etapa = true;
+            }
           }
         });
 
@@ -653,15 +652,40 @@ const DataStore = {
     localStorage.setItem('sigo_users_list', JSON.stringify(this.users));
   },
 
-  // ================= FORMATO DE MONEDA EN USD =================
+  // ================= FORMATO DE MONEDA EN USD Y PARSEO DE DECIMALES =================
+  parseCurrency(val) {
+    if (typeof val === 'number') return isNaN(val) ? 0 : val;
+    if (!val) return 0;
+    let s = String(val).trim().replace(/[$\sUSDusd]/g, '');
+    if (s.includes(',') && s.includes('.')) {
+      if (s.lastIndexOf(',') > s.lastIndexOf('.')) {
+        // Formato con punto de miles y coma decimal (ej: 5.684,30)
+        s = s.replace(/\./g, '').replace(',', '.');
+      } else {
+        // Formato con coma de miles y punto decimal (ej: 5,684.30)
+        s = s.replace(/,/g, '');
+      }
+    } else if (s.includes(',')) {
+      // Solo coma decimal (ej: 5684,30)
+      s = s.replace(',', '.');
+    }
+    const n = parseFloat(s);
+    return isNaN(n) ? 0 : n;
+  },
+
   formatUSD(amount) {
-    const n = parseFloat(amount) || 0;
-    return `USD ${Math.round(n).toLocaleString('en-US')}`;
+    const n = typeof amount === 'number' ? amount : this.parseCurrency(amount);
+    if (isNaN(n)) return 'USD 0';
+    if (Number.isInteger(n)) {
+      return `USD ${n.toLocaleString('en-US')}`;
+    } else {
+      return `USD ${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
   },
 
   formatMillionsUSD(amount) {
-    const n = parseFloat(amount) || 0;
-    const millions = n / 1000000;
+    const n = typeof amount === 'number' ? amount : this.parseCurrency(amount);
+    const millions = (n || 0) / 1000000;
     return `USD ${millions.toFixed(2)}M`;
   },
 
@@ -676,7 +700,7 @@ const DataStore = {
     const userDep = data.dependencia || u.dependencia || this.getObraDependencia({ sede: userSede, tipo: data.tipo || 'Obra Civil' });
     const newId = `OBRA-${(this.items.length + 1).toString().padStart(3, '0')}`;
     const pTec = parseFloat(data.prioridad_tecnica) || 3;
-    const monto = parseFloat(data.monto_estimado) || 0;
+    const monto = this.parseCurrency(data.monto_estimado) || 0;
 
     const newItem = {
       id: newId,
@@ -748,11 +772,11 @@ const DataStore = {
       };
     }
 
-    if (!partidaNum || partidaNum.trim() === '') {
+    if (!partidaNum || String(partidaNum).trim() === '') {
       return { success: false, msg: 'Debes ingresar un número de partida válido' };
     }
 
-    const montoVal = parseFloat(montoPartida);
+    const montoVal = this.parseCurrency(montoPartida);
     if (isNaN(montoVal) || montoVal <= 0) {
       return { success: false, msg: 'Debes ingresar un monto válido y mayor a 0 para la partida presupuestaria (USD).' };
     }
@@ -1006,22 +1030,87 @@ const DataStore = {
       usuario: `${this.currentUser.nombre} (${this.currentUser.rol})`,
       estado_anterior: currentStage,
       estado_nuevo: nextStage,
-      fecha_limite: nextDeadline,
+      fecha_termino_anterior: compDate,
       observaciones: notes ? `${defaultObs} ${notes}` : defaultObs
     });
 
     item.estado = nextStage;
     item.fecha_inicio_etapa = compDate;
-    item.fecha_fin_etapa = nextDeadline || this.getDefaultDeadlineForStage(nextStage);
 
     if (nextStage === 'Obras Finalizadas') {
       item.fecha_real_finalizada = compDate;
       item.fecha_fin_real = compDate;
+      item.fecha_fin_etapa = compDate;
       item.avance_fisico = 100;
+      item.requiere_plazo_etapa = false;
+    } else {
+      // La nueva etapa nace sin fecha límite preasignada: debe ser establecida por el nuevo responsable
+      item.fecha_fin_etapa = null;
+      item.requiere_plazo_etapa = true;
+      if (nextStage === 'En licitación') {
+        item.fecha_fin_compulsa = null;
+      }
+      if (nextStage === 'Obras en Curso') {
+        item.fecha_fin_obra = null;
+      }
     }
 
     this.saveItem(item, true);
     return { success: true, nextStage: nextStage, item: item };
+  },
+
+  // ================= DEFINICIÓN OBLIGATORIA DE PLAZO DE ETAPA =================
+  definirPlazoEtapa(id, fechaLimite, notas = '') {
+    const item = this.getItemById(id);
+    if (!item) return { success: false, msg: 'Obra no encontrada.' };
+    if (!this.currentUser) return { success: false, msg: 'No hay usuario autenticado.' };
+
+    if (!this.canUserAdvanceItem(item) && !this.isAdmin()) {
+      return { 
+        success: false, 
+        msg: `⛔ Acceso Denegado: Solo el responsable asignado (${item.responsable || 'Sin Asignar'}) o Administrador puede definir el plazo de esta etapa.` 
+      };
+    }
+
+    if (!fechaLimite || typeof fechaLimite !== 'string' || !fechaLimite.trim()) {
+      return { success: false, msg: 'Debes seleccionar una fecha límite estimada válida.' };
+    }
+
+    const cleanDate = fechaLimite.trim();
+    if (item.fecha_inicio_etapa && cleanDate < item.fecha_inicio_etapa) {
+      return { 
+        success: false, 
+        msg: `La fecha límite (${cleanDate}) no puede ser anterior al inicio de la etapa actual (${item.fecha_inicio_etapa}).` 
+      };
+    }
+
+    item.fecha_fin_etapa = cleanDate;
+    item.requiere_plazo_etapa = false;
+
+    if (item.estado === 'En licitación') {
+      item.fecha_fin_compulsa = cleanDate;
+    } else if (item.estado === 'Obras en Curso') {
+      item.fecha_fin_obra = cleanDate;
+    }
+
+    const uName = this.currentUser.nombre;
+    let labelEtapa = item.estado;
+    if (item.estado === 'En licitación') labelEtapa = 'Compulsa / Licitación';
+    if (item.estado === 'Obras en Curso') labelEtapa = 'Ejecución de Obra';
+    const obs = `Plazo de la etapa '${labelEtapa}' fijado para el ${cleanDate} por ${uName}.${notas ? ' Obs: ' + notas : ''}`;
+
+    if (!Array.isArray(item.historial)) item.historial = [];
+    item.historial.unshift({
+      fecha: new Date().toISOString().split('T')[0],
+      usuario: uName,
+      estado_anterior: item.estado,
+      estado_nuevo: item.estado,
+      fecha_limite: cleanDate,
+      observaciones: obs
+    });
+
+    this.saveItem(item, true);
+    return { success: true, item: item };
   },
 
   // ================= SEMÁFOROS Y PLAZOS =================
@@ -1032,6 +1121,16 @@ const DataStore = {
     }
     if (estado.includes('suspendid')) {
       return { status: 'suspendido', label: 'Suspendida', class: 'badge-semaforo-suspendido', days: null };
+    }
+
+    // Si la obra requiere definición de plazo o carece de fecha fin en etapas activas
+    if (item.requiere_plazo_etapa || (!item.fecha_fin_etapa && !item.fecha_fin_obra && item.estado !== 'Estudio de Factibilidad')) {
+      return { 
+        status: 'sin_plazo', 
+        label: 'Plazo Pendiente', 
+        class: 'bg-amber-100 text-amber-800 border border-amber-300 font-bold', 
+        days: null 
+      };
     }
 
     const dateStr = item.fecha_fin_etapa || item.fecha_fin_obra;
