@@ -2880,6 +2880,17 @@ const App = {
         selResp.value = assignedUser.id;
       } else if (item.responsable_id) {
         selResp.value = item.responsable_id;
+      } else if (item.creado_por && item.creado_por !== 'Sin Asignar') {
+        const uCreator = (DataStore.users || []).find(u => 
+          (item.creado_por_id && u.id === item.creado_por_id) ||
+          (u.nombre && u.nombre.toLowerCase() === item.creado_por.toLowerCase()) ||
+          (u.username && u.username.toLowerCase() === item.creado_por.toLowerCase())
+        ) || DataStore.getObraAssignedUser({ ...item, responsable: item.creado_por, estado: 'Proyecto' });
+        if (uCreator) {
+          selResp.value = uCreator.id;
+        } else {
+          selResp.value = '';
+        }
       } else {
         selResp.value = '';
       }

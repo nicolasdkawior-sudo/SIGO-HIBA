@@ -339,7 +339,7 @@ const DEFAULT_USERS = [
     password_hash: DEFAULT_ADMIN_HASH,
     debe_cambiar_clave: false,
     sede: 'Central',
-    dependencia: 'Departamento de Instalaciones',
+    dependencia: 'Departamento de Mantenimiento Central',
     rol: 'pm_obra',
     activo: true,
     puede_crear: true,
@@ -440,7 +440,7 @@ const DataStore = {
             existing.nombre = existing.nombre || defU.nombre;
             existing.email = existing.email || defU.email;
             existing.sede = existing.sede || defU.sede;
-            existing.dependencia = existing.dependencia || defU.dependencia;
+            existing.dependencia = (defU.id === 'usr-kawior-pm') ? defU.dependencia : (existing.dependencia || defU.dependencia);
             existing.rol = existing.rol || defU.rol;
             if (existing.activo === undefined) existing.activo = true;
 
@@ -556,6 +556,26 @@ const DataStore = {
 
       // Sincronizar asignación de usuario si tiene nombre de responsable pero falta ID (solo si no es Factibilidad sin partida)
       if ((item.estado !== 'Estudio de Factibilidad' && item.estado !== 'Ante Proyecto') || this.hasValidPartida(item)) {
+        // 1. Si en localStorage quedó como Sin Asignar pero en INITIAL_DATA tenía responsable histórico o creado_por
+        if ((!item.responsable || item.responsable === 'Sin Asignar' || !item.responsable_id) && window.INITIAL_DATA) {
+          const initList = (window.INITIAL_DATA.obras || []).concat(window.INITIAL_DATA.infraestructura || []);
+          const orig = initList.find(x => x.id === item.id);
+          if (orig && orig.responsable && orig.responsable !== 'Sin Asignar' && orig.responsable !== 'S/D' && orig.responsable !== 'Pendiente') {
+            item.responsable = orig.responsable;
+          } else if (item.creado_por && item.creado_por !== 'Sin Asignar') {
+            item.responsable = item.creado_por;
+          }
+        }
+
+        // 2. Si estaba asignada a Admin (usr-nicolas) pero pertenece canónicamente a Mantenimiento Central
+        if (item.responsable_id === 'usr-nicolas' && item.dependencia === 'Departamento de Mantenimiento Central') {
+          const uKawiorPM = this.users.find(u => u.id === 'usr-kawior-pm');
+          if (uKawiorPM) {
+            item.responsable_id = uKawiorPM.id;
+            item.responsable = uKawiorPM.nombre;
+          }
+        }
+
         if (!item.responsable_id && item.responsable) {
           const uFound = this.getObraAssignedUser(item);
           if (uFound) {
@@ -930,16 +950,31 @@ const DataStore = {
     }
 
     // Al pasar de Estudio de Factibilidad a Proyecto:
-    // Si no tiene responsable asignado formalmente pero tiene un creador identificado en el departamento, asignar al creador
+    // Si no tiene responsable asignado formalmente pero tiene un creador identificado en el departamento o extraData, asignar al responsable
     if ((currentStage === 'Estudio de Factibilidad' || currentStage === 'Ante Proyecto') && nextStage === 'Proyecto') {
-      if ((!item.responsable_id || item.responsable === 'Sin Asignar') && item.creado_por) {
-        const uCreator = this.users.find(u => 
-          (u.nombre && u.nombre.toLowerCase() === item.creado_por.toLowerCase()) || 
-          (u.username && u.username.toLowerCase() === item.creado_por.toLowerCase())
-        );
-        if (uCreator) {
-          item.responsable_id = uCreator.id;
-          item.responsable = uCreator.nombre;
+      if (extraData?.responsable_id) {
+        const uExp = this.users.find(u => u.id === extraData.responsable_id);
+        if (uExp) {
+          item.responsable_id = uExp.id;
+          item.responsable = uExp.nombre;
+          if (uExp.dependencia && uExp.dependencia !== 'Dirección General / Administración') {
+            item.dependencia = uExp.dependencia;
+          }
+        }
+      }
+      if (!item.responsable_id || item.responsable === 'Sin Asignar') {
+        const creatorName = item.creado_por_nombre || item.creado_por || item.creado_por_username;
+        if (creatorName) {
+          const uCreator = item.creado_por_id 
+            ? this.users.find(u => u.id === item.creado_por_id)
+            : this.getObraAssignedUser({ ...item, responsable: creatorName });
+          if (uCreator) {
+            item.responsable_id = uCreator.id;
+            item.responsable = uCreator.nombre;
+            if (uCreator.dependencia && uCreator.dependencia !== 'Dirección General / Administración') {
+              item.dependencia = uCreator.dependencia;
+            }
+          }
         }
       }
     }
@@ -1063,31 +1098,51 @@ const DataStore = {
     // 1. Coincidencia directa por ID de usuario asignado
     if (item.responsable_id && item.responsable_id === this.currentUser.id) return true;
 
-    // 2. Si la obra ya está asignada formalmente a otro usuario activo por ID, no pertenece a este
+    // 2. Si la obra ya está asignada formalmente a otro usuario activo por ID
     if (item.responsable_id && item.responsable_id !== this.currentUser.id) {
       const otherUser = this.users.find(u => u.id === item.responsable_id);
-      if (otherUser && otherUser.activo) return false;
-    }
+      if (otherUser && otherUser.activo) {
+        // Si otherUser es un Admin general (ej: usr-nicolas) y el usuario actual es el PM operativo de la misma dependencia cuyo nombre coincide
+        const normalizeStr = s => (s || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+        const obraDep = normalizeStr(item.dependencia);
+        const uDep = normalizeStr(this.currentUser.dependencia);
+        const resp = normalizeStr(item.responsable);
+        const uName = normalizeStr(this.currentUser.nombre);
+        const uUser = normalizeStr(this.currentUser.username);
+        const stopwords = ['arq', 'ing', 'dr', 'dra', 'pm', 'central', 'san', 'justo', 'perifericos', 'de', 'la', 'el', 'compras', 'licitaciones', 'obras', 'infraestructura', 'admin'];
+        const tokens = uName.replace(/[^a-z0-9]/g, ' ').split(/\s+/).filter(t => t.length > 2 && !stopwords.includes(t));
+        const matchesToken = tokens.some(t => resp.includes(t)) || (uUser && resp.includes(uUser));
 
-    // 3. Usuarios dados de alta expresamente con bandera 'arranca_en_cero':
-    // Solo tienen asignadas las obras que se les asigne explícitamente por ID
-    if (this.currentUser.arranca_en_cero) {
-      return false;
+        if (otherUser.rol === 'admin' && uDep && uDep === obraDep && matchesToken) {
+          // Re-asociar automáticamente al PM operativo del departamento
+          item.responsable_id = this.currentUser.id;
+          item.responsable = this.currentUser.nombre;
+          return true;
+        }
+        return false;
+      }
     }
 
     const normalizeStr = s => (s || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
     const resp = normalizeStr(item.responsable);
     if (!resp || resp === 'sin asignar' || resp === 's/d' || resp === 'pendiente' || resp === 'a designar') return false;
 
+    // 3. Usuarios con bandera arranca_en_cero: no heredan obras de otros departamentos, pero sí reconocen su coincidencia departamental
+    const obraDep = normalizeStr(item.dependencia);
     const u = this.currentUser;
+    const uDep = normalizeStr(u.dependencia);
+    if (u.arranca_en_cero && obraDep && uDep && obraDep !== uDep) {
+      return false;
+    }
+
     const uUser = normalizeStr(u.username);
     const uName = normalizeStr(u.nombre);
 
     if (uUser && (resp === uUser || resp.includes(uUser) || uUser.includes(resp))) return true;
     if (uName && (resp.includes(uName) || uName.includes(resp))) return true;
 
-    // Tokens identificatorios significativos del nombre de usuario (ej: "palmioli", "waldemar", "boselli", "lopez", "vasquez", "kawior", "nicolas")
-    const stopwords = ['arq', 'ing', 'dr', 'dra', 'pm', 'central', 'san', 'justo', 'perifericos', 'de', 'la', 'el', 'compras', 'licitaciones', 'obras', 'infraestructura'];
+    // Tokens identificatorios significativos del nombre de usuario (ej: "palmioli", "waldemar", "boselli", "lopez", "vasquez", "kawior", "nicolas", "ladaga")
+    const stopwords = ['arq', 'ing', 'dr', 'dra', 'pm', 'central', 'san', 'justo', 'perifericos', 'de', 'la', 'el', 'compras', 'licitaciones', 'obras', 'infraestructura', 'admin'];
     const tokens = uName.replace(/[^a-z0-9]/g, ' ').split(/\s+/).filter(t => t.length > 2 && !stopwords.includes(t));
     for (const token of tokens) {
       if (resp.includes(token)) return true;
@@ -1122,20 +1177,37 @@ const DataStore = {
     if ((item.estado === 'Estudio de Factibilidad' || item.estado === 'Ante Proyecto') && !this.hasValidPartida(item)) {
       return null;
     }
+
+    const normalizeStr = s => (s || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    const obraDep = normalizeStr(item.dependencia);
+
     if (item.responsable_id) {
+      // Si fue asignada a admin usr-nicolas pero la obra pertenece canónicamente a Mantenimiento Central
+      if (item.responsable_id === 'usr-nicolas' && obraDep === 'departamento de mantenimiento central') {
+        const uKawior = this.users.find(u => u.id === 'usr-kawior-pm');
+        if (uKawior && uKawior.activo) return uKawior;
+      }
       const u = this.users.find(user => user.id === item.responsable_id);
       if (u) return u;
     }
+
     if (!item.responsable) return null;
-    const normalizeStr = s => (s || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
     const resp = normalizeStr(item.responsable);
     if (!resp || resp === 'sin asignar' || resp === 's/d' || resp === 'pendiente' || resp === 'a designar') return null;
 
-    const obraDep = normalizeStr(item.dependencia);
+    // Priorizar usuarios del departamento canónico de la obra y roles operativos sobre administradores
+    const candidates = [...this.users].filter(u => u.activo).sort((a, b) => {
+      const aDep = normalizeStr(a.dependencia);
+      const bDep = normalizeStr(b.dependencia);
+      const aMatchesDep = (obraDep && aDep === obraDep) ? 1 : 0;
+      const bMatchesDep = (obraDep && bDep === obraDep) ? 1 : 0;
+      if (aMatchesDep !== bMatchesDep) return bMatchesDep - aMatchesDep;
+      const aIsAdmin = (a.rol === 'admin' || aDep === 'direccion general / administracion') ? 1 : 0;
+      const bIsAdmin = (b.rol === 'admin' || bDep === 'direccion general / administracion') ? 1 : 0;
+      return aIsAdmin - bIsAdmin;
+    });
 
-    return this.users.find(u => {
-      if (u.arranca_en_cero) return false;
-
+    return candidates.find(u => {
       // Si la obra tiene dependencia definida, el usuario debe pertenecer a la misma dependencia (salvo Administrador General)
       if (obraDep && u.dependencia) {
         const uDep = normalizeStr(u.dependencia);
@@ -1148,7 +1220,7 @@ const DataStore = {
       const uName = normalizeStr(u.nombre);
       if (uUser && (resp === uUser || resp.includes(uUser) || uUser.includes(resp))) return true;
       if (uName && (resp.includes(uName) || uName.includes(resp))) return true;
-      const stopwords = ['arq', 'ing', 'dr', 'dra', 'pm', 'central', 'san', 'justo', 'perifericos'];
+      const stopwords = ['arq', 'ing', 'dr', 'dra', 'pm', 'central', 'san', 'justo', 'perifericos', 'obras', 'infraestructura', 'admin'];
       const tokens = uName.replace(/[^a-z0-9]/g, ' ').split(/\s+/).filter(t => t.length > 2 && !stopwords.includes(t));
       if (tokens.some(t => resp.includes(t))) return true;
       const uTokens = uUser.replace(/[^a-z0-9]/g, ' ').split(/\s+/).filter(t => t.length > 2 && !stopwords.includes(t));
