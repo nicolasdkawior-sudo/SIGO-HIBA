@@ -955,6 +955,8 @@ const DataStore = {
 
     if (nextStage === 'Obras Finalizadas') {
       item.fecha_real_finalizada = compDate;
+      item.fecha_fin_real = compDate;
+      item.avance_fisico = 100;
     }
 
     this.saveItem(item, true);
@@ -1541,7 +1543,7 @@ const DataStore = {
     list.forEach(item => {
       const mObra = item.monto_obra_usd || 0;
       const mEquip = item.monto_equipamiento_usd || 0;
-      const mTotal = mObra + mEquip;
+      const mTotal = item.monto_total_usd || (mObra + mEquip);
 
       const isFinalizada = item.estado === 'Obras Finalizadas';
       const isSuspendida = item.estado === 'Suspendida';
@@ -1577,10 +1579,24 @@ const DataStore = {
         estadosUsd[est] = mTotal;
       }
 
-      const s = item.sede || 'Central';
-      if (!sedesCount[s]) sedesCount[s] = { count: 0, usd: 0 };
-      sedesCount[s].count++;
-      sedesCount[s].usd += mTotal;
+      // Cómputo de Inversión por Sede:
+      // Excluye Estudio de Factibilidad (es anteproyecto en estudio sin inversión firme), Suspendidas y Finalizadas.
+      // Computa estrictamente: Proyecto + En licitación + Obras en Curso.
+      const esEtapaInversion = (
+        item.estado === 'Proyecto' ||
+        item.estado === 'Proyecto para licitar' ||
+        item.estado === 'En licitación' ||
+        item.estado === 'Obras en Curso'
+      );
+
+      if (esEtapaInversion) {
+        let s = item.sede || 'Central';
+        if (s === 'Almagro') s = 'Central';
+        if (s === 'Perifericos') s = 'Periféricos';
+        if (!sedesCount[s]) sedesCount[s] = { count: 0, usd: 0 };
+        sedesCount[s].count++;
+        sedesCount[s].usd += mTotal;
+      }
     });
 
     const activeTotal = vencidos + porVencer + enPlazo;

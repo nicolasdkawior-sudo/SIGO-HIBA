@@ -1459,6 +1459,8 @@ const App = {
     if (!item) return;
 
     const u = DataStore.currentUser;
+    const isAdmin = DataStore.isAdmin();
+
     if (!u || u.solo_lectura || u.rol === 'visualizador' || !u.puede_avanzar) {
       alert("⛔ Acceso Denegado: Tu perfil es de solo lectura y no tiene autorización para avanzar etapas.");
       return;
@@ -1497,6 +1499,12 @@ const App = {
     
     const defaultDeadline = DataStore.getDefaultDeadlineForStage(nextStage);
     document.getElementById('transNewDeadline').value = defaultDeadline;
+
+    // Ocultar fecha límite de nueva etapa cuando la obra avanza a Finalizada
+    const containerNewDeadline = document.getElementById('transNewDeadlineContainer');
+    if (containerNewDeadline) {
+      containerNewDeadline.classList.toggle('hidden', nextStage === 'Obras Finalizadas');
+    }
 
     // Restricción estricta de fecha: Hoy y hasta 7 días hacia atrás máximo
     const now = new Date();
