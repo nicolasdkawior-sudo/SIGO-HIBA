@@ -1477,14 +1477,13 @@ const App = {
     const quickPartidaInput = document.getElementById('transQuickPartidaInput');
     const quickMontoInput = document.getElementById('transQuickMontoPartidaInput');
 
-    if (quickPartidaInput) quickPartidaInput.value = item.partida || '';
-    const defMonto = item.monto_partida_usd || item.monto_total_usd || item.monto_obra_usd || (item.cashflow ? item.cashflow.monto_total : '') || '';
-    if (quickMontoInput) quickMontoInput.value = (defMonto > 0) ? defMonto : '';
-
     const requierePartida = (currentStage === 'Estudio de Factibilidad' && nextStage === 'Proyecto');
     const tienePartida = DataStore.hasValidPartida(item) && (item.monto_partida_usd > 0 || item.monto_total_usd > 0);
 
     if (requierePartida && !tienePartida) {
+      if (quickPartidaInput) quickPartidaInput.value = item.partida || '';
+      const defMonto = item.monto_partida_usd || item.monto_total_usd || item.monto_obra_usd || (item.cashflow ? item.cashflow.monto_total : '') || '';
+      if (quickMontoInput) quickMontoInput.value = (defMonto > 0) ? defMonto : '';
       if (warnSinPartida) warnSinPartida.classList.remove('hidden');
       if (inputQuickPartida) {
         if (u.puede_asignar_partida || isAdmin) {
@@ -1496,6 +1495,8 @@ const App = {
     } else {
       if (warnSinPartida) warnSinPartida.classList.add('hidden');
       if (inputQuickPartida) inputQuickPartida.classList.add('hidden');
+      if (quickPartidaInput) quickPartidaInput.value = '';
+      if (quickMontoInput) quickMontoInput.value = '';
     }
 
     const alertFinal = document.getElementById('transFinalNotice');
@@ -1571,12 +1572,6 @@ const App = {
     const enteredPartida = quickPartidaInput ? quickPartidaInput.value.trim() : '';
     const enteredMonto = quickMontoInput ? quickMontoInput.value.trim() : '';
 
-    if (currentStage === 'Estudio de Factibilidad' && nextStage === 'Proyecto') {
-      if (!hasPartida && !enteredPartida && !u.puede_asignar_partida && !isAdmin) {
-        alert("⛔ No es posible avanzar a la etapa de Proyecto:\n\nEsta obra requiere que Dirección Médica o Administración asigne una Partida Presupuestaria previamente.");
-        return;
-      }
-    }
 
     const compDate = document.getElementById('transCompletionDate').value;
     const newDeadline = document.getElementById('transNewDeadline').value;
@@ -1605,21 +1600,26 @@ const App = {
       return;
     }
 
-    if (enteredPartida) {
-      if (!u.puede_asignar_partida) {
-        alert("⛔ Acceso Denegado: No tienes el permiso específico para asignar partida presupuestaria.");
-        return;
-      }
-      const montoToAssign = enteredMonto || item.monto_partida_usd || item.monto_total_usd || item.monto_obra_usd;
-      const partRes = DataStore.asignarPartidaPresupuestaria(id, enteredPartida, montoToAssign);
-      if (!partRes.success) {
-        alert(partRes.msg);
-        return;
-      }
-    }
-
-    // VALIDACIÓN ESTRICTA: Para avanzar de Estudio de Factibilidad a Proyecto es OBLIGATORIO tener partida presupuestaria y monto
+    // VALIDACIÓN ESTRICTA Y ASIGNACIÓN: Para avanzar de Estudio de Factibilidad a Proyecto es OBLIGATORIO tener partida presupuestaria y monto
     if (currentStage === 'Estudio de Factibilidad' && nextStage === 'Proyecto') {
+      if (!hasPartida && !enteredPartida && !u.puede_asignar_partida && !isAdmin) {
+        alert("⛔ No es posible avanzar a la etapa de Proyecto:\n\nEsta obra requiere que Dirección Médica o Administración asigne una Partida Presupuestaria previamente.");
+        return;
+      }
+
+      if (enteredPartida && enteredPartida !== (item.partida || '')) {
+        if (!u.puede_asignar_partida && !isAdmin) {
+          alert("⛔ Acceso Denegado: No tienes el permiso específico para asignar partida presupuestaria.");
+          return;
+        }
+        const montoToAssign = enteredMonto || item.monto_partida_usd || item.monto_total_usd || item.monto_obra_usd;
+        const partRes = DataStore.asignarPartidaPresupuestaria(id, enteredPartida, montoToAssign);
+        if (!partRes.success) {
+          alert(partRes.msg);
+          return;
+        }
+      }
+
       const finalPartida = (item.partida || enteredPartida).trim();
       const finalMonto = item.monto_partida_usd || parseFloat(enteredMonto) || item.monto_total_usd || 0;
       if (!finalPartida || finalPartida === '' || finalPartida === 'S/D' || finalPartida.toUpperCase() === 'PENDIENTE') {
