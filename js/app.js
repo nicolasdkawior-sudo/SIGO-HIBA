@@ -322,25 +322,62 @@ const App = {
     if (ctxPipeline) {
       if (this.charts.pipeline) this.charts.pipeline.destroy();
       
-      const labels = [
-        'Estudio de Factibilidad', 
-        'Proyecto', 
-        'Proyecto para licitar', 
-        'En licitación', 
-        'Obras en Curso', 
-        'Obras Finalizadas', 
-        'Suspendida'
-      ];
+      const u = DataStore.currentUser;
+      const isComprador = Boolean(u && (u.rol === 'licitaciones' || u.dependencia === 'Compras & Licitaciones'));
+
+      // Personalización de encabezado según perfil
+      const titleEl = document.getElementById('pipelineChartTitle');
+      const subEl = document.getElementById('pipelineChartSubtitle');
+      const badgeEl = document.getElementById('pipelineChartBadge');
+      if (isComprador) {
+        if (titleEl) titleEl.innerText = 'Tablero de Compras y Licitaciones';
+        if (subEl) subEl.innerText = 'Obras para licitar, adjudicadas en curso y finalizadas';
+        if (badgeEl) {
+          badgeEl.innerText = 'Gestión Compras';
+          badgeEl.className = 'text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md';
+        }
+      } else {
+        if (titleEl) titleEl.innerText = 'Embudo de Avance de Obras';
+        if (subEl) subEl.innerText = 'Distribución y valorización por etapa';
+        if (badgeEl) {
+          badgeEl.innerText = 'Total Etapas';
+          badgeEl.className = 'text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md';
+        }
+      }
+
+      let labels;
+      let baseColors;
+
+      if (isComprador) {
+        labels = ['En licitación', 'Obras en Curso', 'Obras Finalizadas'];
+        if (kpis.estadosCount && kpis.estadosCount['Suspendida'] > 0) {
+          labels.push('Suspendida');
+        }
+        baseColors = labels.map(lbl => {
+          if (lbl === 'En licitación') return '#f59e0b'; // Ámbar compulsa
+          if (lbl === 'Obras en Curso') return '#2563eb'; // Azul ejecución
+          if (lbl === 'Obras Finalizadas') return '#10b981'; // Verde finalizadas
+          return '#f43f5e'; // Suspendida
+        });
+      } else {
+        labels = [
+          'Estudio de Factibilidad', 
+          'Proyecto', 
+          'En licitación', 
+          'Obras en Curso', 
+          'Obras Finalizadas', 
+          'Suspendida'
+        ];
+        baseColors = [
+          '#94a3b8', '#3b82f6', '#f59e0b', 
+          '#2563eb', '#10b981', '#f43f5e'
+        ];
+      }
 
       const dataValues = labels.map(lbl => kpis.estadosCount[lbl] || 0);
       const dataUsd = labels.map(lbl => (kpis.estadosUsd && kpis.estadosUsd[lbl]) ? kpis.estadosUsd[lbl] : 0);
 
       // Colores de las barras con borde destacado si una barra está seleccionada
-      const baseColors = [
-        '#94a3b8', '#3b82f6', '#0284c7', 
-        '#eab308', '#22c55e', '#10b981', '#f43f5e'
-      ];
-
       const bgColors = labels.map((lbl, idx) => {
         if (!this.pipelineSelectedStage) return baseColors[idx];
         return lbl === this.pipelineSelectedStage ? baseColors[idx] : baseColors[idx] + '44';
@@ -429,7 +466,7 @@ const App = {
                 callback: function(val, idx) {
                   const label = labels[idx];
                   if (label === 'Estudio de Factibilidad') return 'Factibilidad';
-                  if (label === 'Proyecto para licitar') return 'Para Licitar';
+                  if (label === 'En licitación') return 'En Licitación';
                   if (label === 'Obras en Curso') return 'En Curso';
                   if (label === 'Obras Finalizadas') return 'Finalizadas';
                   return label;
@@ -719,15 +756,19 @@ const App = {
     const kanbanContainer = document.getElementById('kanbanContainer');
     if (!kanbanContainer) return;
 
-    let stages = [
-      'Estudio de Factibilidad',
-      'Proyecto',
-      'Proyecto para licitar',
-      'En licitación',
-      'Obras en Curso',
-      'Obras Finalizadas',
-      'Suspendida'
-    ];
+    const u = DataStore.currentUser;
+    const isComprador = Boolean(u && (u.rol === 'licitaciones' || u.dependencia === 'Compras & Licitaciones'));
+
+    let stages = isComprador
+      ? ['En licitación', 'Obras en Curso', 'Obras Finalizadas', 'Suspendida']
+      : [
+          'Estudio de Factibilidad',
+          'Proyecto',
+          'En licitación',
+          'Obras en Curso',
+          'Obras Finalizadas',
+          'Suspendida'
+        ];
 
     if (this.filters.filtroFinalizadas === 'activas') {
       stages = stages.filter(s => s !== 'Obras Finalizadas');
@@ -1504,17 +1545,18 @@ const App = {
       alertFinal.classList.toggle('hidden', nextStage !== 'Obras Finalizadas');
     }
 
-    // Aviso dinámico si avanza a Proyecto para licitar (Pase a Compras)
+    // Aviso dinámico si avanza a En licitación (Pase a Compras)
     const warnPaseLicitaciones = document.getElementById('transLicitacionesPaseNotice');
     if (warnPaseLicitaciones) {
-      warnPaseLicitaciones.classList.toggle('hidden', nextStage !== 'Proyecto para licitar');
+      warnPaseLicitaciones.classList.toggle('hidden', !(nextStage === 'En licitación' && currentStage === 'Proyecto'));
     }
 
-    // Contenedor Compulsa (cuando avanza a En licitación)
+    // Contenedor Compulsa (cuando avanza a En licitación y es Comprador o Admin)
     const containerCompulsa = document.getElementById('transCompulsaContainer');
     const inputFechaCompulsa = document.getElementById('transFechaCompulsaInput');
     if (containerCompulsa) {
-      if (nextStage === 'En licitación') {
+      const isCompradorOrAdmin = Boolean((u && (u.rol === 'licitaciones' || u.dependencia === 'Compras & Licitaciones')) || isAdmin);
+      if (nextStage === 'En licitación' && isCompradorOrAdmin) {
         containerCompulsa.classList.remove('hidden');
         if (inputFechaCompulsa) {
           inputFechaCompulsa.value = item.fecha_fin_compulsa || defaultDeadline;
@@ -1647,12 +1689,7 @@ const App = {
 
     if (nextStage === 'En licitación') {
       const fechaCompulsa = document.getElementById('transFechaCompulsaInput')?.value;
-      if (!fechaCompulsa) {
-        alert("⚠️ Debes indicar la Fecha Estimada de Finalización de la Compulsa.");
-        document.getElementById('transFechaCompulsaInput')?.focus();
-        return;
-      }
-      extraData.fechaCompulsa = fechaCompulsa;
+      extraData.fechaCompulsa = fechaCompulsa || newDeadline;
     }
 
     if (currentStage === 'En licitación' && nextStage === 'Obras en Curso') {

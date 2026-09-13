@@ -97,7 +97,6 @@ function generateSalt(len = 16) {
 const STAGES_SEQUENCE = [
   'Estudio de Factibilidad',
   'Proyecto',
-  'Proyecto para licitar',
   'En licitación',
   'Obras en Curso',
   'Obras Finalizadas'
@@ -106,7 +105,6 @@ const STAGES_SEQUENCE = [
 const DEFAULT_STAGE_DAYS = {
   'Estudio de Factibilidad': 45,
   'Proyecto': 60,
-  'Proyecto para licitar': 30,
   'En licitación': 45,
   'Obras en Curso': 120
 };
@@ -522,6 +520,7 @@ const DataStore = {
           if (item.sede === 'Periférico') item.sede = 'Periféricos';
           if (!item.sede) item.sede = 'Central';
           if (item.estado === 'Ante Proyecto') item.estado = 'Estudio de Factibilidad';
+          if (item.estado === 'Proyecto para licitar') item.estado = 'Proyecto';
           
           if (!item.fecha_fin_etapa) {
             const days = DEFAULT_STAGE_DAYS[item.estado] || 45;
@@ -535,11 +534,12 @@ const DataStore = {
       }
     }
 
-    // Normalizar datos (unificación de Anteproyecto en Estudio de Factibilidad)
+    // Normalizar datos (unificación de Anteproyecto en Factibilidad y Proyecto para licitar en Proyecto)
     this.items.forEach(item => {
       if (item.sede === 'Almagro') item.sede = 'Central';
       if (item.sede === 'Periférico') item.sede = 'Periféricos';
       if (item.estado === 'Ante Proyecto') item.estado = 'Estudio de Factibilidad';
+      if (item.estado === 'Proyecto para licitar') item.estado = 'Proyecto';
 
       // Sincronizar dependencia canónica primero (repara automáticamente discrepancias en localStorage)
       item.dependencia = this.getObraDependencia(item);
@@ -813,6 +813,7 @@ const DataStore = {
   // ================= WORKFLOW SECUENCIAL =================
   getNextStage(currentStage) {
     if (currentStage === 'Ante Proyecto') return 'Proyecto';
+    if (currentStage === 'Proyecto para licitar') return 'En licitación';
     const idx = STAGES_SEQUENCE.indexOf(currentStage);
     if (idx >= 0 && idx < STAGES_SEQUENCE.length - 1) {
       return STAGES_SEQUENCE[idx + 1];
@@ -876,12 +877,9 @@ const DataStore = {
       }
     }
 
-    // VALIDACIÓN CRÍTICA: Al pasar a En licitación, se requiere fecha estimada de término de la compulsa
+    // Al pasar a En licitación: fijar fecha de compulsa y resguardar proyectista original
     if (nextStage === 'En licitación') {
-      const fechaCompulsa = extraData?.fechaCompulsa || nextDeadline;
-      if (!fechaCompulsa) {
-        return { success: false, msg: '⛔ Para iniciar la licitación debes indicar la Fecha Estimada de Término de la Compulsa.' };
-      }
+      const fechaCompulsa = extraData?.fechaCompulsa || nextDeadline || this.getDefaultDeadlineForStage('En licitación');
       item.fecha_fin_compulsa = fechaCompulsa;
       nextDeadline = fechaCompulsa;
     }
@@ -920,8 +918,8 @@ const DataStore = {
       return { success: false, msg: `⛔ La fecha de finalización no puede tener más de 7 días de antigüedad (rango permitido: ${minDateStr} a ${maxDateStr}).` };
     }
 
-    // Si avanza a Proyecto para licitar, resguardar proyectista original y dependencia de origen
-    if (nextStage === 'Proyecto para licitar') {
+    // Si avanza a En licitación, resguardar proyectista original y dependencia de origen
+    if (nextStage === 'En licitación' || nextStage === 'Proyecto para licitar') {
       item.proyectista_id = item.responsable_id || (this.currentUser ? this.currentUser.id : null);
       item.proyectista_nombre = item.responsable || (this.currentUser ? this.currentUser.nombre : 'Proyectista');
       item.proyectista_dependencia = item.dependencia || this.getObraDependencia(item);
@@ -935,14 +933,13 @@ const DataStore = {
     }
 
     let defaultObs = `Etapa '${currentStage}' finalizada y certificada el ${compDate} por ${this.currentUser.nombre}. Avanza a '${nextStage}'.`;
-    if (nextStage === 'Proyecto para licitar') {
-      defaultObs = `Proyecto aprobado por ${this.currentUser.nombre}. Se deriva a Compras y Licitaciones para compulsa de precios.`;
-    } else if (nextStage === 'En licitación') {
-      defaultObs = `Apertura de compulsa licitatoria. Fecha estimada de cierre de compulsa: ${item.fecha_fin_compulsa || nextDeadline}.`;
+    if (nextStage === 'En licitación') {
+      defaultObs = `Proyecto completado por ${this.currentUser.nombre}. Se deriva al Departamento de Compras para licitación y compulsa de precios.`;
     } else if (nextStage === 'Obras en Curso') {
       defaultObs = `Compulsa finalizada y adjudicada a '${item.proveedor}' por USD ${this.formatUSD(item.monto_adjudicado_usd)}. Retorna al proyectista ${item.responsable} en Obras en Curso.`;
     }
 
+    if (!Array.isArray(item.historial)) item.historial = [];
     item.historial.unshift({
       fecha: compDate,
       usuario: `${this.currentUser.nombre} (${this.currentUser.rol})`,
@@ -1355,11 +1352,10 @@ const DataStore = {
     // 1. Administrador General ve todo el hospital
     if (this.isAdmin()) return true;
 
-    // 2. Flujo Licitatorio ('Proyecto para licitar' y 'En licitación'):
-    // El comprador / departamento de compras ve todas las obras en etapa licitatoria EXCLUSIVAMENTE
-    const esEtapaLicitatoria = (item.estado === 'Proyecto para licitar' || item.estado === 'En licitación');
+    // 2. Perfil Comprador / Departamento de Compras (rol 'licitaciones'):
+    // El comprador ve las obras que le derivan en licitación, las adjudicadas en curso y las finalizadas
     if (u.rol === 'licitaciones' || u.dependencia === 'Compras & Licitaciones') {
-      return esEtapaLicitatoria;
+      return (item.estado === 'En licitación' || item.estado === 'Obras en Curso' || item.estado === 'Obras Finalizadas' || item.estado === 'Suspendida');
     }
 
     // 3. Roles transversales de consulta institucional (Dirección Médica, Auditoría)
@@ -1367,9 +1363,9 @@ const DataStore = {
       return true;
     }
 
-    // Si la obra está en etapa licitatoria y el usuario es proyectista / técnico departamental:
+    // Si la obra está en etapa de licitación y el usuario es proyectista / técnico departamental:
     // La obra le cae al comprador y desaparece temporalmente del panel del proyectista hasta que se adjudique
-    if (esEtapaLicitatoria) {
+    if (item.estado === 'En licitación') {
       return false;
     }
 
@@ -1398,9 +1394,9 @@ const DataStore = {
     if (this.currentUser.puede_avanzar === false) return false;
     if (this.isAdmin()) return true;
 
-    // Si la obra está en etapa de licitación ('Proyecto para licitar' o 'En licitación'):
-    // Solo el comprador (rol 'licitaciones') o el Admin pueden certificar el avance
-    if (item.estado === 'Proyecto para licitar' || item.estado === 'En licitación') {
+    // Si la obra está en etapa 'En licitación':
+    // Solo el comprador (rol 'licitaciones') o el Admin pueden certificar la adjudicación
+    if (item.estado === 'En licitación') {
       return this.currentUser.rol === 'licitaciones';
     }
 
@@ -1415,7 +1411,7 @@ const DataStore = {
     if (this.isAdmin()) return true;
 
     // En etapa licitatoria, el comprador puede editar fechas y plazos de compulsa
-    if ((item.estado === 'Proyecto para licitar' || item.estado === 'En licitación') && this.currentUser.rol === 'licitaciones') {
+    if (item.estado === 'En licitación' && this.currentUser.rol === 'licitaciones') {
       return true;
     }
 
@@ -1521,7 +1517,6 @@ const DataStore = {
     const estadosCount = {
       'Estudio de Factibilidad': 0,
       'Proyecto': 0,
-      'Proyecto para licitar': 0,
       'En licitación': 0,
       'Obras en Curso': 0,
       'Obras Finalizadas': 0,
@@ -1531,7 +1526,6 @@ const DataStore = {
     const estadosUsd = {
       'Estudio de Factibilidad': 0,
       'Proyecto': 0,
-      'Proyecto para licitar': 0,
       'En licitación': 0,
       'Obras en Curso': 0,
       'Obras Finalizadas': 0,
@@ -1573,7 +1567,8 @@ const DataStore = {
       else if (sem.status === 'por_vencer') porVencer++;
       else if (sem.status === 'en_plazo') enPlazo++;
 
-      const est = (item.estado === 'Ante Proyecto') ? 'Estudio de Factibilidad' : item.estado;
+      let est = (item.estado === 'Ante Proyecto') ? 'Estudio de Factibilidad' : item.estado;
+      if (est === 'Proyecto para licitar') est = 'Proyecto';
       if (estadosCount.hasOwnProperty(est)) {
         estadosCount[est]++;
         estadosUsd[est] = (estadosUsd[est] || 0) + mTotal;
