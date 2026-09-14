@@ -1034,17 +1034,28 @@ const DataStore = {
     // VALIDACIÓN CRÍTICA: Al pasar de En licitación a Obras en Curso (Adjudicación)
     if (currentStage === 'En licitación' && nextStage === 'Obras en Curso') {
       const proveedor = (extraData?.proveedor || '').trim();
+      const ordenCompra = (extraData?.ordenCompra || extraData?.orden_compra || extraData?.numero_oc || '').trim();
       const montoAdj = parseFloat(extraData?.montoAdjudicado) || 0;
-      const anticipoPct = Math.min(100, Math.max(0, parseFloat(extraData?.porcentajeAnticipo ?? extraData?.anticipoPorcentaje) || 0));
+      const rawAnticipo = extraData?.porcentajeAnticipo ?? extraData?.anticipoPorcentaje;
       const plazoMeses = parseInt(extraData?.plazoMeses || extraData?.duracionMeses, 10) || 0;
 
       if (!proveedor) {
-        return { success: false, msg: '⛔ Para avanzar a "Obras en Curso" debes indicar el Proveedor Adjudicado.' };
+        return { success: false, msg: '⛔ Para avanzar a "Obras en Curso" debes indicar la Razón Social del Proveedor Adjudicado.' };
+      }
+      if (!ordenCompra) {
+        return { success: false, msg: '⛔ Para avanzar a "Obras en Curso" es OBLIGATORIO ingresar el Número de Orden de Compra (OC).' };
       }
       if (montoAdj <= 0) {
         return { success: false, msg: '⛔ Para avanzar a "Obras en Curso" debes indicar el Monto Total de la Adjudicación (USD mayor a 0).' };
       }
+      if (rawAnticipo === '' || rawAnticipo === null || rawAnticipo === undefined || isNaN(parseFloat(rawAnticipo))) {
+        return { success: false, msg: '⛔ Para avanzar a "Obras en Curso" es OBLIGATORIO ingresar el Porcentaje de Anticipo en OC (ingresar 0 si no cuenta con anticipo).' };
+      }
+      const anticipoPct = Math.min(100, Math.max(0, parseFloat(rawAnticipo)));
+
       item.proveedor = proveedor;
+      item.orden_compra = ordenCompra;
+      item.numero_oc = ordenCompra;
       item.monto_adjudicado_usd = montoAdj;
       item.monto_total_usd = montoAdj;
       item.monto_obra_usd = montoAdj;
@@ -1130,11 +1141,12 @@ const DataStore = {
     if (nextStage === 'En licitación') {
       defaultObs = `Proyecto completado por ${this.currentUser.nombre}. Se deriva al Departamento de Compras para licitación y compulsa de precios.`;
     } else if (nextStage === 'Obras en Curso') {
+      const ocInfo = item.orden_compra ? ` [OC N° ${item.orden_compra}]` : '';
       const antInfo = (item.anticipo_porcentaje && item.anticipo_porcentaje > 0)
         ? ` (Anticipo OC: ${item.anticipo_porcentaje}% - USD ${this.formatUSD(item.anticipo_monto_usd)})`
         : ` (Sin anticipo OC)`;
       const plazoInfo = item.plazo_meses ? ` [Plazo: ${item.plazo_meses} meses]` : '';
-      defaultObs = `Compulsa finalizada y adjudicada a '${item.proveedor}' por USD ${this.formatUSD(item.monto_adjudicado_usd)}${antInfo}${plazoInfo}. Retorna al proyectista ${item.responsable} en Obras en Curso.`;
+      defaultObs = `Compulsa finalizada y adjudicada a '${item.proveedor}' por USD ${this.formatUSD(item.monto_adjudicado_usd)}${ocInfo}${antInfo}${plazoInfo}. Retorna al proyectista ${item.responsable} en Obras en Curso.`;
     }
 
     if (!Array.isArray(item.historial)) item.historial = [];
@@ -1731,9 +1743,10 @@ const DataStore = {
     if (this.isAdmin()) return true;
 
     // 2. Perfil Comprador / Departamento de Compras (rol 'licitaciones'):
-    // El comprador ve las obras que le derivan en licitación, las adjudicadas en curso y las finalizadas
+    // El comprador ve las obras en Proyecto (solo lectura preventiva para anticipar compras),
+    // las que le derivan en licitación (operativas), las adjudicadas en curso, finalizadas y suspendidas.
     if (u.rol === 'licitaciones' || u.dependencia === 'Compras & Licitaciones') {
-      return (item.estado === 'En licitación' || item.estado === 'Obras en Curso' || item.estado === 'Obras Finalizadas' || item.estado === 'Suspendida');
+      return (item.estado === 'Proyecto' || item.estado === 'En licitación' || item.estado === 'Obras en Curso' || item.estado === 'Obras Finalizadas' || item.estado === 'Suspendida');
     }
 
     // 3. Roles transversales de consulta institucional (Dirección Médica, Auditoría)
@@ -1801,6 +1814,11 @@ const DataStore = {
     if (this.currentUser.solo_lectura || this.currentUser.rol === 'visualizador') return false;
     if (this.isAdmin()) return true;
 
+    // Perfil comprador (licitaciones): En Proyecto es estrictamente solo lectura preventiva (no puede avanzar)
+    if (this.currentUser.rol === 'licitaciones' && item.estado === 'Proyecto') {
+      return false;
+    }
+
     // Si la obra está en Estudio de Factibilidad:
     // Solo la Dirección o Admin con permiso de partida puede asignarle partida y avanzarla a Proyecto
     if (item.estado === 'Estudio de Factibilidad' || item.estado === 'Ante Proyecto') {
@@ -1824,6 +1842,11 @@ const DataStore = {
     if (!this.currentUser || !item) return false;
     if (this.currentUser.solo_lectura || this.currentUser.rol === 'visualizador') return false;
     if (this.isAdmin()) return true;
+
+    // Perfil comprador (licitaciones): En Proyecto es estrictamente solo lectura preventiva (no puede editar ni modificar)
+    if (this.currentUser.rol === 'licitaciones' && item.estado === 'Proyecto') {
+      return false;
+    }
 
     // En etapa licitatoria, el comprador puede editar fechas y plazos de compulsa
     if (item.estado === 'En licitación' && this.currentUser.rol === 'licitaciones') {
@@ -2864,6 +2887,9 @@ const DataStore = {
         'Nivel Ponderación': pond.nivelLabel,
         'Responsable': item.responsable || '',
         'Proveedor': item.proveedor || '',
+        'Orden de Compra': item.orden_compra || item.numero_oc || '',
+        'Anticipo %': (item.anticipo_porcentaje !== undefined && item.anticipo_porcentaje !== null) ? `${item.anticipo_porcentaje}%` : '',
+        'Anticipo USD': item.anticipo_monto_usd || 0,
         'Categoría': item.categoria || '',
         'Fecha Inicio Etapa': item.fecha_inicio_etapa || '',
         'Fecha Límite Etapa': (item.estado === 'Estudio de Factibilidad' || item.estado === 'Ante Proyecto') ? 'Sin plazo (En análisis)' : (item.fecha_fin_etapa || '-'),

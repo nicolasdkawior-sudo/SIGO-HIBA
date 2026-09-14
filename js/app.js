@@ -416,7 +416,7 @@ const App = {
       const badgeEl = document.getElementById('pipelineChartBadge');
       if (isComprador) {
         if (titleEl) titleEl.innerText = 'Tablero de Compras y Licitaciones';
-        if (subEl) subEl.innerText = 'Obras para licitar, adjudicadas en curso y finalizadas';
+        if (subEl) subEl.innerText = 'Obras en proyecto (previsión), para licitar, adjudicadas en curso y finalizadas';
         if (badgeEl) {
           badgeEl.innerText = 'Gestión Compras';
           badgeEl.className = 'text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md';
@@ -434,11 +434,12 @@ const App = {
       let baseColors;
 
       if (isComprador) {
-        labels = ['En licitación', 'Obras en Curso', 'Obras Finalizadas'];
+        labels = ['Proyecto', 'En licitación', 'Obras en Curso', 'Obras Finalizadas'];
         if (kpis.estadosCount && kpis.estadosCount['Suspendida'] > 0) {
           labels.push('Suspendida');
         }
         baseColors = labels.map(lbl => {
+          if (lbl === 'Proyecto') return '#3b82f6'; // Azul proyecto (previsión de compras)
           if (lbl === 'En licitación') return '#f59e0b'; // Ámbar compulsa
           if (lbl === 'Obras en Curso') return '#2563eb'; // Azul ejecución
           if (lbl === 'Obras Finalizadas') return '#10b981'; // Verde finalizadas
@@ -766,6 +767,7 @@ const App = {
       const nextStage = DataStore.getNextStage(item.estado);
       const u = DataStore.currentUser;
       const isAdmin = DataStore.isAdmin();
+      const isComprador = Boolean(u && (u.rol === 'licitaciones' || u.dependencia === 'Compras & Licitaciones'));
       const canAdvanceThis = DataStore.canUserAdvanceItem(item);
       const canAvanzar = canAdvanceThis && u && !u.solo_lectura && u.rol !== 'visualizador';
       const isCorta = DataStore.isPartidaCorta(item);
@@ -782,30 +784,29 @@ const App = {
               ${sem.label}
             </span>
             <div>
-              <div class="font-bold text-slate-800 text-sm flex items-center space-x-2 flex-wrap">
-                <span>${item.nombre}</span>
+              <div class="flex items-center space-x-2">
+                <span class="font-bold text-slate-800 text-sm">${item.nombre}</span>
+                <span class="text-xs text-slate-400 font-mono">(${item.id})</span>
                 <span class="px-1.5 py-0.2 text-[10px] rounded border ${pond.colorClass}">
                   ${pond.nivelLabel} (${pond.valor}★)
                 </span>
+                <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] px-1.5 py-0.2 rounded font-semibold">${(item.dependencia || DataStore.getObraDependencia(item)).replace('Departamento de ', '')}</span>
                 ${!item.partida || item.partida === 'S/D' ? `<span class="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.2 rounded font-bold">Sin Partida</span>` : ''}
-                ${isCorta ? `<span class="bg-rose-100 text-rose-800 text-[10px] px-2 py-0.2 rounded font-bold border border-rose-300 inline-flex items-center space-x-1" title="Partida asignada menor al costo requerido (-USD ${DataStore.formatUSD(deficit)})"><i data-lucide="alert-triangle" class="w-2.5 h-2.5 text-rose-600"></i><span>Partida Corta (-USD ${DataStore.formatUSD(deficit)})</span></span>` : ''}
+                ${isCorta ? `<span class="bg-rose-100 text-rose-800 text-[10px] px-1.5 py-0.2 rounded font-bold border border-rose-300 inline-flex items-center space-x-1" title="Partida menor al costo requerido (-USD ${DataStore.formatUSD(deficit)})"><i data-lucide="alert-triangle" class="w-2.5 h-2.5 text-rose-600"></i><span>Partida Corta</span></span>` : ''}
               </div>
-              <div class="text-xs text-slate-400 flex items-center space-x-2 mt-0.5 flex-wrap gap-y-1">
-                <span class="font-semibold text-slate-600">📍 ${item.sede}</span>
-                <span>•</span>
-                <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] px-1.5 py-0.2 rounded font-semibold">${item.dependencia || DataStore.getObraDependencia(item)}</span>
-                <span>•</span>
-                <span>Fase: <strong class="text-blue-600">${item.estado}</strong></span>
-                <span>•</span>
+              <div class="text-xs text-slate-500 flex items-center space-x-2 mt-0.5">
+                <span>Sede: <strong>${item.sede}</strong></span>
+                <span>• Fase: <strong class="text-slate-700">${item.estado}</strong></span>
+                <span>• Responsable: </span>
                 ${isAssigned ? `
-                  <span class="bg-emerald-50 text-emerald-800 border border-emerald-300 text-[10px] px-2 py-0.5 rounded-full font-bold inline-flex items-center space-x-1" title="Obra a cargo de ${item.responsable}">
+                  <span class="text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center space-x-1">
                     <i data-lucide="user-check" class="w-3 h-3 text-emerald-600"></i>
-                    <span>Asignada: <strong>${item.responsable}</strong></span>
+                    <span>${item.responsable}</span>
                   </span>
                 ` : `
-                  <span class="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] px-2 py-0.5 rounded-full font-bold inline-flex items-center space-x-1" title="Obra pendiente de ser asignada a un responsable">
+                  <span class="text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center space-x-1">
                     <i data-lucide="alert-circle" class="w-3 h-3 text-amber-600"></i>
-                    <span>⚠️ Sin Asignar</span>
+                    <span>Sin Asignar</span>
                   </span>
                   ${item.creado_por ? `
                     <span class="bg-slate-100 text-slate-700 border border-slate-300 text-[10px] px-2 py-0.5 rounded-full font-medium inline-flex items-center space-x-1" title="Presentada por ${item.creado_por}">
@@ -841,7 +842,7 @@ const App = {
                 <span>Avanzar</span>
                 <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
               </button>
-            ` : (nextStage && !isAdmin ? `<span class="px-1.5 py-0.5 bg-slate-100 text-slate-400 rounded text-[10px]" title="Solo el responsable asignado puede certificar esta obra">🔒 ${item.responsable || 'Sin Asignar'}</span>` : '')}
+            ` : (nextStage && !isAdmin ? (isComprador && item.estado === 'Proyecto' ? `<span class="px-2 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded text-xs font-bold" title="Vista preliminar de compras - Solo lectura">👁️ Solo Consulta</span>` : `<span class="px-1.5 py-0.5 bg-slate-100 text-slate-400 rounded text-[10px]" title="Solo el responsable asignado puede certificar esta obra">🔒 ${item.responsable || 'Sin Asignar'}</span>`) : '')}
           </div>
         </div>
       `;
@@ -859,7 +860,7 @@ const App = {
     const isComprador = Boolean(u && (u.rol === 'licitaciones' || u.dependencia === 'Compras & Licitaciones'));
 
     let stages = isComprador
-      ? ['En licitación', 'Obras en Curso', 'Obras Finalizadas', 'Suspendida']
+      ? ['Proyecto', 'En licitación', 'Obras en Curso', 'Obras Finalizadas', 'Suspendida']
       : [
           'Estudio de Factibilidad',
           'Proyecto',
@@ -884,12 +885,14 @@ const App = {
       const stageItems = items.filter(x => x.estado === stage);
       const stageUsd = stageItems.reduce((acc, x) => acc + (x.monto_total_usd || x.monto_obra_usd || 0), 0);
       const nextStage = DataStore.getNextStage(stage);
+      const isProyectoComprador = isComprador && stage === 'Proyecto';
 
       html += `
-        <div class="kanban-column flex flex-col p-3 shadow-xs border border-slate-200">
+        <div class="kanban-column flex flex-col p-3 shadow-xs border ${isProyectoComprador ? 'border-indigo-300 bg-indigo-50/20' : 'border-slate-200'}">
           <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-200">
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-2 flex-wrap gap-1">
               <span class="font-bold text-xs text-slate-800 uppercase tracking-wide">${stage}</span>
+              ${isProyectoComprador ? '<span class="text-[10px] text-indigo-700 bg-indigo-100 border border-indigo-200 px-1.5 py-0.5 rounded font-bold" title="Obras técnicas próximas a licitar (Modo Solo Lectura)">👁️ Próximas (Solo Lectura)</span>' : ''}
               <span class="bg-white text-slate-600 text-xs px-2 py-0.5 rounded-full font-bold border border-slate-200">${stageItems.length}</span>
             </div>
             <span class="text-xs text-slate-500 font-bold">${DataStore.formatUSD(stageUsd)}</span>
@@ -993,7 +996,7 @@ const App = {
                       <span>Avanzar</span>
                       <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
                     </button>
-                  ` : (nextStage && !isAdmin ? `<span class="px-1.5 py-0.5 bg-slate-100 text-slate-400 rounded text-[10px]" title="Solo el responsable asignado puede certificar esta obra">🔒</span>` : '')}
+                  ` : (nextStage && !isAdmin ? (isComprador && item.estado === 'Proyecto' ? `<span class="px-1.5 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded text-[10px] font-bold" title="Vista preliminar de compras - Solo lectura">👁️ Solo Consulta</span>` : `<span class="px-1.5 py-0.5 bg-slate-100 text-slate-400 rounded text-[10px]" title="Solo el responsable asignado puede certificar esta obra">🔒</span>`) : '')}
                 </div>
               </div>
             </div>
@@ -1032,6 +1035,7 @@ const App = {
       const nextStage = DataStore.getNextStage(item.estado);
       const u = DataStore.currentUser;
       const isAdmin = DataStore.isAdmin();
+      const isComprador = Boolean(u && (u.rol === 'licitaciones' || u.dependencia === 'Compras & Licitaciones'));
       const canAdvanceThis = DataStore.canUserAdvanceItem(item);
       const canAvanzar = canAdvanceThis && u && !u.solo_lectura && u.rol !== 'visualizador';
       const isCorta = DataStore.isPartidaCorta(item);
@@ -1117,7 +1121,7 @@ const App = {
                   <span>Avanzar</span>
                   <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
                 </button>
-              ` : (nextStage && !isAdmin ? `<span class="text-slate-400 text-[10px] font-medium px-1.5 py-0.5 bg-slate-100 rounded" title="Solo puede avanzar el responsable asignado: ${item.responsable || 'Sin Asignar'}">🔒 ${item.responsable || 'Sin Asignar'}</span>` : (!isAdmin ? `<span class="text-slate-300 text-xs font-mono">-</span>` : ''))}
+              ` : (nextStage && !isAdmin ? (isComprador && item.estado === 'Proyecto' ? `<span class="text-indigo-700 bg-indigo-50 border border-indigo-200 text-[10px] font-bold px-1.5 py-0.5 rounded" title="Vista preliminar de compras - Solo lectura">👁️ Solo Consulta</span>` : `<span class="text-slate-400 text-[10px] font-medium px-1.5 py-0.5 bg-slate-100 rounded" title="Solo puede avanzar el responsable asignado: ${item.responsable || 'Sin Asignar'}">🔒 ${item.responsable || 'Sin Asignar'}</span>`) : (!isAdmin ? `<span class="text-slate-300 text-xs font-mono">-</span>` : ''))}
             </div>
           </td>
         </tr>
@@ -1774,6 +1778,7 @@ const App = {
     // Contenedor Adjudicación (cuando avanza de En licitación a Obras en Curso)
     const containerAdjudicacion = document.getElementById('transAdjudicacionContainer');
     const inputProveedor = document.getElementById('transProveedorAdjudicadoInput');
+    const inputOrdenCompra = document.getElementById('transOrdenCompraInput');
     const inputMontoAdj = document.getElementById('transMontoAdjudicadoInput');
     const inputAnticipo = document.getElementById('transAnticipoPorcentajeInput');
     const inputPlazo = document.getElementById('transPlazoMesesInput');
@@ -1782,9 +1787,10 @@ const App = {
       if (currentStage === 'En licitación' && nextStage === 'Obras en Curso') {
         containerAdjudicacion.classList.remove('hidden');
         if (inputProveedor) inputProveedor.value = item.proveedor || '';
+        if (inputOrdenCompra) inputOrdenCompra.value = item.orden_compra || item.numero_oc || '';
         const defMontoAdj = item.monto_adjudicado_usd || item.monto_total_usd || item.monto_obra_usd || '';
         if (inputMontoAdj) inputMontoAdj.value = defMontoAdj > 0 ? defMontoAdj : '';
-        if (inputAnticipo) inputAnticipo.value = (item.anticipo_porcentaje !== undefined && item.anticipo_porcentaje !== null) ? item.anticipo_porcentaje : 0;
+        if (inputAnticipo) inputAnticipo.value = (item.anticipo_porcentaje !== undefined && item.anticipo_porcentaje !== null) ? item.anticipo_porcentaje : '';
         if (inputPlazo) inputPlazo.value = item.plazo_meses || 10;
         this.handleAdjudicacionInputChange();
       } else {
@@ -1924,13 +1930,19 @@ const App = {
     const extraData = {};
     if (currentStage === 'En licitación' && nextStage === 'Obras en Curso') {
       const proveedor = (document.getElementById('transProveedorAdjudicadoInput')?.value || '').trim();
+      const ordenCompra = (document.getElementById('transOrdenCompraInput')?.value || '').trim();
       const montoAdj = DataStore.parseCurrency(document.getElementById('transMontoAdjudicadoInput')?.value) || 0;
-      const anticipoPct = Math.min(100, Math.max(0, parseFloat(document.getElementById('transAnticipoPorcentajeInput')?.value) || 0));
+      const rawAnticipo = document.getElementById('transAnticipoPorcentajeInput')?.value;
       const plazoMeses = parseInt(document.getElementById('transPlazoMesesInput')?.value, 10) || 0;
 
       if (!proveedor) {
-        alert("⚠️ Debes indicar el Proveedor Adjudicado para avanzar a 'Obras en Curso'.");
+        alert("⚠️ Debes indicar la Razón Social del Proveedor Adjudicado para avanzar a 'Obras en Curso'.");
         document.getElementById('transProveedorAdjudicadoInput')?.focus();
+        return;
+      }
+      if (!ordenCompra) {
+        alert("⚠️ Debes ingresar el Número de Orden de Compra (OC) para avanzar a 'Obras en Curso'.");
+        document.getElementById('transOrdenCompraInput')?.focus();
         return;
       }
       if (montoAdj <= 0) {
@@ -1938,7 +1950,17 @@ const App = {
         document.getElementById('transMontoAdjudicadoInput')?.focus();
         return;
       }
+      if (rawAnticipo === '' || rawAnticipo === null || rawAnticipo === undefined || isNaN(parseFloat(rawAnticipo))) {
+        alert("⚠️ Debes ingresar el Porcentaje de Anticipo en Orden de Compra (cargar 0 si no lleva anticipo).");
+        document.getElementById('transAnticipoPorcentajeInput')?.focus();
+        return;
+      }
+      const anticipoPct = Math.min(100, Math.max(0, parseFloat(rawAnticipo)));
+
       extraData.proveedor = proveedor;
+      extraData.ordenCompra = ordenCompra;
+      extraData.orden_compra = ordenCompra;
+      extraData.numero_oc = ordenCompra;
       extraData.montoAdjudicado = montoAdj;
       extraData.porcentajeAnticipo = anticipoPct;
       if (plazoMeses > 0) extraData.plazoMeses = plazoMeses;
@@ -4317,6 +4339,7 @@ const App = {
     // Condiciones de Contratación y Anticipo OC
     const panelContratacion = document.getElementById('modalObraContratacionPanel');
     if (panelContratacion) {
+      setVal('modalObraOrdenCompra', item.orden_compra || item.numero_oc || '');
       setVal('modalObraMontoAdjudicado', item.monto_adjudicado_usd || item.monto_total_usd || montoObra || 0);
       setVal('modalObraAnticipoPct', (item.anticipo_porcentaje !== undefined && item.anticipo_porcentaje !== null) ? item.anticipo_porcentaje : 0);
       setVal('modalObraPlazoMeses', item.plazo_meses || '');
@@ -4486,6 +4509,9 @@ const App = {
       'modalObraPrioridadTec',
       'modalObraPrioridadMed',
       'modalObraDependenciaSelect',
+      'modalObraOrdenCompra',
+      'modalObraAnticipoPct',
+      'modalObraPlazoMeses',
       'modalObraObservaciones'
     ];
 
@@ -4661,6 +4687,11 @@ const App = {
     // Configurar estado de edición según permisos
     if (isAdmin) {
       this.toggleAdminEditMode(Boolean(startInEditMode));
+    } else if (u && (u.rol === 'licitaciones' || u.dependencia === 'Compras & Licitaciones') && item.estado === 'Proyecto') {
+      if (warningRestr) {
+        warningRestr.innerHTML = '👁️ <strong>Vista Preliminar para Compras (Solo Consulta):</strong> Esta obra se encuentra en etapa de <strong>Proyecto técnico</strong>. Tu perfil puede visualizar su alcance para previsión de adquisiciones y pliegos, pero no puede editarla ni avanzarla hasta que el proyectista finalice el proyecto y la derive a licitación.';
+        warningRestr.classList.remove('hidden');
+      }
     } else if (canEdit) {
       // Responsable a cargo: permitir editar fechas y observaciones
       this.adminEditModeActive = false;
@@ -4694,7 +4725,8 @@ const App = {
         'modalObraTitle', 'modalObraSede', 'modalObraTipo', 'modalObraEstado',
         'modalObraPartida', 'modalObraMontoPartida', 'modalObraMontoObra', 'modalObraMontoEquip',
         'modalObraM2', 'modalObraResponsable', 'modalObraResponsableSelect', 'modalObraProveedor',
-        'modalObraCategoria', 'modalObraPrioridadTec', 'modalObraPrioridadMed', 'modalObraDependenciaSelect'
+        'modalObraCategoria', 'modalObraPrioridadTec', 'modalObraPrioridadMed', 'modalObraDependenciaSelect',
+        'modalObraOrdenCompra', 'modalObraAnticipoPct', 'modalObraPlazoMeses'
       ];
       lockedFieldIds.forEach(fId => {
         const el = document.getElementById(fId);
@@ -4714,10 +4746,22 @@ const App = {
         }
       });
     } else {
-      // Modo consulta departamental (solo lectura)
+      // Modo consulta departamental / comprador en proyecto (solo lectura)
       this.toggleAdminEditMode(false);
       const btnSave = document.getElementById('btnModalSaveObra');
       if (btnSave) btnSave.classList.add('hidden');
+
+      if (u && (u.rol === 'licitaciones' || u.dependencia === 'Compras & Licitaciones') && item.estado === 'Proyecto') {
+        const footerInfo = document.getElementById('modalObraFooterInfo');
+        if (footerInfo) {
+          footerInfo.innerHTML = `
+            <span class="inline-flex items-center space-x-1.5 text-indigo-900 font-bold bg-indigo-50 px-3 py-1 rounded-lg border border-indigo-200">
+              <i data-lucide="eye" class="w-3.5 h-3.5 text-indigo-600"></i>
+              <span>Perfil Comprador: Vista preliminar de Proyecto (Solo Consulta). Se habilitará para licitar cuando finalice esta etapa.</span>
+            </span>
+          `;
+        }
+      }
     }
 
     // Configurar botón de Avanzar Etapa en el modal
@@ -4948,6 +4992,12 @@ const App = {
     }
 
     // Anticipo en Orden de Compra y Plazo de Ejecución
+    const inputOC = document.getElementById('modalObraOrdenCompra');
+    if (inputOC) {
+      const ocVal = inputOC.value.trim();
+      item.orden_compra = ocVal;
+      item.numero_oc = ocVal;
+    }
     const inputAnticipoPct = document.getElementById('modalObraAnticipoPct');
     if (inputAnticipoPct) {
       const aPct = Math.min(100, Math.max(0, parseFloat(inputAnticipoPct.value) || 0));

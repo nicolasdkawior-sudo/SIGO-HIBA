@@ -249,3 +249,28 @@ El reporte ejecutivo para comités de Dirección, Finanzas y Auditoría fue redi
    - Dictamen Institucional de Auditoría y Certificación de Inversiones con validez ejecutiva.
    - Casilleros formales para 3 firmas: Responsable de Partidas, Director de Compras/Contrataciones y Dirección General / Consejo Directivo.
 
+---
+
+## 9. PERFIL COMPRADOR (LICITACIONES): ADJUDICACIÓN CON ORDEN DE COMPRA (OC) Y ANTICIPO OBLIGATORIO + VISIBILIDAD PREVENTIVA DE PROYECTOS
+
+### 9.1. Adjudicación Obligatoria de Licitaciones
+- **Campos Estrictamente Obligatorios al Certificar Avance a "Obras en Curso":**
+  1. **Razón Social del Proveedor Adjudicado** (`proveedor`): Bloquea el pase si está vacío.
+  2. **Número de Orden de Compra (OC)** (`orden_compra` / `numero_oc`): Identificador contractual formal de compra hospitalaria (ej: `OC-2026-0892` o `4500012345`). Bloquea si está vacío.
+  3. **Monto Total Adjudicado en USD** (`monto_adjudicado_usd`): Monto formal resultante de la compulsa de precios. Bloquea si es $\le 0$.
+  4. **Porcentaje de Anticipo en Orden de Compra (%)** (`anticipo_porcentaje`): Obligatorio registrar un valor numérico entre 0% y 100% (cargar 0 si contractualmente no lleva anticipo). Bloquea si se deja vacío o no es un número válido.
+  5. **Plazo de Ejecución en Meses** (`plazo_meses`): Duración estimada para el prorrateo de saldo en el Cash Flow.
+- **Trazabilidad e Historial Contractual:**
+  - El sistema genera una traza inmutable en el historial que incluye el número de OC, el monto adjudicado y las condiciones de anticipo:  
+    `Compulsa finalizada y adjudicada a '[Proveedor]' por USD [Monto] [OC N° [OC]] (Anticipo OC: X% - USD Y) [Plazo: Z meses]. Retorna al proyectista [Responsable] en Obras en Curso.`
+  - Al adjudicarse, la obra retorna automáticamente a la responsabilidad operativa del Proyectista técnico original.
+
+### 9.2. Visibilidad Preventiva de Proyectos para el Comprador (Solo Lectura Estricta)
+- **Objetivo Operativo:** El departamento de Compras & Licitaciones debe conocer con antelación el pipeline de obras técnicas en elaboración para planificar compulsa de precios, armado preliminar de pliegos y precalificación de contratistas.
+- **Acceso en Tableros y Listados:**
+  - En el Tablero Kanban y Listados, el Comprador visualiza la columna **"Proyecto"** con distintivo visual `👁️ Próximas (Solo Lectura)`.
+  - En el Embudo del Dashboard, se incluye la barra de etapa **"Proyecto"** destacada en azul para previsión presupuestaria.
+- **Aislamiento y Bloqueo de Acciones:**
+  - El Comprador **no puede editar, modificar datos maestros ni avanzar obras en etapa Proyecto** (`canUserEditObra(item) === false` y `canUserAdvanceItem(item) === false`).
+  - En las tarjetas y filas de tabla, se ocultan los botones de "Editar" y "Avanzar", mostrándose la insignia `👁️ Solo Consulta`.
+  - Si el Comprador abre el modal de una obra en Proyecto, el sistema se bloquea en modo solo lectura con banner explicativo: *"Vista Preliminar para Compras (Solo Consulta): Esta obra se encuentra en etapa de Proyecto técnico. El Comprador puede visualizar su alcance para previsión de adquisiciones y pliegos, pero no puede editarla ni avanzarla hasta que pase a licitación"*.

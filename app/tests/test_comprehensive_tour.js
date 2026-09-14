@@ -186,15 +186,17 @@ var resDefinirPlazoLic = DataStore.definirPlazoEtapa(idObraTest, '2026-11-15', '
 obraCreada = DataStore.getItemById(idObraTest);
 assert("Comprador define plazo de licitación", resDefinirPlazoLic.success && obraCreada.fecha_fin_etapa === '2026-11-15');
 
-// 4.2 Adjudicación con Proveedor y Monto Adjudicado USD
+// 4.2 Adjudicación con Proveedor, Orden de Compra, Monto y Anticipo en USD
 var extraAdj = {
   proveedor: 'Constructora Hospitalaria Médica S.A.',
-  montoAdjudicado: 6720.50
+  ordenCompra: 'OC-2026-0044',
+  montoAdjudicado: 6720.50,
+  anticipoPorcentaje: 20
 };
 var resAvanzarObra = DataStore.confirmAndAdvanceStage(idObraTest, '2026-09-13', null, 'Adjudicación concluida tras concurso de precios', extraAdj);
 obraCreada = DataStore.getItemById(idObraTest);
 assert("Pase exitoso a 'Obras en Curso' con Proveedor y Monto Adjudicado", resAvanzarObra.success && obraCreada.estado === 'Obras en Curso');
-assert("Datos de adjudicación registrados correctamente en USD", obraCreada.proveedor === 'Constructora Hospitalaria Médica S.A.' && obraCreada.monto_adjudicado_usd === 6720.50);
+assert("Datos de adjudicación registrados correctamente en USD", obraCreada.proveedor === 'Constructora Hospitalaria Médica S.A.' && obraCreada.monto_adjudicado_usd === 6720.50 && obraCreada.orden_compra === 'OC-2026-0044');
 
 // ------------------------------------------------------------------------------
 // FASE 5: ROL PM INFRAESTRUCTURA CENTRAL (usr-kawior-pm)
@@ -399,6 +401,7 @@ DataStore.items.unshift(obraCFTest);
 var fechaHoyStr = new Date().toISOString().split('T')[0];
 var advResult = DataStore.confirmAndAdvanceStage('OBRA-CF-ANTICIPO-1M', fechaHoyStr, null, 'Adjudicación con 30% de anticipo y 10 meses de obra según pliego', {
   proveedor: 'Constructora del Plata S.A.',
+  ordenCompra: 'OC-2026-9999',
   montoAdjudicado: 1000000,
   porcentajeAnticipo: 30,
   plazoMeses: 10
@@ -533,6 +536,141 @@ assert("Obra en etapa Proyecto NO figura en getPendingMedicalPriorityItems()", !
 // Limpieza de obra temporal de prueba
 DataStore.items = DataStore.items.filter(function(it) { return it.id !== nuevaFact.id; });
 DataStore.persist();
+
+// ================================================================================
+// FASE 12: PERFIL COMPRADOR (LICITACIONES) - ORDEN DE COMPRA (OC) Y ANTICIPO OBLIGATORIO + VISIBILIDAD SOLO LECTURA EN PROYECTO
+// ================================================================================
+print("\n--- FASE 12: PERFIL COMPRADOR (LICITACIONES) Y ADJUDICACIÓN CON OC Y ANTICIPO ---");
+
+// 12.1 Login como Comprador (usr-licitaciones)
+var authLicitacionesTour = DataStore.authenticate('licitaciones', 'Admin2025!');
+DataStore.currentUser = authLicitacionesTour.user;
+assert("Login exitoso como Comprador (usr-licitaciones)", authLicitacionesTour.success === true && DataStore.currentUser.rol === 'licitaciones');
+
+// Crear una obra en etapa 'Proyecto' para testear visibilidad preventiva
+var obraProyTest = {
+  id: 'TEST-PROY-COMPRADOR-01',
+  nombre: 'Adecuación de Quirófano 5 para Licitación Futura',
+  tipo: 'Obra Civil',
+  sede: 'Central',
+  dependencia: 'Departamento de Arquitectura & Obras Civiles',
+  estado: 'Proyecto',
+  partida: '8899001',
+  monto_partida_usd: 300000,
+  monto_obra_usd: 300000,
+  monto_total_usd: 300000,
+  responsable: 'Arq. Martín Gómez',
+  responsable_id: 'usr-martin',
+  prioridad_tecnica: 4,
+  prioridad_medica: 4,
+  prioridad_final: 4,
+  superficie_m2: 120,
+  fecha_inicio_etapa: '2026-09-01',
+  fecha_fin_etapa: '2026-10-15',
+  historial: []
+};
+DataStore.items.push(obraProyTest);
+
+// 12.2 Visibilidad de etapa Proyecto para el Comprador
+assert("El Comprador PUEDE VER obras en etapa Proyecto (canUserViewObra)", DataStore.canUserViewObra(obraProyTest) === true);
+var filteredComp = DataStore.getFilteredItems();
+var canSeeInFiltered = filteredComp.some(function(x) { return x.id === obraProyTest.id; });
+assert("La obra en Proyecto aparece en el listado getFilteredItems() para el Comprador", canSeeInFiltered);
+
+// 12.3 Restricción estricta de NO EDICIÓN y NO AVANCE en Proyecto para el Comprador
+assert("El Comprador NO PUEDE EDITAR obras en Proyecto (canUserEditObra es false)", DataStore.canUserEditObra(obraProyTest) === false);
+assert("El Comprador NO PUEDE AVANZAR obras en Proyecto (canUserAdvanceItem es false)", DataStore.canUserAdvanceItem(obraProyTest) === false);
+var resAdvanceProyDenied = DataStore.confirmAndAdvanceStage(obraProyTest.id, '2026-09-14', null, 'Intento avance indebido');
+assert("Intento de avance en Proyecto por Comprador es RECHAZADO por permisos", resAdvanceProyDenied.success === false);
+
+// 12.4 Crear una obra en etapa 'En licitación' a cargo de Compras
+var obraLicTest = {
+  id: 'TEST-LIC-COMPRADOR-01',
+  nombre: 'Compulsa de Precios Nueva Sala de Espera Pediatría',
+  tipo: 'Obra Civil',
+  sede: 'Central',
+  dependencia: 'Compras & Licitaciones',
+  estado: 'En licitación',
+  partida: '8899002',
+  monto_partida_usd: 500000,
+  monto_obra_usd: 500000,
+  monto_total_usd: 500000,
+  responsable: 'Lic. Mariana López',
+  responsable_id: 'usr-licitaciones',
+  proyectista_id: 'usr-martin',
+  proyectista_nombre: 'Arq. Martín Gómez',
+  proyectista_dependencia: 'Departamento de Arquitectura & Obras Civiles',
+  prioridad_tecnica: 4,
+  prioridad_medica: 4,
+  prioridad_final: 4,
+  fecha_inicio_etapa: '2026-09-01',
+  fecha_fin_etapa: '2026-09-30',
+  historial: []
+};
+DataStore.items.push(obraLicTest);
+
+assert("El Comprador tiene autorización para certificar avance en 'En licitación'", DataStore.canUserAdvanceItem(obraLicTest) === true);
+
+// 12.5 Validaciones obligatorias de adjudicación: Proveedor, OC, Monto y Anticipo
+var resNoProv = DataStore.confirmAndAdvanceStage(obraLicTest.id, '2026-09-14', null, '', {
+  proveedor: '',
+  ordenCompra: 'OC-2026-001',
+  montoAdjudicado: 480000,
+  anticipoPorcentaje: 20
+});
+assert("Bloqueado si falta la Razón Social del Proveedor", resNoProv.success === false && resNoProv.msg.indexOf("Proveedor Adjudicado") !== -1);
+
+var resNoOC = DataStore.confirmAndAdvanceStage(obraLicTest.id, '2026-09-14', null, '', {
+  proveedor: 'Constructora Central S.A.',
+  ordenCompra: '',
+  montoAdjudicado: 480000,
+  anticipoPorcentaje: 20
+});
+assert("Bloqueado si falta el Número de Orden de Compra (OC)", resNoOC.success === false && resNoOC.msg.indexOf("Orden de Compra") !== -1);
+
+var resNoMonto = DataStore.confirmAndAdvanceStage(obraLicTest.id, '2026-09-14', null, '', {
+  proveedor: 'Constructora Central S.A.',
+  ordenCompra: 'OC-2026-001',
+  montoAdjudicado: 0,
+  anticipoPorcentaje: 20
+});
+assert("Bloqueado si el Monto Adjudicado es <= 0", resNoMonto.success === false && resNoMonto.msg.indexOf("Monto Total de la Adjudicación") !== -1);
+
+var resNoAnticipo = DataStore.confirmAndAdvanceStage(obraLicTest.id, '2026-09-14', null, '', {
+  proveedor: 'Constructora Central S.A.',
+  ordenCompra: 'OC-2026-001',
+  montoAdjudicado: 480000,
+  anticipoPorcentaje: ''
+});
+assert("Bloqueado si no se ingresa el Porcentaje de Anticipo en OC", resNoAnticipo.success === false && resNoAnticipo.msg.indexOf("Porcentaje de Anticipo") !== -1);
+
+// 12.6 Adjudicación exitosa con todos los campos obligatorios completos
+var resAdjSuccess = DataStore.confirmAndAdvanceStage(obraLicTest.id, '2026-09-14', null, 'Adjudicación aprobada por Comisión', {
+  proveedor: 'Techint Ingeniería y Construcción S.A.',
+  ordenCompra: 'OC-2026-8899',
+  montoAdjudicado: 485000,
+  anticipoPorcentaje: 30,
+  plazoMeses: 10
+});
+
+assert("Adjudicación exitosa a 'Obras en Curso'", resAdjSuccess.success === true && resAdjSuccess.nextStage === 'Obras en Curso');
+assert("Persistencia correcta de Proveedor", obraLicTest.proveedor === 'Techint Ingeniería y Construcción S.A.');
+assert("Persistencia correcta de Orden de Compra (orden_compra)", obraLicTest.orden_compra === 'OC-2026-8899');
+assert("Persistencia correcta de Orden de Compra (numero_oc)", obraLicTest.numero_oc === 'OC-2026-8899');
+assert("Persistencia correcta de Monto Adjudicado USD", obraLicTest.monto_adjudicado_usd === 485000);
+assert("Persistencia correcta de Porcentaje de Anticipo (30%)", obraLicTest.anticipo_porcentaje === 30);
+assert("Cálculo preciso del Anticipo USD (30% de 485.000 = 145.500)", obraLicTest.anticipo_monto_usd === 145500);
+assert("Plazo de obra asignado (10 meses)", obraLicTest.plazo_meses === 10);
+assert("La obra en curso retorna al proyectista original (Arq. Martín Gómez)", obraLicTest.responsable === 'Arq. Martín Gómez');
+assert("El historial incluye el registro con el número de OC", obraLicTest.historial[0].observaciones.indexOf('OC N° OC-2026-8899') !== -1);
+assert("En Obras en Curso el Comprador ya NO puede certificar avance (canUserAdvanceItem es false)", DataStore.canUserAdvanceItem(obraLicTest) === false);
+
+// Limpieza de obras temporales de la Fase 12
+DataStore.items = DataStore.items.filter(function(it) {
+  return it.id !== obraProyTest.id && it.id !== obraLicTest.id;
+});
+DataStore.persist();
+DataStore.currentUser = authAdmin.user; // Restaurar admin
 
 print("\n================================================================================");
 var failedCount = results.filter(function(r) { return r.status === 'FAIL'; }).length;

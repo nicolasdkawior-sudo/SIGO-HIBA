@@ -235,3 +235,29 @@ Diseñado para que la Dirección pueda delegar decenas de obras rápidamente sin
 - **Política Anti-Fuerza Bruta:** Si se ingresa una contraseña errónea 5 veces consecutivas, el sistema activará un bloqueo de seguridad por **5 minutos**. Aparecerá un temporizador en pantalla indicando el tiempo restante (`05:00`). Durante este lapso, el botón de ingreso quedará deshabilitado.
 - **Cierre de Sesión por Inactividad:** Tras 30 minutos sin movimiento del mouse o teclado, la plataforma cerrará la sesión de forma preventiva alertando al usuario y protegiendo datos médicos y presupuestarios sensibles.
 - **Cambio de Contraseña:** Si su usuario tiene configurada la directiva de actualización obligatoria, al iniciar sesión se desplegará el modal para establecer su contraseña personal definitiva (mínimo 6 caracteres).
+
+---
+
+## 10. GUÍA OPERATIVA PARA EL PERFIL COMPRADOR (COMPRAS & LICITACIONES)
+
+### 10.1. Visualización Anticipada de la Etapa "Proyecto" (Solo Lectura)
+1. Al iniciar sesión con el usuario de Compras (`usr-licitaciones`):
+   - En el **Tablero Kanban**, ahora observará la columna **"Proyecto"** encabezada con el distintivo **"👁️ Próximas (Solo Lectura)"**.
+   - En el **Embudo del Dashboard**, observará la barra azul correspondiente a los proyectos técnicos en desarrollo.
+2. **Propósito Operativo:** Conocer con anticipación las obras que los proyectistas están terminando de diseñar, permitiendo a Compras prever pliegos, contactos con contratistas y armado de compulsa.
+3. **Restricción de Seguridad:** En las obras de la columna Proyecto, el comprador **no puede editar datos ni avanzar etapas** (los botones de acción se ocultan y muestran la insignia `👁️ Solo Consulta`). Si abre el modal de detalle, todos los campos permanecerán bloqueados con el banner explicativo: *"Vista Preliminar para Compras (Solo Consulta)"*.
+
+### 10.2. Certificación de Adjudicación con Orden de Compra (OC) y Anticipo Obligatorio
+Cuando una obra se encuentra en la etapa **"En licitación"**, el Comprador es el único operador autorizado para certificar su compulsa:
+1. Haga clic en el botón azul **"Avanzar"** de la tarjeta o fila de la obra licitada.
+2. Se desplegará el panel de **"Adjudicación de la Compulsa"**, donde el sistema le exigirá **obligatoriamente**:
+   - **Proveedor Adjudicado (\*):** Razón social formal de la constructora o contratista adjudicado.
+   - **Número de Orden de Compra (OC) (\*):** Código o número de la orden de compra emitida (ej: `OC-2026-0892` o `4500012345`).
+   - **Monto Total Adjudicado (USD) (\*):** Importe final adjudicado (debe ser mayor a USD 0).
+   - **Porcentaje de Anticipo en Orden de Compra (%) (\*):** Ingrese el porcentaje pactado de anticipo contractual (entre 0 y 100%). Si la obra no contempla anticipo financiero, debe cargar obligatoriamente `0`.
+   - **Plazo de Ejecución (Meses):** Duración estimada de la obra en meses.
+3. **Cuadro Dinámico de Flujo:** A medida que ingresa los valores, el sistema calcula y exhibe en tiempo real:
+   - **Anticipo Inicial (Mes 1):** Monto exacto en USD que absorberá la tesorería en el primer mes de obra.
+   - **Saldo a Distribuir:** Monto restante y desglose de las cuotas mensuales idénticas para los meses 2 en adelante.
+4. Haga clic en **"Confirmar y Avanzar Etapa"**. Si omitió el N° de Orden de Compra o el porcentaje de anticipo, el sistema impedirá el avance y le solicitará completar el dato obligatorio.
+5. Al confirmarse, la obra pasa a **"Obras en Curso"**, se registra el N° de OC y condiciones de anticipo en el historial inmutable de auditoría y la obra retorna automáticamente al proyectista técnico para su supervisión en obra.
