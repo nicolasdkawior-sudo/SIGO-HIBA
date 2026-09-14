@@ -240,7 +240,10 @@ CREATE TRIGGER trg_audit_estado_obra
 
 -- ==============================================================================
 -- POLÍTICAS DE SEGURIDAD POR FILAS (ROW LEVEL SECURITY - RLS)
+-- Blindaje estricto: Acceso anónimo denegado, aislamiento departamental y auditoría
 -- ==============================================================================
+
+-- 1. Habilitación forzada de RLS en todas las tablas
 ALTER TABLE sedes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE perfiles_usuarios ENABLE ROW LEVEL SECURITY;
 ALTER TABLE proyectos_obras ENABLE ROW LEVEL SECURITY;
@@ -248,21 +251,151 @@ ALTER TABLE criterios_tecnicos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE obra_cashflow ENABLE ROW LEVEL SECURITY;
 ALTER TABLE obra_historial_estados ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Lectura sedes pública y autenticada" 
+-- 2. Revocar privilegios públicos por defecto al rol anónimo (Anti-Data Leaks)
+REVOKE ALL ON perfiles_usuarios FROM anon;
+REVOKE ALL ON proyectos_obras FROM anon;
+REVOKE ALL ON criterios_tecnicos FROM anon;
+REVOKE ALL ON obra_cashflow FROM anon;
+REVOKE ALL ON obra_historial_estados FROM anon;
+
+-- Otorgar privilegios operativos exclusivamente al rol autenticado
+GRANT SELECT ON sedes TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON perfiles_usuarios TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON proyectos_obras TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON criterios_tecnicos TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON obra_cashflow TO authenticated;
+GRANT SELECT, INSERT ON obra_historial_estados TO authenticated;
+
+-- 3. Funciones auxiliares de seguridad (SECURITY DEFINER para prevenir recursión)
+CREATE OR REPLACE FUNCTION auth_user_role()
+RETURNS TEXT AS $$
+BEGIN
+    RETURN (SELECT rol::TEXT FROM perfiles_usuarios WHERE id = auth.uid() LIMIT 1);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION is_admin_or_direccion()
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN COALESCE((SELECT rol IN ('admin', 'direccion_medica') FROM perfiles_usuarios WHERE id = auth.uid() LIMIT 1), false);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION auth_user_sede()
+RETURNS TEXT AS $$
+BEGIN
+    RETURN COALESCE((SELECT sede_asignada FROM perfiles_usuarios WHERE id = auth.uid() LIMIT 1), '');
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 4. Políticas para SEDES
+DROP POLICY IF EXISTS "Lectura sedes pública y autenticada" ON sedes;
+CREATE POLICY "Lectura sedes para todos" 
     ON sedes FOR SELECT USING (true);
 
-CREATE POLICY "Lectura obras a usuarios autenticados y anónimos" 
-    ON proyectos_obras FOR SELECT USING (true);
+CREATE POLICY "Modificación sedes solo admin" 
+    ON sedes FOR ALL 
+    USING (auth.role() = 'authenticated' AND is_admin_or_direccion());
 
-CREATE POLICY "Inserción y edición según sede de usuario" 
-    ON proyectos_obras FOR ALL 
+-- 5. Políticas para PERFILES_USUARIOS (Proteger emails y datos personales)
+DROP POLICY IF EXISTS "Lectura perfil propio o admin" ON perfiles_usuarios;
+CREATE POLICY "Lectura perfil propio o admin" 
+    ON perfiles_usuarios FOR SELECT 
     USING (
         auth.role() = 'authenticated' AND (
-            EXISTS (
-                SELECT 1 FROM perfiles_usuarios u 
-                WHERE u.id = auth.uid() 
-                AND (u.sede_asignada = 'Todas' OR u.sede_asignada = proyectos_obras.sede_nombre)
-                AND u.activo = true
+            id = auth.uid() OR is_admin_or_direccion()
+        )
+    );
+
+DROP POLICY IF EXISTS "Actualizacion perfil propio o admin" ON perfiles_usuarios;
+CREATE POLICY "Actualizacion perfil propio o admin" 
+    ON perfiles_usuarios FOR UPDATE 
+    USING (
+        auth.role() = 'authenticated' AND (
+            id = auth.uid() OR is_admin_or_direccion()
+        )
+    );
+
+DROP POLICY IF EXISTS "Creacion y eliminacion usuarios solo admin" ON perfiles_usuarios;
+CREATE POLICY "Creacion y eliminacion usuarios solo admin" 
+    ON perfiles_usuarios FOR ALL 
+    USING (auth.role() = 'authenticated' AND is_admin_or_direccion());
+
+-- Vista de directorio seguro para listar responsables sin exponer correos ni metadatos privados
+CREATE OR REPLACE VIEW vw_directorio_profesionales AS
+SELECT id, nombre, email, rol, sede_asignada, activo
+FROM perfiles_usuarios
+WHERE activo = true;
+
+GRANT SELECT ON vw_directorio_profesionales TO authenticated;
+
+-- 6. Políticas para PROYECTOS_OBRAS (Aislamiento por Sede y Responsable)
+DROP POLICY IF EXISTS "Lectura obras a usuarios autenticados y anónimos" ON proyectos_obras;
+DROP POLICY IF EXISTS "Lectura obras autenticadas con aislamiento" ON proyectos_obras;
+CREATE POLICY "Lectura obras autenticadas con aislamiento" 
+    ON proyectos_obras FOR SELECT 
+    USING (
+        auth.role() = 'authenticated' AND (
+            is_admin_or_direccion() 
+            OR auth_user_sede() = 'Todas' 
+            OR auth_user_sede() = proyectos_obras.sede_nombre
+            OR proyectos_obras.responsable_id = auth.uid()
+        )
+    );
+
+DROP POLICY IF EXISTS "Insercion obras segun permisos y sede" ON proyectos_obras;
+CREATE POLICY "Insercion obras segun permisos y sede" 
+    ON proyectos_obras FOR INSERT 
+    WITH CHECK (
+        auth.role() = 'authenticated' AND (
+            is_admin_or_direccion() 
+            OR (
+                (auth_user_sede() = 'Todas' OR auth_user_sede() = proyectos_obras.sede_nombre)
+                AND (SELECT puede_crear_obras FROM perfiles_usuarios WHERE id = auth.uid()) = true
             )
         )
     );
+
+DROP POLICY IF EXISTS "Edicion obras segun responsabilidad y etapa" ON proyectos_obras;
+CREATE POLICY "Edicion obras segun responsabilidad y etapa" 
+    ON proyectos_obras FOR UPDATE 
+    USING (
+        auth.role() = 'authenticated' AND (
+            is_admin_or_direccion()
+            OR (
+                proyectos_obras.responsable_id = auth.uid()
+                AND (SELECT puede_avanzar_etapas FROM perfiles_usuarios WHERE id = auth.uid()) = true
+            )
+        )
+    );
+
+DROP POLICY IF EXISTS "Eliminacion obras solo admin" ON proyectos_obras;
+CREATE POLICY "Eliminacion obras solo admin" 
+    ON proyectos_obras FOR DELETE 
+    USING (auth.role() = 'authenticated' AND is_admin_or_direccion());
+
+-- 7. Políticas para CRITERIOS_TÉCNICOS, CASHFLOW E HISTORIAL (Heredan de la Obra)
+CREATE POLICY "Lectura criterios vinculados a obras visibles" 
+    ON criterios_tecnicos FOR SELECT 
+    USING (auth.role() = 'authenticated' AND EXISTS (SELECT 1 FROM proyectos_obras p WHERE p.id = criterios_tecnicos.obra_id));
+
+CREATE POLICY "Modificacion criterios solo responsable o admin" 
+    ON criterios_tecnicos FOR ALL 
+    USING (auth.role() = 'authenticated' AND (is_admin_or_direccion() OR EXISTS (SELECT 1 FROM proyectos_obras p WHERE p.id = criterios_tecnicos.obra_id AND p.responsable_id = auth.uid())));
+
+CREATE POLICY "Lectura cashflow vinculada a obras visibles" 
+    ON obra_cashflow FOR SELECT 
+    USING (auth.role() = 'authenticated' AND EXISTS (SELECT 1 FROM proyectos_obras p WHERE p.id = obra_cashflow.obra_id));
+
+CREATE POLICY "Modificacion cashflow solo admin" 
+    ON obra_cashflow FOR ALL 
+    USING (auth.role() = 'authenticated' AND is_admin_or_direccion());
+
+CREATE POLICY "Lectura historial de estados vinculada a obras visibles" 
+    ON obra_historial_estados FOR SELECT 
+    USING (auth.role() = 'authenticated' AND EXISTS (SELECT 1 FROM proyectos_obras p WHERE p.id = obra_historial_estados.obra_id));
+
+CREATE POLICY "Insercion de historial de estados para usuarios autenticados" 
+    ON obra_historial_estados FOR INSERT 
+    WITH CHECK (auth.role() = 'authenticated');
+-- Fin de políticas RLS de seguridad robusta

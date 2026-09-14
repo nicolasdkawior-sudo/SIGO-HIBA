@@ -1,0 +1,5 @@
+# SIGO HIBA - Protección contra Indexación y Web Crawlers
+# Bloqueo total de motores de búsqueda para evitar fugas de datos hospitalarios y entornos de staging
+
+User-agent: *
+Disallow: /

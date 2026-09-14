@@ -1,7 +1,89 @@
 // ==============================================================================
-// CONTROLADOR PRINCIPAL SIGO HIBA v2.2
-// Gráfico interactivo con desglose por clic, Limpieza de filtros y USD estricto
+// GESTOR DE SEGURIDAD INSTITUCIONAL, RATE LIMITING Y ANTI-FUERZA BRUTA
 // ==============================================================================
+const SecurityManager = {
+  MAX_ATTEMPTS: 5,
+  LOCKOUT_DURATION_MS: 5 * 60 * 1000, // 5 minutos de bloqueo temporal
+  STORAGE_KEY: 'sigo_security_lockout',
+  timerInterval: null,
+
+  getLockoutState() {
+    try {
+      const raw = localStorage.getItem(this.STORAGE_KEY);
+      if (!raw) return { attempts: 0, lockedUntil: 0 };
+      const state = JSON.parse(raw);
+      if (state.lockedUntil && Date.now() > state.lockedUntil) {
+        this.resetAttempts();
+        return { attempts: 0, lockedUntil: 0 };
+      }
+      return state;
+    } catch (e) {
+      return { attempts: 0, lockedUntil: 0 };
+    }
+  },
+
+  isLocked() {
+    const state = this.getLockoutState();
+    return Boolean(state.lockedUntil && Date.now() < state.lockedUntil);
+  },
+
+  getRemainingLockoutSeconds() {
+    const state = this.getLockoutState();
+    if (!state.lockedUntil) return 0;
+    return Math.max(0, Math.ceil((state.lockedUntil - Date.now()) / 1000));
+  },
+
+  recordFailedAttempt(username = '') {
+    const state = this.getLockoutState();
+    state.attempts = (state.attempts || 0) + 1;
+    state.lastAttempt = Date.now();
+    state.lastUsername = username;
+
+    if (state.attempts >= this.MAX_ATTEMPTS) {
+      state.lockedUntil = Date.now() + this.LOCKOUT_DURATION_MS;
+    }
+
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(state));
+    return state;
+  },
+
+  recordSuccessfulLogin() {
+    this.resetAttempts();
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+  },
+
+  resetAttempts() {
+    localStorage.removeItem(this.STORAGE_KEY);
+  },
+
+  formatTime(totalSeconds) {
+    const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+    const s = (totalSeconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  },
+
+  startLockoutCountdown(onTick, onExpired) {
+    if (this.timerInterval) clearInterval(this.timerInterval);
+    const update = () => {
+      const remaining = this.getRemainingLockoutSeconds();
+      if (remaining <= 0) {
+        clearInterval(this.timerInterval);
+        this.timerInterval = null;
+        this.resetAttempts();
+        if (onExpired) onExpired();
+      } else {
+        if (onTick) onTick(this.formatTime(remaining), remaining);
+      }
+    };
+    update();
+    this.timerInterval = setInterval(update, 1000);
+  }
+};
+
+window.SecurityManager = SecurityManager;
 
 const App = {
   currentView: 'dashboard',
@@ -28,6 +110,9 @@ const App = {
     this.pipelineSelectedStage = null;
     DataStore.init();
     SupabaseManager.init();
+
+    this.checkLockoutState();
+    this.initInactivityWatcher();
 
     this.setupEventListeners();
     this.updateCloudStatusUI();
@@ -3210,41 +3295,74 @@ const App = {
   },
 
   renderLoginScreenProfiles() {
-    const select = document.getElementById('selectAuthorizedAccount');
-    if (!select) return;
-
-    const users = DataStore.users || [];
-    select.innerHTML = '<option value="">-- Seleccionar cuenta para autocompletar --</option>' +
-      users.map(u => `<option value="${u.username}">${u.nombre} (Usuario: ${u.username}) - Rol: ${u.rol.toUpperCase()}</option>`).join('');
+    // Deprecado por seguridad: el selector de perfiles público fue removido para evitar fugas de usuarios
   },
 
-  handleQuickSelectAccount(username) {
-    if (!username) return;
-    const uInput = document.getElementById('inputLoginUsername');
-    const pInput = document.getElementById('inputLoginPassword');
-    if (uInput) uInput.value = username;
-    if (pInput) {
-      pInput.value = 'Admin2025!';
-      if (typeof pInput.focus === 'function') pInput.focus();
+  checkLockoutState() {
+    const lockoutBox = document.getElementById('loginLockoutMessage');
+    const countdownSpan = document.getElementById('loginLockoutCountdown');
+    const submitBtn = document.getElementById('btnLoginSubmit');
+    const errBox = document.getElementById('loginErrorMessage');
+
+    if (SecurityManager.isLocked()) {
+      if (errBox) errBox.classList.add('hidden');
+      if (lockoutBox) lockoutBox.classList.remove('hidden');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Acceso Bloqueado Temporalmente';
+      }
+      SecurityManager.startLockoutCountdown(
+        (formattedTime) => {
+          if (countdownSpan) countdownSpan.innerText = formattedTime;
+        },
+        () => {
+          if (lockoutBox) lockoutBox.classList.add('hidden');
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<span>Ingresar al Sistema</span><i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>';
+            if (window.lucide) lucide.createIcons();
+          }
+        }
+      );
+      return true;
+    } else {
+      if (lockoutBox) lockoutBox.classList.add('hidden');
+      if (submitBtn) submitBtn.disabled = false;
+      return false;
     }
   },
 
-  quickFillAdminLogin() {
-    const uInput = document.getElementById('inputLoginUsername');
-    const pInput = document.getElementById('inputLoginPassword');
-    if (uInput) uInput.value = 'admin';
-    if (pInput) {
-      pInput.value = 'Admin2025!';
-      if (typeof pInput.focus === 'function') pInput.focus();
+  initInactivityWatcher(timeoutMinutes = 30) {
+    let timeoutId;
+    const resetTimer = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      if (!DataStore.currentUser) return;
+      timeoutId = setTimeout(() => {
+        if (DataStore.currentUser) {
+          const uName = DataStore.currentUser.nombre;
+          DataStore.logout();
+          this.checkAuth();
+          alert(`🔒 Tu sesión (${uName}) ha sido cerrada automáticamente tras 30 minutos de inactividad por políticas de seguridad institucional.`);
+        }
+      }, timeoutMinutes * 60 * 1000);
+    };
+
+    if (typeof window !== 'undefined' && window.addEventListener) {
+      ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(evt => {
+        window.addEventListener(evt, resetTimer, { passive: true });
+      });
+      resetTimer();
     }
   },
 
-  directLogin(username, password = 'Admin2025!') {
-    const uInput = document.getElementById('inputLoginUsername');
-    const pInput = document.getElementById('inputLoginPassword');
-    if (uInput) uInput.value = username;
-    if (pInput) pInput.value = password;
-    this.handleLoginSubmit();
+  escapeHTML(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   },
 
   togglePasswordVisibility(inputId) {
@@ -3253,11 +3371,17 @@ const App = {
     input.type = input.type === 'password' ? 'text' : 'password';
   },
 
-  handleLoginSubmit() {
+  async handleLoginSubmit() {
     const uInput = document.getElementById('inputLoginUsername');
     const pInput = document.getElementById('inputLoginPassword');
     const errBox = document.getElementById('loginErrorMessage');
     const errText = document.getElementById('loginErrorText');
+    const submitBtn = document.getElementById('btnLoginSubmit');
+
+    // 1. Verificar si el cliente está en período de bloqueo por fuerza bruta
+    if (this.checkLockoutState()) {
+      return;
+    }
 
     if (errBox) errBox.classList.add('hidden');
 
@@ -3266,14 +3390,30 @@ const App = {
 
     if (!username || !password) {
       if (errBox && errText) {
-        errText.innerText = 'Por favor ingresa usuario y contraseña.';
+        errText.innerText = 'Por favor ingresa tu usuario o correo institucional y contraseña.';
         errBox.classList.remove('hidden');
       }
       return;
     }
 
+    // 2. Retardo progresivo anti-timing/fuerza bruta si hubo intentos fallidos previos
+    const prevAttempts = SecurityManager.getLockoutState().attempts || 0;
+    if (prevAttempts > 0) {
+      const delayMs = Math.min(prevAttempts * 500, 2000);
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Verificando credenciales...';
+      }
+      await new Promise(r => setTimeout(r, delayMs));
+      if (submitBtn && !SecurityManager.isLocked()) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>Ingresar al Sistema</span><i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>';
+      }
+    }
+
     const res = DataStore.authenticate(username, password);
     if (res.success) {
+      SecurityManager.recordSuccessfulLogin();
       if (errBox) errBox.classList.add('hidden');
 
       if (res.mustChangePassword) {
@@ -3295,11 +3435,17 @@ const App = {
         if (window.lucide) lucide.createIcons();
       }
     } else {
-      if (errBox && errText) {
-        errText.innerText = res.msg;
-        errBox.classList.remove('hidden');
+      const lockoutState = SecurityManager.recordFailedAttempt(username);
+      if (lockoutState.lockedUntil) {
+        this.checkLockoutState();
       } else {
-        alert(res.msg);
+        const remaining = SecurityManager.MAX_ATTEMPTS - lockoutState.attempts;
+        if (errBox && errText) {
+          errText.innerHTML = `${res.msg}<br><span class="font-bold text-amber-700">Te quedan ${remaining} intento(s) antes del bloqueo temporal de seguridad.</span>`;
+          errBox.classList.remove('hidden');
+        } else {
+          alert(`${res.msg}\nTe quedan ${remaining} intentos antes del bloqueo.`);
+        }
       }
       if (window.lucide) lucide.createIcons();
     }
@@ -4238,11 +4384,16 @@ const App = {
     const url = document.getElementById('inputSupabaseUrl').value;
     const key = document.getElementById('inputSupabaseKey').value;
 
-    const success = SupabaseManager.setCredentials(url, key);
+    const res = SupabaseManager.setCredentials(url, key);
+    if (!res.success && res.error) {
+      alert(res.error);
+      return;
+    }
+
     this.updateCloudStatusUI();
     document.getElementById('modalSettings').classList.add('hidden');
 
-    if (success) {
+    if (res.isConfigured) {
       this.showToast('Supabase conectado correctamente 🎉');
     } else {
       this.showToast('Conexión guardada. Modo local activo.');
