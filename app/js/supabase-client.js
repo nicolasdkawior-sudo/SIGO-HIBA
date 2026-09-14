@@ -58,15 +58,22 @@ const SupabaseManager = {
   },
 
   init() {
-    let url = localStorage.getItem('sigo_supabase_url_sec');
-    let key = localStorage.getItem('sigo_supabase_key_sec');
+    // 1. Configuración provista por backend / servidor / variables de despliegue
+    let url = (typeof window !== 'undefined' && (window.__SUPABASE_CONFIG__?.url || window.ENV_SUPABASE?.url)) || '';
+    let key = (typeof window !== 'undefined' && (window.__SUPABASE_CONFIG__?.key || window.ENV_SUPABASE?.key)) || '';
 
-    if (url) url = this._deobfuscate(url);
-    if (key) key = this._deobfuscate(key);
+    // 2. Respaldo de configuración previa en almacenamiento local seguro
+    if (!url || !key) {
+      url = localStorage.getItem('sigo_supabase_url_sec');
+      key = localStorage.getItem('sigo_supabase_key_sec');
 
-    // Compatibilidad con almacenamiento previo no ofuscado
-    if (!url) url = localStorage.getItem('sigo_supabase_url');
-    if (!key) key = localStorage.getItem('sigo_supabase_key');
+      if (url) url = this._deobfuscate(url);
+      if (key) key = this._deobfuscate(key);
+
+      // Compatibilidad con almacenamiento previo no ofuscado
+      if (!url) url = localStorage.getItem('sigo_supabase_url');
+      if (!key) key = localStorage.getItem('sigo_supabase_key');
+    }
 
     if (url && key && window.supabase) {
       // Re-verificar seguridad antes de instanciar

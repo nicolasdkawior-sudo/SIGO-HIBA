@@ -3609,11 +3609,6 @@ const App = {
     if (btnExecutive) {
       btnExecutive.classList.toggle('hidden', u.rol !== 'admin');
     }
-
-    const btnSettings = document.getElementById('btnSettingsTop');
-    if (btnSettings) {
-      btnSettings.classList.toggle('hidden', u.rol !== 'admin');
-    }
   },
 
   // ================= CÁLCULO INSTANTÁNEO Y AUDITORÍA DE M2 =================
@@ -4388,40 +4383,12 @@ const App = {
   },
 
   openSettingsModal() {
-    const u = DataStore.currentUser;
-    if (!u || u.rol !== 'admin') {
-      alert("⛔ Acceso Denegado: Solo administradores pueden configurar la conexión a la base de datos.");
-      return;
-    }
-    const creds = SupabaseManager.getCredentials();
-    document.getElementById('inputSupabaseUrl').value = creds.url;
-    document.getElementById('inputSupabaseKey').value = creds.key;
-    document.getElementById('modalSettings').classList.remove('hidden');
+    console.info("Configuración de base de datos desacoplada de la interfaz; gestionada a nivel de backend.");
   },
 
-  saveSettingsModal() {
-    const url = document.getElementById('inputSupabaseUrl').value;
-    const key = document.getElementById('inputSupabaseKey').value;
+  saveSettingsModal() {},
 
-    const res = SupabaseManager.setCredentials(url, key);
-    if (!res.success && res.error) {
-      alert(res.error);
-      return;
-    }
-
-    this.updateCloudStatusUI();
-    document.getElementById('modalSettings').classList.add('hidden');
-
-    if (res.isConfigured) {
-      this.showToast('Supabase conectado correctamente 🎉');
-    } else {
-      this.showToast('Conexión guardada. Modo local activo.');
-    }
-  },
-
-  closeSettingsModal() {
-    document.getElementById('modalSettings').classList.add('hidden');
-  },
+  closeSettingsModal() {},
 
   updateCloudStatusUI() {
     const indicator = document.getElementById('cloudStatusIndicator');

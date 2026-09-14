@@ -180,9 +180,10 @@ El flujo de avance de cada obra se rige por la siguiente secuencia canónica:
 2. **Protección de Datos y Crawlers:**
    - Archivo `robots.txt` que bloquea la indexación de motores de búsqueda (`User-agent: * Disallow: /`).
    - Meta etiquetas `robots` y `googlebot` con directivas `noindex, nofollow, noarchive, nosnippet`.
-3. **Manejo Seguro de Supabase:**
-   - Validación preventiva de API Keys en frontend: rechazo automático e inmediato de claves secretas `service_role`. Solo se autoriza la clave pública `anon`.
-   - Ofuscación de credenciales guardadas en `localStorage` para impedir su lectura simple en texto plano.
+3. **Manejo Seguro y Desacople de Base de Datos (Configuración Exclusiva en Backend):**
+   - La configuración de conexión a Supabase Cloud (URL y API Key) está **estrictamente desacoplada de la interfaz de usuario visual**. Se eliminó cualquier botón de engranaje o modal de configuración en el frontend para impedir que cualquier usuario o atacante acceda, altere o visualice la configuración de la base de datos.
+   - Las conexiones se gestionan e inyectan exclusivamente a nivel de backend, servidor o variables de entorno del despliegue (`window.__SUPABASE_CONFIG__` o entorno servidor).
+   - Validación preventiva en cliente: rechazo automático e inmediato de claves secretas `service_role`.
    - Políticas RLS (Row Level Security) estrictas en PostgreSQL.
 4. **Cierre de Sesión por Inactividad:**
    - Temporizador de 30 minutos de inactividad que cierra la sesión activa automáticamente y devuelve al usuario a la pantalla de acceso institucional.
