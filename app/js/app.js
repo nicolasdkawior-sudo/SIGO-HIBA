@@ -3327,7 +3327,13 @@ const App = {
       return true;
     } else {
       if (lockoutBox) lockoutBox.classList.add('hidden');
-      if (submitBtn) submitBtn.disabled = false;
+      if (submitBtn && !submitBtn.dataset.busy) {
+        submitBtn.disabled = false;
+        if (!submitBtn.innerHTML.includes('arrow-right')) {
+          submitBtn.innerHTML = '<span>Ingresar al Sistema</span><i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>';
+          if (window.lucide) lucide.createIcons();
+        }
+      }
       return false;
     }
   },
@@ -3396,55 +3402,69 @@ const App = {
       return;
     }
 
-    // 2. Retardo progresivo anti-timing/fuerza bruta si hubo intentos fallidos previos
-    const prevAttempts = SecurityManager.getLockoutState().attempts || 0;
-    if (prevAttempts > 0) {
-      const delayMs = Math.min(prevAttempts * 500, 2000);
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerText = 'Verificando credenciales...';
-      }
-      await new Promise(r => setTimeout(r, delayMs));
-      if (submitBtn && !SecurityManager.isLocked()) {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<span>Ingresar al Sistema</span><i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>';
-      }
+    if (submitBtn) {
+      submitBtn.dataset.busy = 'true';
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span>Verificando credenciales...</span>';
     }
 
-    const res = DataStore.authenticate(username, password);
-    if (res.success) {
-      SecurityManager.recordSuccessfulLogin();
-      if (errBox) errBox.classList.add('hidden');
-
-      if (res.mustChangePassword) {
-        // Obligar cambio de contraseña temporal
-        this.openChangePasswordModal();
-      } else {
-        if (DataStore.currentUser && DataStore.currentUser.dependencia && DataStore.currentUser.dependencia !== 'Dirección General / Administración' && !DataStore.isAdmin()) {
-          this.filters.dependencia = DataStore.currentUser.dependencia;
-        } else {
-          this.filters.dependencia = 'TODAS';
-        }
-        if (DataStore.currentUser && DataStore.currentUser.sede !== 'Todas') {
-          this.filters.sede = DataStore.currentUser.sede;
-        }
-        this.checkAuth();
-        this.updateUserUI();
-        this.render();
-        this.showToast(`¡Bienvenido/a ${res.user.nombre}!`);
-        if (window.lucide) lucide.createIcons();
+    try {
+      // 2. Retardo progresivo anti-timing/fuerza bruta si hubo intentos fallidos previos
+      const prevAttempts = SecurityManager.getLockoutState().attempts || 0;
+      if (prevAttempts > 0) {
+        const delayMs = Math.min(prevAttempts * 400, 1500);
+        await new Promise(r => setTimeout(r, delayMs));
       }
-    } else {
-      const lockoutState = SecurityManager.recordFailedAttempt(username);
-      if (lockoutState.lockedUntil) {
-        this.checkLockoutState();
-      } else {
-        const remaining = SecurityManager.MAX_ATTEMPTS - lockoutState.attempts;
-        if (errBox && errText) {
-          errText.innerHTML = `${res.msg}<br><span class="font-bold text-amber-700">Te quedan ${remaining} intento(s) antes del bloqueo temporal de seguridad.</span>`;
-          errBox.classList.remove('hidden');
+
+      const res = DataStore.authenticate(username, password);
+      if (res.success) {
+        SecurityManager.recordSuccessfulLogin();
+        if (errBox) errBox.classList.add('hidden');
+
+        if (res.mustChangePassword) {
+          // Obligar cambio de contraseña temporal
+          this.openChangePasswordModal();
         } else {
-          alert(`${res.msg}\nTe quedan ${remaining} intentos antes del bloqueo.`);
+          if (DataStore.currentUser && DataStore.currentUser.dependencia && DataStore.currentUser.dependencia !== 'Dirección General / Administración' && !DataStore.isAdmin()) {
+            this.filters.dependencia = DataStore.currentUser.dependencia;
+          } else {
+            this.filters.dependencia = 'TODAS';
+          }
+          if (DataStore.currentUser && DataStore.currentUser.sede !== 'Todas') {
+            this.filters.sede = DataStore.currentUser.sede;
+          }
+          this.checkAuth();
+          this.updateUserUI();
+          this.render();
+          this.showToast(`¡Bienvenido/a ${res.user.nombre}!`);
+          if (window.lucide) lucide.createIcons();
+        }
+      } else {
+        const lockoutState = SecurityManager.recordFailedAttempt(username);
+        if (lockoutState.lockedUntil) {
+          this.checkLockoutState();
+        } else {
+          const remaining = SecurityManager.MAX_ATTEMPTS - lockoutState.attempts;
+          if (errBox && errText) {
+            errText.innerHTML = `${res.msg}<br><span class="font-bold text-amber-700">Te quedan ${remaining} intento(s) antes del bloqueo temporal de seguridad.</span>`;
+            errBox.classList.remove('hidden');
+          } else {
+            alert(`${res.msg}\nTe quedan ${remaining} intentos antes del bloqueo.`);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error al autenticar:", err);
+      if (errBox && errText) {
+        errText.innerText = "Ocurrió un error inesperado al iniciar sesión. Por favor intenta nuevamente.";
+        errBox.classList.remove('hidden');
+      }
+    } finally {
+      if (submitBtn) {
+        delete submitBtn.dataset.busy;
+        if (!SecurityManager.isLocked() && !DataStore.currentUser) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<span>Ingresar al Sistema</span><i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>';
         }
       }
       if (window.lucide) lucide.createIcons();
@@ -4408,11 +4428,11 @@ const App = {
     const indicator = document.getElementById('cloudStatusIndicator');
     const text = document.getElementById('cloudStatusText');
     if (SupabaseManager.isConfigured) {
-      indicator.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse';
-      text.innerText = 'Supabase Cloud';
+      if (indicator) indicator.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse';
+      if (text) text.innerText = 'Supabase Cloud';
     } else {
-      indicator.className = 'w-2.5 h-2.5 rounded-full bg-amber-400';
-      text.innerText = 'Modo Local / Demo';
+      if (indicator) indicator.className = 'w-2.5 h-2.5 rounded-full bg-amber-400';
+      if (text) text.innerText = 'Modo Local / Demo';
     }
   },
 
@@ -4432,4 +4452,9 @@ const App = {
 };
 
 window.App = App;
-window.addEventListener('DOMContentLoaded', () => App.init());
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => App.init());
+} else {
+  App.init();
+}
+
