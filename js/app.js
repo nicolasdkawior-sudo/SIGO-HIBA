@@ -2109,8 +2109,9 @@ const App = {
 
       // Dependencia filter
       if (depFilter !== 'TODAS') {
-        const itemDep = item.dependencia || DataStore.getObraDependencia(item);
-        if (itemDep !== depFilter) return false;
+        const itemDep = DataStore.normalizeDependencia ? DataStore.normalizeDependencia(item.dependencia || DataStore.getObraDependencia(item)) : (item.dependencia || DataStore.getObraDependencia(item));
+        const normalizedFilter = DataStore.normalizeDependencia ? DataStore.normalizeDependencia(depFilter) : depFilter;
+        if (itemDep !== normalizedFilter) return false;
       }
 
       // Assignment status
@@ -2308,7 +2309,8 @@ const App = {
       const currentVal = deptSelect.value;
       const depts = new Set();
       (DataStore.items || []).forEach(x => {
-        if (x.dependencia) depts.add(x.dependencia);
+        const dep = DataStore.normalizeDependencia ? DataStore.normalizeDependencia(x.dependencia || DataStore.getObraDependencia(x)) : x.dependencia;
+        if (dep) depts.add(dep);
       });
       let html = '<option value="todos">Todos los Departamentos</option>';
       Array.from(depts).sort().forEach(d => {
@@ -2348,7 +2350,11 @@ const App = {
       if (estadoFilter === 'asignadas' && isSinAsignar) return false;
 
       // 2. Departamento
-      if (deptFilter !== 'todos' && item.dependencia !== deptFilter) return false;
+      if (deptFilter !== 'todos') {
+        const itemDep = DataStore.normalizeDependencia ? DataStore.normalizeDependencia(item.dependencia || DataStore.getObraDependencia(item)) : item.dependencia;
+        const targetDep = DataStore.normalizeDependencia ? DataStore.normalizeDependencia(deptFilter) : deptFilter;
+        if (itemDep !== targetDep) return false;
+      }
 
       // 3. Persona / Responsable actual
       if (personaFilter !== 'todos' && item.responsable_id !== personaFilter) return false;
@@ -2872,7 +2878,8 @@ const App = {
     document.getElementById('editUserUsername').value = `@${user.username || ''}`;
     document.getElementById('editUserEmail').value = user.email || '';
     if (document.getElementById('editUserDependencia')) {
-      document.getElementById('editUserDependencia').value = user.dependencia || 'Departamento de Proyectos Central';
+      const depVal = DataStore.normalizeDependencia ? DataStore.normalizeDependencia(user.dependencia) : user.dependencia;
+      document.getElementById('editUserDependencia').value = depVal || 'Departamento de Proyectos Central';
     }
     document.getElementById('editUserSede').value = user.sede || 'Central';
     document.getElementById('editUserRol').value = user.rol || 'pm_obra';
@@ -3404,7 +3411,7 @@ const App = {
         depSelect.disabled = false;
         depSelect.classList.remove('bg-slate-200', 'cursor-not-allowed');
       } else if (u.dependencia && u.dependencia !== 'Dirección General / Administración') {
-        depSelect.value = u.dependencia;
+        depSelect.value = DataStore.normalizeDependencia ? DataStore.normalizeDependencia(u.dependencia) : u.dependencia;
         depSelect.disabled = true;
         depSelect.classList.add('bg-slate-200', 'cursor-not-allowed');
       }

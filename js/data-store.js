@@ -195,7 +195,7 @@ const DEFAULT_USERS = [
     password_hash: DEFAULT_ADMIN_HASH,
     debe_cambiar_clave: false,
     sede: 'San Justo',
-    dependencia: 'Departamento de Proyectos San Justo',
+    dependencia: 'Departamento de Mantenimiento y Proyectos San Justo',
     rol: 'pm_obra',
     activo: true,
     puede_crear: true,
@@ -248,8 +248,8 @@ const DEFAULT_USERS = [
     salt: DEFAULT_SALT,
     password_hash: DEFAULT_ADMIN_HASH,
     debe_cambiar_clave: false,
-    sede: 'Central',
-    dependencia: 'Departamento de Mantenimiento San Justo',
+    sede: 'San Justo',
+    dependencia: 'Departamento de Mantenimiento y Proyectos San Justo',
     rol: 'pm_obra',
     activo: true,
     puede_crear: true,
@@ -393,11 +393,24 @@ const DataStore = {
 
   DEPENDENCIAS: [
     'Departamento de Mantenimiento Central',
-    'Departamento de Mantenimiento San Justo',
     'Departamento de Proyectos Central',
-    'Departamento de Proyectos San Justo',
+    'Departamento de Mantenimiento y Proyectos San Justo',
     'Departamento de Instalaciones'
   ],
+
+  normalizeDependencia(dep) {
+    if (!dep) return '';
+    const d = dep.trim();
+    if (d === 'Departamento de Proyectos San Justo' || 
+        d === 'Departamento de Mantenimiento San Justo' || 
+        d === 'Proyectos San Justo' || 
+        d === 'Mantenimiento San Justo' ||
+        d === 'Departamento de Mantenimiento y Proyectos San Justo' ||
+        d === 'Mantenimiento y Proyectos San Justo') {
+      return 'Departamento de Mantenimiento y Proyectos San Justo';
+    }
+    return d;
+  },
 
   init() {
     // 1. Cargar Usuarios
@@ -482,6 +495,7 @@ const DataStore = {
       if (u.activo === undefined) u.activo = true;
       if (u.puede_avanzar === undefined) u.puede_avanzar = (u.rol !== 'visualizador' && !u.solo_lectura);
       if (u.puede_crear === undefined) u.puede_crear = (u.rol !== 'visualizador' && !u.solo_lectura);
+      u.dependencia = this.normalizeDependencia(u.dependencia);
     });
     this.persistUsers();
 
@@ -541,7 +555,7 @@ const DataStore = {
       if (item.estado === 'Proyecto para licitar') item.estado = 'Proyecto';
 
       // Sincronizar dependencia canónica primero (repara automáticamente discrepancias en localStorage)
-      item.dependencia = this.getObraDependencia(item);
+      item.dependencia = this.normalizeDependencia(this.getObraDependencia(item));
 
       // Si la obra está en Estudio de Factibilidad y no tiene partida válida:
       // No puede estar asignada a nadie. Debe figurar como Sin Asignar y preservar creado_por.
@@ -1426,46 +1440,62 @@ const DataStore = {
   getObraDependencia(item) {
     if (!item) return '';
 
-    // 1. Si tiene dependencia explícita válida asignada o derivada, esa es su dependencia canónica
-    if (item.dependencia && item.dependencia.trim() !== '' && item.dependencia !== 'Dirección General / Administración') {
-      return item.dependencia.trim();
+    const sede = (item.sede || '').toLowerCase();
+
+    // 1. San Justo unificado: todas las obras radicadas en la sede San Justo pertenecen al departamento unificado de San Justo,
+    // salvo que hayan sido formalmente asignadas o derivadas por Admin a otra dependencia externa válida mediante responsable_id.
+    if (sede.includes('justo')) {
+      if (item.responsable_id) {
+        const respUser = this.users.find(u => u.id === item.responsable_id);
+        if (respUser && respUser.dependencia && respUser.dependencia !== 'Dirección General / Administración') {
+          const uNorm = this.normalizeDependencia(respUser.dependencia);
+          if (!uNorm.toLowerCase().includes('san justo')) {
+            return uNorm;
+          }
+        }
+      }
+      if (item.dependencia && item.dependencia.trim() !== '' && item.dependencia !== 'Dirección General / Administración') {
+        const norm = this.normalizeDependencia(item.dependencia);
+        if (!norm.toLowerCase().includes('san justo') && item.responsable_id) {
+          return norm;
+        }
+      }
+      return 'Departamento de Mantenimiento y Proyectos San Justo';
     }
 
-    // 2. Si la obra está asignada formalmente a un usuario con ID
+    // 2. Si tiene dependencia explícita válida asignada o derivada, esa es su dependencia canónica
+    if (item.dependencia && item.dependencia.trim() !== '' && item.dependencia !== 'Dirección General / Administración') {
+      return this.normalizeDependencia(item.dependencia);
+    }
+
+    // 3. Si la obra está asignada formalmente a un usuario con ID
     if (item.responsable_id) {
       const respUser = this.users.find(u => u.id === item.responsable_id);
       if (respUser && respUser.dependencia && respUser.dependencia !== 'Dirección General / Administración') {
-        return respUser.dependencia.trim();
+        return this.normalizeDependencia(respUser.dependencia);
       }
     }
     const respObj = this.getObraAssignedUser(item);
     if (respObj && respObj.dependencia && respObj.dependencia !== 'Dirección General / Administración') {
-      return respObj.dependencia.trim();
+      return this.normalizeDependencia(respObj.dependencia);
     }
 
     // Si tiene dependencia explícita aunque sea Dirección General
     if (item.dependencia && item.dependencia.trim() !== '') {
-      return item.dependencia.trim();
+      return this.normalizeDependencia(item.dependencia);
     }
 
-    // 3. Heurística según categoría, tipo y sede para obras sin asignar
+    // 4. Heurística según categoría, tipo y sede para obras sin asignar
+
     const cat = (item.categoria || '').toLowerCase();
     const nom = (item.nombre || '').toLowerCase();
     const tipo = (item.tipo || '').toLowerCase();
-    const sede = (item.sede || '').toLowerCase();
 
     if (cat.includes('instalaci') || nom.includes('instalaci') || nom.includes('clima') || nom.includes('termo') || nom.includes('electr')) {
       return 'Departamento de Instalaciones';
     }
     if (tipo.includes('infra') || nom.includes('mantenimiento')) {
-      if (sede.includes('justo')) {
-        return 'Departamento de Mantenimiento San Justo';
-      }
       return 'Departamento de Mantenimiento Central';
-    }
-    // Obra Civil / Proyectos
-    if (sede.includes('justo')) {
-      return 'Departamento de Proyectos San Justo';
     }
     return 'Departamento de Proyectos Central';
   },
@@ -1497,7 +1527,7 @@ const DataStore = {
       // verificar si el responsable actual pertenece a la nueva dependencia.
       // Si no pertenece, liberar la asignación para evitar conflictos interdepartamentales.
       const currentResp = this.users.find(u => u.id === item.responsable_id);
-      if (currentResp && currentResp.dependencia && currentResp.dependencia !== dependencia) {
+      if (currentResp && currentResp.dependencia && this.normalizeDependencia(currentResp.dependencia) !== this.normalizeDependencia(dependencia)) {
         item.responsable_id = null;
         item.responsable = 'Sin Asignar';
       }
@@ -1530,7 +1560,7 @@ const DataStore = {
         // Si el responsable pertenecía a otra dependencia, liberar para evitar fuga interdepartamental
         if (item.responsable_id) {
           const currentResp = this.users.find(u => u.id === item.responsable_id);
-          if (currentResp && currentResp.dependencia && currentResp.dependencia !== dependencia) {
+          if (currentResp && currentResp.dependencia && this.normalizeDependencia(currentResp.dependencia) !== this.normalizeDependencia(dependencia)) {
             item.responsable_id = null;
             item.responsable = 'Sin Asignar';
           }
@@ -1570,9 +1600,13 @@ const DataStore = {
       return true;
     }
 
+    const uDep = this.normalizeDependencia(u.dependencia || '').trim().toLowerCase();
+    const isSanJustoUser = uDep.includes('san justo') || (u.sede && u.sede.toLowerCase() === 'san justo');
+
     // Si la obra está en etapa de licitación y el usuario es proyectista / técnico departamental:
-    // La obra le cae al comprador y desaparece temporalmente del panel del proyectista hasta que se adjudique
-    if (item.estado === 'En licitación') {
+    // La obra le cae al comprador y desaparece temporalmente del panel del proyectista hasta que se adjudique.
+    // Para el equipo de San Justo, se mantiene visible la totalidad de obras en consulta departamental.
+    if (item.estado === 'En licitación' && !isSanJustoUser) {
       return false;
     }
 
@@ -1583,15 +1617,25 @@ const DataStore = {
       if (item.creado_por && (item.creado_por === u.nombre || item.creado_por === u.username)) return true;
     }
 
-    const uDep = (u.dependencia || '').trim().toLowerCase();
+    // Si la obra está asignada formalmente a este usuario, siempre puede verla
+    if (this.isUserAssignedToObra(item)) return true;
     if (!uDep) {
       if (u.sede === 'Todas') return true;
       return (item.sede || '').toLowerCase() === (u.sede || '').toLowerCase();
     }
 
+    // San Justo unificado: los usuarios de San Justo ven todas las obras de San Justo
+    if (uDep.includes('san justo') || (u.sede && u.sede.toLowerCase() === 'san justo')) {
+      const itemDep = this.normalizeDependencia(this.getObraDependencia(item) || item.dependencia || '').trim().toLowerCase();
+      const itemSede = (item.sede || '').trim().toLowerCase();
+      if (itemDep.includes('san justo') || itemSede === 'san justo') {
+        return true;
+      }
+    }
+
     // 4. Aislamiento Departamental Estricto:
     // La obra pertenece a UNA SOLA dependencia canónica.
-    const canonicalDep = (this.getObraDependencia(item) || item.dependencia || '').trim().toLowerCase();
+    const canonicalDep = this.normalizeDependencia(this.getObraDependencia(item) || item.dependencia || '').trim().toLowerCase();
 
     // Si la obra pertenece a otro departamento, es IMPOSIBLE que un usuario de este departamento la vea
     if (canonicalDep !== uDep) {
@@ -1658,12 +1702,13 @@ const DataStore = {
       }
 
       // 2. Filtro Dependencia explícito (bloqueado a la dependencia propia para usuarios no administradores)
-      const depFilter = (!isAdm && u && u.dependencia && u.dependencia !== 'Dirección General / Administración')
+      const rawDepFilter = (!isAdm && u && u.dependencia && u.dependencia !== 'Dirección General / Administración')
         ? u.dependencia
         : filters.dependencia;
+      const depFilter = this.normalizeDependencia(rawDepFilter);
 
       if (depFilter && depFilter !== 'TODAS') {
-        const itemDep = this.getObraDependencia(item) || item.dependencia;
+        const itemDep = this.normalizeDependencia(this.getObraDependencia(item) || item.dependencia);
         if (itemDep !== depFilter) return false;
       }
 
