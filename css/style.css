@@ -101,3 +101,42 @@ body {
 .hidden {
   display: none !important;
 }
+
+/* Estilos de Impresión e Informe Ejecutivo One-Pager */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 11px !important;
+  }
+  body > *:not(#modalExecutiveReport) {
+    display: none !important;
+  }
+  #modalExecutiveReport {
+    display: block !important;
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+  #modalExecutiveReport .modal-backdrop,
+  #modalExecutiveReport > div:first-child {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    position: static !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  @page {
+    size: A4 landscape;
+    margin: 6mm 8mm;
+  }
+  .print-page {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}

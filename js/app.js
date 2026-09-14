@@ -2276,6 +2276,591 @@ const App = {
     }
   },
 
+  // ================= ASIGNACIÓN Y REASIGNACIÓN ÁGIL DE OBRAS =================
+  openAsignacionInteractivaModal() {
+    const u = DataStore.currentUser;
+    if (!u || u.rol !== 'admin') {
+      alert("⛔ Acceso Restringido: Solo los administradores pueden utilizar el Centro de Asignación y Reasignación Ágil.");
+      return;
+    }
+
+    this.populateAsignacionFiltros();
+    const selEstado = document.getElementById('filtroAsignacionEstado');
+    if (selEstado) selEstado.value = 'sin_asignar';
+    const inputBuscar = document.getElementById('filtroAsignacionBuscar');
+    if (inputBuscar) inputBuscar.value = '';
+
+    this.renderAsignacionInteractivaList();
+    const modal = document.getElementById('modalAsignacionInteractiva');
+    if (modal) modal.classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+  },
+
+  closeAsignacionInteractivaModal() {
+    const modal = document.getElementById('modalAsignacionInteractiva');
+    if (modal) modal.classList.add('hidden');
+    this.render(); // Actualiza tablero y vistas generales
+  },
+
+  populateAsignacionFiltros() {
+    const deptSelect = document.getElementById('filtroAsignacionDept');
+    if (deptSelect) {
+      const currentVal = deptSelect.value;
+      const depts = new Set();
+      (DataStore.items || []).forEach(x => {
+        if (x.dependencia) depts.add(x.dependencia);
+      });
+      let html = '<option value="todos">Todos los Departamentos</option>';
+      Array.from(depts).sort().forEach(d => {
+        html += `<option value="${d}">${d}</option>`;
+      });
+      deptSelect.innerHTML = html;
+      if (currentVal && depts.has(currentVal)) deptSelect.value = currentVal;
+    }
+
+    const personaSelect = document.getElementById('filtroAsignacionPersona');
+    if (personaSelect) {
+      const currentVal = personaSelect.value;
+      let html = '<option value="todos">Cualquier Responsable</option>';
+      (DataStore.users || []).forEach(u => {
+        html += `<option value="${u.id}">${u.nombre} (@${u.username})</option>`;
+      });
+      personaSelect.innerHTML = html;
+      if (currentVal) personaSelect.value = currentVal;
+    }
+  },
+
+  renderAsignacionInteractivaList() {
+    const listContainer = document.getElementById('asignacionInteractivaList');
+    const badgeCount = document.getElementById('asignacionLiveCountBadge');
+    if (!listContainer) return;
+
+    const estadoFilter = document.getElementById('filtroAsignacionEstado')?.value || 'sin_asignar';
+    const deptFilter = document.getElementById('filtroAsignacionDept')?.value || 'todos';
+    const personaFilter = document.getElementById('filtroAsignacionPersona')?.value || 'todos';
+    const searchQuery = (document.getElementById('filtroAsignacionBuscar')?.value || '').trim().toLowerCase();
+
+    // Filtrado inteligente
+    let items = (DataStore.items || []).filter(item => {
+      // 1. Estado asignación
+      const isSinAsignar = (!item.responsable_id || item.responsable === 'Sin Asignar' || item.responsable_id === 'sin-asignar');
+      if (estadoFilter === 'sin_asignar' && !isSinAsignar) return false;
+      if (estadoFilter === 'asignadas' && isSinAsignar) return false;
+
+      // 2. Departamento
+      if (deptFilter !== 'todos' && item.dependencia !== deptFilter) return false;
+
+      // 3. Persona / Responsable actual
+      if (personaFilter !== 'todos' && item.responsable_id !== personaFilter) return false;
+
+      // 4. Búsqueda libre
+      if (searchQuery) {
+        const text = `${item.id} ${item.nombre} ${item.sede} ${item.partida || ''} ${item.responsable || ''} ${item.creado_por || ''} ${item.dependencia || ''}`.toLowerCase();
+        if (!text.includes(searchQuery)) return false;
+      }
+
+      return true;
+    });
+
+    if (badgeCount) {
+      badgeCount.innerText = `${items.length} ${items.length === 1 ? 'obra' : 'obras'}`;
+    }
+
+    if (items.length === 0) {
+      listContainer.innerHTML = `
+        <div class="bg-white rounded-2xl p-8 text-center border border-slate-200 shadow-2xs">
+          <div class="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3">
+            <i data-lucide="check-circle-2" class="w-7 h-7"></i>
+          </div>
+          <h4 class="font-black text-slate-800 text-sm">¡Al día! No hay obras en este filtro</h4>
+          <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">Todas las obras han sido asignadas o no coinciden con los criterios de búsqueda actuales. Cambia de filtro o reasigna según sea necesario.</p>
+        </div>
+      `;
+      if (window.lucide) lucide.createIcons();
+      return;
+    }
+
+    // Opciones de usuarios para los selects
+    const userOptionsHtml = (DataStore.users || []).map(u => {
+      return `<option value="${u.id}">${u.nombre} - ${u.dependencia || u.rol}</option>`;
+    }).join('');
+
+    let html = '';
+    items.forEach(item => {
+      const isSinAsignar = (!item.responsable_id || item.responsable === 'Sin Asignar' || item.responsable_id === 'sin-asignar');
+      const montoUSD = item.monto_adjudicado_usd || item.monto_partida_usd || item.monto_total_usd || item.monto_obra_usd || 0;
+      const montoFormateado = montoUSD > 0 ? `US$ ${montoUSD.toLocaleString('en-US')}` : 'Sin Monto';
+
+      html += `
+        <div id="quick-assign-card-${item.id}" class="quick-assign-card bg-white rounded-xl p-3.5 border border-slate-200 hover:border-amber-300 shadow-2xs transition-all duration-200">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            
+            <!-- Datos de la Obra -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center space-x-2 flex-wrap gap-y-1 mb-1">
+                <span class="font-mono font-black text-xs px-2 py-0.5 rounded bg-slate-900 text-amber-400">${item.id}</span>
+                <span class="font-bold text-slate-900 text-xs truncate max-w-md" title="${item.nombre}">${item.nombre}</span>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200">${item.estado}</span>
+                ${item.partida ? `<span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">Partida: ${item.partida}</span>` : '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-800">Sin Partida</span>'}
+              </div>
+
+              <div class="flex items-center space-x-2 text-[11px] text-slate-500 flex-wrap gap-y-1">
+                <span>📍 <strong>${item.sede}</strong></span>
+                <span>•</span>
+                <span>🏛️ ${item.dependencia || 'Infraestructura'}</span>
+                <span>•</span>
+                <span>💰 <strong>${montoFormateado}</strong></span>
+                ${item.creado_por ? `<span>•</span><span>Creado por: <strong class="text-slate-700">${item.creado_por}</strong></span>` : ''}
+                <span>•</span>
+                <span id="label-owner-${item.id}" class="${isSinAsignar ? 'text-rose-600 font-bold' : 'text-slate-700 font-semibold'}">
+                  ${isSinAsignar ? '⚠️ Sin Asignar' : `Asignado a: <strong>${item.responsable}</strong>`}
+                </span>
+              </div>
+            </div>
+
+            <!-- Selector Rápido de Responsable -->
+            <div class="shrink-0 flex items-center space-x-2">
+              <div class="text-right hidden sm:block">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Asignar a:</div>
+              </div>
+              <select onchange="App.handleQuickAssignChange('${item.id}', this.value, this)" 
+                      class="bg-amber-50/60 hover:bg-amber-100/80 border-2 border-amber-300 focus:border-amber-500 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-900 shadow-2xs focus:outline-none transition cursor-pointer">
+                <option value="">-- Seleccionar Responsable --</option>
+                ${userOptionsHtml}
+                <option value="sin-asignar" ${isSinAsignar ? 'selected' : ''}>⚠️ Dejar Sin Asignar</option>
+              </select>
+            </div>
+
+          </div>
+        </div>
+      `;
+    });
+
+    listContainer.innerHTML = html;
+    if (window.lucide) lucide.createIcons();
+  },
+
+  handleQuickAssignChange(itemId, newUserId, selectEl) {
+    if (!newUserId) return; // No seleccionó nada
+
+    const targetUserId = (newUserId === 'sin-asignar') ? null : newUserId;
+    const res = DataStore.quickAssignObra(itemId, targetUserId);
+
+    if (!res.success) {
+      alert("Error al asignar: " + res.msg);
+      selectEl.value = "";
+      return;
+    }
+
+    const assignedName = res.obra.responsable || 'Sin Asignar';
+    this.showToast(`⚡ ${itemId} asignada exitosamente a: ${assignedName}`);
+
+    // Determinar si debe desaparecer de la vista actual
+    const estadoFilter = document.getElementById('filtroAsignacionEstado')?.value || 'sin_asignar';
+    const personaFilter = document.getElementById('filtroAsignacionPersona')?.value || 'todos';
+
+    let shouldVanish = false;
+    if (estadoFilter === 'sin_asignar' && targetUserId !== null) {
+      shouldVanish = true;
+    } else if (estadoFilter === 'asignadas' && targetUserId === null) {
+      shouldVanish = true;
+    } else if (personaFilter !== 'todos' && targetUserId !== personaFilter) {
+      shouldVanish = true;
+    }
+
+    const card = document.getElementById(`quick-assign-card-${itemId}`);
+    if (card) {
+      if (shouldVanish) {
+        // Animación suave de desaparición
+        card.classList.add('transition-all', 'duration-300', 'opacity-0', 'scale-95', '-translate-y-2');
+        setTimeout(() => {
+          card.remove();
+          const list = document.getElementById('asignacionInteractivaList');
+          const remaining = list ? list.querySelectorAll('.quick-assign-card').length : 0;
+          const badgeCount = document.getElementById('asignacionLiveCountBadge');
+          if (badgeCount) {
+            badgeCount.innerText = `${remaining} ${remaining === 1 ? 'obra' : 'obras'}`;
+          }
+          if (remaining === 0) {
+            App.renderAsignacionInteractivaList();
+          }
+        }, 300);
+      } else {
+        // Si permanece visible (ej: vista 'todas'), actualizar labels
+        const labelOwner = document.getElementById(`label-owner-${itemId}`);
+        if (labelOwner) {
+          const isSinAsignar = (!res.obra.responsable_id || res.obra.responsable === 'Sin Asignar');
+          labelOwner.className = isSinAsignar ? 'text-rose-600 font-bold' : 'text-slate-700 font-semibold';
+          labelOwner.innerHTML = isSinAsignar ? '⚠️ Sin Asignar' : `Asignado a: <strong>${res.obra.responsable}</strong>`;
+        }
+      }
+    }
+  },
+
+  // ================= INFORME EJECUTIVO CONSOLIDADO Y TABLERO DE DIRECCIÓN =================
+  openExecutiveReportModal() {
+    const u = DataStore.currentUser;
+    if (!u || u.rol !== 'admin') {
+      alert("⛔ Acceso Restringido: El Tablero Ejecutivo de Dirección es exclusivo para Dirección General y Administración.");
+      return;
+    }
+
+    this.renderExecutiveReportContent();
+    const modal = document.getElementById('modalExecutiveReport');
+    if (modal) modal.classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+  },
+
+  closeExecutiveReportModal() {
+    const modal = document.getElementById('modalExecutiveReport');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  renderExecutiveReportContent() {
+    const container = document.getElementById('executiveReportContainer');
+    if (!container) return;
+
+    const report = DataStore.getExecutiveReportData();
+    const fmt = (n) => {
+      const val = parseFloat(n) || 0;
+      return val.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    };
+
+    let html = `
+      <!-- MEMBRETE OFICIAL HOSPITAL ITALIANO DE BUENOS AIRES -->
+      <div class="border-b-2 border-slate-900 pb-3 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-center space-x-3.5">
+          <div class="w-12 h-12 bg-blue-900 text-white rounded-xl flex items-center justify-center font-black text-xl shadow-sm border-2 border-blue-700 tracking-wider">
+            HIBA
+          </div>
+          <div>
+            <h1 class="text-base font-black text-slate-900 tracking-tight leading-none uppercase">Hospital Italiano de Buenos Aires</h1>
+            <h2 class="text-xs font-bold text-blue-900 mt-1">Dirección de Infraestructura y Obras • Dirección General</h2>
+            <div class="text-[10px] text-slate-500 font-mono mt-0.5">SISTEMA INTEGRAL DE GESTIÓN DE OBRAS E INVERSIONES (SIGO)</div>
+          </div>
+        </div>
+        <div class="sm:text-right text-xs">
+          <div class="flex sm:justify-end items-center space-x-1.5 mb-0.5">
+            <span class="bg-rose-100 text-rose-800 border border-rose-300 text-[9px] font-black px-2 py-0.2 rounded-full uppercase tracking-wider">Confidencial</span>
+            <span class="bg-slate-100 text-slate-700 text-[9px] font-bold px-2 py-0.2 rounded-full">One-Pager</span>
+          </div>
+          <div class="text-[11px] text-slate-700">Fecha de Emisión: <strong>${report.fechaEmision}</strong></div>
+          <div class="text-[10px] text-slate-500">Emitido por: <strong>${report.emisor}</strong></div>
+        </div>
+      </div>
+
+      <!-- 4 TARJETAS KPI DE DIRECCIÓN -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+        
+        <!-- KPI 1: Obras en Curso -->
+        <div class="bg-gradient-to-br from-blue-50 to-indigo-50/70 border border-blue-200 rounded-xl p-3.5 shadow-2xs">
+          <div class="flex items-center justify-between text-blue-900 mb-1">
+            <span class="font-bold text-[10px] uppercase tracking-wider">Obras en Ejecución</span>
+            <i data-lucide="activity" class="w-4 h-4 text-blue-600"></i>
+          </div>
+          <div class="text-xl font-black text-slate-900">${report.obrasEnCurso.total} <span class="text-xs font-semibold text-slate-500">obras</span></div>
+          <div class="text-xs font-bold text-blue-800 mt-0.5">US$ ${fmt(report.obrasEnCurso.montoTotalUSD)}</div>
+          <div class="mt-2 flex items-center justify-between text-[10px] text-slate-500">
+            <span>Avance Físico Promedio:</span>
+            <strong class="text-blue-900">${report.obrasEnCurso.avancePromedio}%</strong>
+          </div>
+          <div class="w-full bg-blue-200 rounded-full h-1.5 mt-1 overflow-hidden">
+            <div class="bg-blue-600 h-1.5 rounded-full" style="width: ${Math.min(100, report.obrasEnCurso.avancePromedio)}%"></div>
+          </div>
+        </div>
+
+        <!-- KPI 2: Factibilidad en Espera (Sin Partida) -->
+        <div class="bg-gradient-to-br from-amber-50 to-orange-50/70 border border-amber-200 rounded-xl p-3.5 shadow-2xs">
+          <div class="flex items-center justify-between text-amber-900 mb-1">
+            <span class="font-bold text-[10px] uppercase tracking-wider">Factibilidad sin Partida</span>
+            <i data-lucide="clock" class="w-4 h-4 text-amber-600"></i>
+          </div>
+          <div class="text-xl font-black text-slate-900">${report.factibilidadSinPartida.total} <span class="text-xs font-semibold text-slate-500">en espera</span></div>
+          <div class="text-xs font-bold text-amber-800 mt-0.5">US$ ${fmt(report.factibilidadSinPartida.montoTotalUSD)} <span class="text-[9px] font-normal text-slate-500">(solicitado)</span></div>
+          <div class="mt-2 text-[10px] bg-amber-100/80 text-amber-900 font-bold px-2 py-0.5 rounded flex items-center space-x-1">
+            <i data-lucide="alert-triangle" class="w-3 h-3 text-amber-700 shrink-0"></i>
+            <span>Pendiente definición de Dirección</span>
+          </div>
+        </div>
+
+        <!-- KPI 3: Desvíos Presupuestarios en Partidas -->
+        <div class="bg-gradient-to-br from-rose-50 to-pink-50/70 border border-rose-200 rounded-xl p-3.5 shadow-2xs">
+          <div class="flex items-center justify-between text-rose-900 mb-1">
+            <span class="font-bold text-[10px] uppercase tracking-wider">Desvíos Presupuestarios</span>
+            <i data-lucide="trending-down" class="w-4 h-4 text-rose-600"></i>
+          </div>
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-sm font-black text-rose-700 leading-tight">-${fmt(report.partidasDesvios.totalDeficitUSD)} USD</div>
+              <div class="text-[10px] text-slate-500 font-medium">${report.partidasDesvios.totalSobreEjecutadas} partidas sobre-ejecutadas</div>
+            </div>
+            <div class="text-right">
+              <div class="text-xs font-bold text-emerald-700 leading-tight">+${fmt(report.partidasDesvios.totalSuperavitUSD)} USD</div>
+              <div class="text-[10px] text-slate-500 font-medium">${report.partidasDesvios.totalSubEjecutadas} sub-ejecutadas</div>
+            </div>
+          </div>
+          <div class="mt-2 text-[10px] text-slate-500 border-t border-rose-200/60 pt-1 flex justify-between">
+            <span>Partidas con ajuste requerido:</span>
+            <strong class="text-rose-900">${report.partidasDesvios.totalSobreEjecutadas + report.partidasDesvios.totalSubEjecutadas}</strong>
+          </div>
+        </div>
+
+        <!-- KPI 4: Obras Suspendidas (Capital Inmovilizado) -->
+        <div class="bg-gradient-to-br from-slate-100 to-slate-200/60 border border-slate-300 rounded-xl p-3.5 shadow-2xs">
+          <div class="flex items-center justify-between text-slate-700 mb-1">
+            <span class="font-bold text-[10px] uppercase tracking-wider">Obras Suspendidas</span>
+            <i data-lucide="pause-circle" class="w-4 h-4 text-slate-600"></i>
+          </div>
+          <div class="text-xl font-black text-slate-900">${report.obrasSuspendidas.total} <span class="text-xs font-semibold text-slate-500">en pausa</span></div>
+          <div class="text-xs font-bold text-slate-700 mt-0.5">US$ ${fmt(report.obrasSuspendidas.montoTotalUSD)}</div>
+          <div class="mt-2 text-[10px] bg-slate-200/80 text-slate-700 font-semibold px-2 py-0.5 rounded flex items-center space-x-1">
+            <i data-lucide="lock" class="w-3 h-3 text-slate-500 shrink-0"></i>
+            <span>Capital inmovilizado en cartera</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- GRID DE 4 CUADRANTES DE CONTROL EJECUTIVO -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+
+        <!-- CUADRANTE 1: OBRAS EN CURSO (EJECUCIÓN ACTIVA) -->
+        <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200">
+              <h3 class="font-black text-xs text-slate-900 flex items-center space-x-1.5">
+                <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+                <span>Obras en Curso de Ejecución (${report.obrasEnCurso.total})</span>
+              </h3>
+              <span class="text-[10px] font-bold text-blue-700 font-mono">Total: US$ ${fmt(report.obrasEnCurso.montoTotalUSD)}</span>
+            </div>
+
+            <div class="overflow-x-auto max-h-[190px] overflow-y-auto">
+              <table class="w-full text-[11px] text-left">
+                <thead class="bg-slate-200/60 text-slate-600 font-bold sticky top-0">
+                  <tr>
+                    <th class="py-1 px-1.5">Cód</th>
+                    <th class="py-1 px-1.5">Proyecto</th>
+                    <th class="py-1 px-1.5">Sede</th>
+                    <th class="py-1 px-1.5 text-right">Inversión USD</th>
+                    <th class="py-1 px-1.5 text-center">Avance</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                  ${report.obrasEnCurso.items.length === 0 ? `
+                    <tr><td colspan="5" class="py-3 text-center text-slate-400">No hay obras en curso actualmente</td></tr>
+                  ` : report.obrasEnCurso.items.slice(0, 7).map(item => `
+                    <tr class="hover:bg-white transition">
+                      <td class="py-1 px-1.5 font-mono font-bold text-blue-700">${item.id}</td>
+                      <td class="py-1 px-1.5 font-bold text-slate-800 max-w-[170px] truncate" title="${item.nombre}">${item.nombre}</td>
+                      <td class="py-1 px-1.5 text-slate-600">${item.sede}</td>
+                      <td class="py-1 px-1.5 text-right font-mono font-bold text-slate-900">$${fmt(item.monto_adjudicado_usd || item.monto_total_usd || 0)}</td>
+                      <td class="py-1 px-1.5 text-center">
+                        <div class="inline-flex items-center space-x-1">
+                          <span class="font-bold text-[10px] text-slate-700">${item.avance_fisico || 0}%</span>
+                        </div>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          ${report.obrasEnCurso.items.length > 7 ? `
+            <div class="text-[10px] text-slate-400 text-right pt-1 mt-1 border-t border-slate-200">Mostrando 7 de ${report.obrasEnCurso.items.length} obras en ejecución. Ver tabla completa en XLSX.</div>
+          ` : ''}
+        </div>
+
+        <!-- CUADRANTE 2: FACTIBILIDADES SIN PARTIDA (PENDIENTES DE DEFINICIÓN) -->
+        <div class="border border-amber-200 rounded-xl p-3.5 bg-amber-50/30 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-2 mb-2 border-b border-amber-200">
+              <h3 class="font-black text-xs text-amber-950 flex items-center space-x-1.5">
+                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                <span>Factibilidades sin Partida Asignada (${report.factibilidadSinPartida.total})</span>
+              </h3>
+              <span class="text-[10px] font-bold text-amber-800 font-mono">Solicitado: US$ ${fmt(report.factibilidadSinPartida.montoTotalUSD)}</span>
+            </div>
+
+            <div class="overflow-x-auto max-h-[190px] overflow-y-auto">
+              <table class="w-full text-[11px] text-left">
+                <thead class="bg-amber-100/60 text-amber-900 font-bold sticky top-0">
+                  <tr>
+                    <th class="py-1 px-1.5">Cód</th>
+                    <th class="py-1 px-1.5">Solicitud</th>
+                    <th class="py-1 px-1.5">Sede</th>
+                    <th class="py-1 px-1.5">Solicitante</th>
+                    <th class="py-1 px-1.5 text-right">Estimado USD</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-amber-100">
+                  ${report.factibilidadSinPartida.items.length === 0 ? `
+                    <tr><td colspan="5" class="py-3 text-center text-slate-400">No hay factibilidades pendientes de partida</td></tr>
+                  ` : report.factibilidadSinPartida.items.slice(0, 7).map(item => `
+                    <tr class="hover:bg-white transition">
+                      <td class="py-1 px-1.5 font-mono font-bold text-amber-700">${item.id}</td>
+                      <td class="py-1 px-1.5 font-bold text-slate-800 max-w-[170px] truncate" title="${item.nombre}">${item.nombre}</td>
+                      <td class="py-1 px-1.5 text-slate-600">${item.sede}</td>
+                      <td class="py-1 px-1.5 text-slate-500 text-[10px]">${item.creado_por || item.sector_solicitante || 'S/D'}</td>
+                      <td class="py-1 px-1.5 text-right font-mono font-bold text-amber-900">$${fmt(item.monto_total_usd || item.monto_obra_usd || 0)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="text-[10px] text-amber-800 font-semibold pt-1 mt-1 border-t border-amber-200 flex justify-between items-center">
+            <span>⚠️ Requieren asignación de presupuesto por parte de Dirección</span>
+            <span class="text-slate-400 font-normal">Sin fondos asignados</span>
+          </div>
+        </div>
+
+        <!-- CUADRANTE 3: DESVÍOS DE PARTIDAS (SOBRE Y SUB EJECUTADAS) -->
+        <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200">
+              <h3 class="font-black text-xs text-slate-900 flex items-center space-x-1.5">
+                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                <span>Auditoría de Partidas: Sobre-ejecutadas vs Sub-ejecutadas</span>
+              </h3>
+              <span class="text-[10px] font-bold text-slate-500">Total: ${report.partidasDesvios.totalSobreEjecutadas + report.partidasDesvios.totalSubEjecutadas} con desvío</span>
+            </div>
+
+            <div class="overflow-x-auto max-h-[190px] overflow-y-auto">
+              <table class="w-full text-[11px] text-left">
+                <thead class="bg-slate-200/60 text-slate-600 font-bold sticky top-0">
+                  <tr>
+                    <th class="py-1 px-1.5">Partida</th>
+                    <th class="py-1 px-1.5">Obra / Proyecto</th>
+                    <th class="py-1 px-1.5 text-right">Asignado</th>
+                    <th class="py-1 px-1.5 text-right">Requerido</th>
+                    <th class="py-1 px-1.5 text-right">Desvío USD</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                  ${(report.partidasDesvios.sobreEjecutadas.concat(report.partidasDesvios.subEjecutadas)).length === 0 ? `
+                    <tr><td colspan="5" class="py-3 text-center text-slate-400">Todas las partidas coinciden exactamente con el costo requerido</td></tr>
+                  ` : (report.partidasDesvios.sobreEjecutadas.concat(report.partidasDesvios.subEjecutadas)).slice(0, 6).map(item => {
+                    const isDeficit = item.deficit_usd > 0;
+                    return `
+                      <tr class="hover:bg-white transition">
+                        <td class="py-1 px-1.5 font-mono font-bold text-slate-700">${item.partida}</td>
+                        <td class="py-1 px-1.5 font-semibold text-slate-800 max-w-[150px] truncate" title="${item.nombre}">${item.id} - ${item.nombre}</td>
+                        <td class="py-1 px-1.5 text-right font-mono text-slate-600">$${fmt(item.monto_partida_usd)}</td>
+                        <td class="py-1 px-1.5 text-right font-mono text-slate-600">$${fmt(item.costo_requerido_usd)}</td>
+                        <td class="py-1 px-1.5 text-right font-mono font-bold ${isDeficit ? 'text-rose-600' : 'text-emerald-600'}">
+                          ${isDeficit ? `-$${fmt(item.deficit_usd)}` : `+$${fmt(item.superavit_usd)}`}
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="text-[10px] text-slate-500 pt-1 mt-1 border-t border-slate-200 flex justify-between">
+            <span class="text-rose-700 font-bold">Rojo: Partida Corta (Ampliación)</span>
+            <span class="text-emerald-700 font-bold">Verde: Remanente Liberable</span>
+          </div>
+        </div>
+
+        <!-- CUADRANTE 4: CONSOLIDADO DE CASHFLOW PLURIANUAL -->
+        <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200">
+              <h3 class="font-black text-xs text-slate-900 flex items-center space-x-1.5">
+                <span class="w-2 h-2 rounded-full bg-teal-600"></span>
+                <span>Curva de Cashflow Plurianual Consolidado (2026-2029)</span>
+              </h3>
+              <span class="text-[10px] font-bold text-teal-800 font-mono">Total Cartera: US$ ${fmt(report.cashflow.totalGlobal)}</span>
+            </div>
+
+            <!-- Tabla de Flujo Financiero -->
+            <div class="space-y-2 pt-1">
+              ${[
+                { anio: '2026', monto: report.cashflow.c2026, color: 'bg-blue-600' },
+                { anio: '2027', monto: report.cashflow.c2027, color: 'bg-indigo-600' },
+                { anio: '2028', monto: report.cashflow.c2028, color: 'bg-teal-600' },
+                { anio: '2029+', monto: report.cashflow.c2029, color: 'bg-emerald-600' }
+              ].map(cf => {
+                const pct = report.cashflow.totalGlobal > 0 ? (cf.monto / report.cashflow.totalGlobal * 100) : 0;
+                return `
+                  <div>
+                    <div class="flex justify-between text-[11px] mb-0.5">
+                      <span class="font-bold text-slate-700">Año ${cf.anio}</span>
+                      <span class="font-mono font-bold text-slate-900">US$ ${fmt(cf.monto)} <span class="text-[10px] text-slate-400 font-normal">(${pct.toFixed(1)}%)</span></span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                      <div class="${cf.color} h-2 rounded-full" style="width: ${pct}%"></div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+          
+          <div class="text-[10px] text-slate-500 pt-2 mt-2 border-t border-slate-200 flex justify-between items-center">
+            <span>Flujo proyectado por compromisos contractuales</span>
+            <span class="font-bold text-slate-800">100.0% Distribuido</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- PIE INSTITUCIONAL DE AUDITORÍA Y FIRMAS -->
+      <div class="pt-3 border-t-2 border-slate-900 flex flex-col sm:flex-row items-center justify-between text-[10px] text-slate-500 gap-3">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
+          <span>Documento emitido formalmente por el Sistema SIGO HIBA. Válido para comités de Dirección y Auditoría Interna.</span>
+        </div>
+        <div class="flex items-center space-x-6 text-slate-700 font-semibold">
+          <div class="border-t border-slate-400 pt-0.5 w-32 text-center text-[9px]">Dir. Infraestructura</div>
+          <div class="border-t border-slate-400 pt-0.5 w-32 text-center text-[9px]">Dirección General</div>
+        </div>
+      </div>
+    `;
+
+    container.innerHTML = html;
+    if (window.lucide) lucide.createIcons();
+  },
+
+  downloadExecutiveExcel() {
+    try {
+      const report = DataStore.getExecutiveReportData();
+      DataStore.exportExecutiveReportToExcel(report);
+      this.showToast('📊 Reporte Ejecutivo exportado con éxito a Excel');
+    } catch (e) {
+      console.error(e);
+      alert("Error exportando a Excel: " + e.message);
+    }
+  },
+
+  downloadExecutivePDF() {
+    const element = document.getElementById('executiveReportContainer');
+    if (!element) return;
+
+    if (typeof html2pdf === 'undefined') {
+      window.print();
+      return;
+    }
+
+    this.showToast('⏳ Generando PDF Oficial del Informe Ejecutivo...');
+    const opt = {
+      margin:       [6, 8, 6, 8],
+      filename:     `Informe_Ejecutivo_Direccion_HIBA_${new Date().toISOString().slice(0, 10)}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, logging: false },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+    };
+
+    html2pdf().set(opt).from(element).save().then(() => {
+      App.showToast('✅ PDF Oficial descargado correctamente.');
+    }).catch(err => {
+      console.error('Error generando PDF:', err);
+      window.print();
+    });
+  },
+
   // ================= MODAL: EDITAR PERMISOS =================
   openEditPermissionsModal(userId) {
     const user = DataStore.users.find(x => x.id === userId);
@@ -2843,6 +3428,16 @@ const App = {
     const btnUsers = document.getElementById('btnUsersAdminTop');
     if (btnUsers) {
       btnUsers.classList.toggle('hidden', u.rol !== 'admin');
+    }
+
+    const btnAsignar = document.getElementById('btnAsignarObrasTop');
+    if (btnAsignar) {
+      btnAsignar.classList.toggle('hidden', u.rol !== 'admin');
+    }
+
+    const btnExecutive = document.getElementById('btnExecutiveReportTop');
+    if (btnExecutive) {
+      btnExecutive.classList.toggle('hidden', u.rol !== 'admin');
     }
 
     const btnSettings = document.getElementById('btnSettingsTop');

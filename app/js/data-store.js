@@ -2375,6 +2375,286 @@ const DataStore = {
     } else {
       alert("Librería XLSX no disponible.");
     }
+  },
+
+  // ================= ASIGNACIÓN / REASIGNACIÓN RÁPIDA (ADMIN) =================
+  quickAssignObra(itemId, targetUserId) {
+    if (!this.isAdmin()) {
+      return { success: false, msg: '⛔ Exclusivo para el Administrador General.' };
+    }
+    const item = this.getItemById(itemId);
+    if (!item) return { success: false, msg: 'Obra no encontrada.' };
+
+    const oldResp = item.responsable || 'Sin Asignar';
+
+    if (!targetUserId || targetUserId === 'sin_asignar' || targetUserId === '') {
+      item.responsable = 'Sin Asignar';
+      item.responsable_id = null;
+    } else {
+      const u = (this.users || []).find(user => user.id === targetUserId);
+      if (!u) return { success: false, msg: 'Usuario destinatario no encontrado.' };
+      item.responsable_id = u.id;
+      item.responsable = u.nombre;
+      if (u.dependencia && u.dependencia !== 'Dirección General / Administración') {
+        item.dependencia = u.dependencia;
+      }
+    }
+
+    if (!Array.isArray(item.historial)) item.historial = [];
+    item.historial.unshift({
+      fecha: new Date().toISOString().split('T')[0],
+      usuario: this.currentUser ? this.currentUser.nombre : 'Administrador',
+      estado_anterior: item.estado,
+      estado_nuevo: item.estado,
+      observaciones: `Reasignación rápida: '${oldResp}' ➔ '${item.responsable}' efectuada por ${this.currentUser ? this.currentUser.nombre : 'Admin'}.`
+    });
+
+    this.saveItem(item, true);
+    return { 
+      success: true, 
+      item: item, 
+      obra: item,
+      oldResponsable: oldResp,
+      newResponsable: item.responsable,
+      newResponsableId: item.responsable_id
+    };
+  },
+
+  // ================= DATOS PARA INFORME EJECUTIVO DE DIRECCIÓN =================
+  getExecutiveReportData() {
+    const all = this.items || [];
+
+    // 1. Obras en Curso
+    const enCurso = all.filter(x => x.estado === 'Obras en Curso');
+    const totEnCursoUSD = enCurso.reduce((acc, x) => acc + (x.monto_adjudicado_usd || x.monto_total_usd || x.monto_obra_usd || 0), 0);
+    const avgAvance = enCurso.length > 0 
+      ? parseFloat((enCurso.reduce((acc, x) => acc + (parseFloat(x.avance_fisico) || 0), 0) / enCurso.length).toFixed(1))
+      : 0;
+
+    // 2. Factibilidad sin Partida / Pendientes de Definición de Dirección
+    const factSinPartida = all.filter(x => 
+      (x.estado === 'Estudio de Factibilidad' || x.estado === 'Ante Proyecto') && 
+      (!this.hasValidPartida(x) || !x.monto_partida_usd || x.monto_partida_usd <= 0)
+    );
+    const totFactSinPartidaUSD = factSinPartida.reduce((acc, x) => acc + (x.monto_total_usd || x.monto_obra_usd || 0), 0);
+    const factPorSede = {};
+    factSinPartida.forEach(x => {
+      const s = x.sede || 'Central';
+      factPorSede[s] = (factPorSede[s] || 0) + (x.monto_total_usd || x.monto_obra_usd || 0);
+    });
+
+    // 3. Obras Suspendidas
+    const suspendidas = all.filter(x => (x.estado || '').toLowerCase().includes('suspendid'));
+    const totSuspendidasUSD = suspendidas.reduce((acc, x) => acc + (x.monto_total_usd || x.monto_obra_usd || 0), 0);
+
+    // 4. Consolidado Plurianual de Cashflow
+    let tot2026 = 0, tot2027 = 0, tot2028 = 0, tot2029 = 0;
+    all.forEach(x => {
+      if (x.cashflow && typeof x.cashflow === 'object') {
+        tot2026 += parseFloat(x.cashflow.cashflow_2026) || 0;
+        tot2027 += parseFloat(x.cashflow.cashflow_2027) || 0;
+        tot2028 += parseFloat(x.cashflow.cashflow_2028) || 0;
+        tot2029 += parseFloat(x.cashflow.cashflow_2029) || 0;
+      } else {
+        tot2026 += x.monto_total_usd || x.monto_obra_usd || 0;
+      }
+    });
+    const totCashflowGlobal = tot2026 + tot2027 + tot2028 + tot2029;
+
+    // 5. Control de Partidas: Sobre-ejecutadas (Partida Corta / Déficit) vs Sub-ejecutadas (Superávit / Remanente)
+    const sobreEjecutadas = [];
+    const subEjecutadas = [];
+    let totDeficit = 0;
+    let totSuperavit = 0;
+
+    all.forEach(x => {
+      if (this.hasValidPartida(x) && x.monto_partida_usd > 0) {
+        const costoRequerido = x.monto_total_usd || ((x.monto_obra_usd || 0) + (x.monto_equipamiento_usd || 0));
+        const montoPartida = x.monto_partida_usd;
+        if (costoRequerido > montoPartida) {
+          const def = costoRequerido - montoPartida;
+          totDeficit += def;
+          sobreEjecutadas.push({
+            id: x.id,
+            nombre: x.nombre,
+            sede: x.sede,
+            estado: x.estado,
+            partida: x.partida,
+            monto_partida_usd: montoPartida,
+            costo_requerido_usd: costoRequerido,
+            deficit_usd: def,
+            responsable: x.responsable || 'Sin Asignar'
+          });
+        } else if (montoPartida > costoRequerido) {
+          const sup = montoPartida - costoRequerido;
+          totSuperavit += sup;
+          subEjecutadas.push({
+            id: x.id,
+            nombre: x.nombre,
+            sede: x.sede,
+            estado: x.estado,
+            partida: x.partida,
+            monto_partida_usd: montoPartida,
+            costo_requerido_usd: costoRequerido,
+            superavit_usd: sup,
+            responsable: x.responsable || 'Sin Asignar'
+          });
+        }
+      }
+    });
+
+    sobreEjecutadas.sort((a, b) => b.deficit_usd - a.deficit_usd);
+    subEjecutadas.sort((a, b) => b.superavit_usd - a.superavit_usd);
+
+    return {
+      fechaGeneracion: new Date().toISOString(),
+      fechaEmision: new Date().toLocaleString(),
+      emisor: this.currentUser ? `${this.currentUser.nombre} (${this.currentUser.rol.toUpperCase()})` : 'Dirección General',
+      totalObras: all.length,
+      obrasEnCurso: {
+        total: enCurso.length,
+        montoTotalUSD: totEnCursoUSD,
+        avancePromedio: avgAvance,
+        items: enCurso
+      },
+      factibilidadSinPartida: {
+        total: factSinPartida.length,
+        montoTotalUSD: totFactSinPartidaUSD,
+        desgloseSede: factPorSede,
+        items: factSinPartida
+      },
+      obrasSuspendidas: {
+        total: suspendidas.length,
+        montoTotalUSD: totSuspendidasUSD,
+        items: suspendidas
+      },
+      cashflow: {
+        c2026: tot2026,
+        c2027: tot2027,
+        c2028: tot2028,
+        c2029: tot2029,
+        totalGlobal: totCashflowGlobal
+      },
+      partidasDesvios: {
+        totalSobreEjecutadas: sobreEjecutadas.length,
+        totalDeficitUSD: totDeficit,
+        sobreEjecutadas: sobreEjecutadas,
+        totalSubEjecutadas: subEjecutadas.length,
+        totalSuperavitUSD: totSuperavit,
+        subEjecutadas: subEjecutadas,
+        balanceNetoUSD: totSuperavit - totDeficit
+      }
+    };
+  },
+
+  // ================= EXPORTACIÓN MULTI-HOJA A EXCEL DEL INFORME EJECUTIVO =================
+  exportExecutiveReportToExcel(rep = null) {
+    const report = rep || this.getExecutiveReportData();
+    if (!window.XLSX) {
+      alert("Librería XLSX no disponible para generar el archivo Excel.");
+      return;
+    }
+
+    const wb = XLSX.utils.book_new();
+
+    // Hoja 1: Resumen Ejecutivo
+    const wsResumenData = [
+      ["HOSPITAL ITALIANO DE BUENOS AIRES - DIRECCIÓN GENERAL & ADMINISTRACIÓN"],
+      ["INFORME EJECUTIVO DE CONTROL DE GESTIÓN Y CONTROL PRESUPUESTARIO"],
+      ["Fecha de Emisión:", new Date().toLocaleString()],
+      ["Emisor:", report.emisor],
+      [""],
+      ["INDICADORES CLAVE (KPIS)", "CANTIDAD", "MONTO TOTAL (USD)", "DETALLE ADICIONAL"],
+      ["Obras en Curso (Ejecución)", report.obrasEnCurso.total, report.obrasEnCurso.montoTotalUSD, `Avance Físico Promedio: ${report.obrasEnCurso.avancePromedio}%`],
+      ["Factibilidad sin Partida (Pendientes Dirección)", report.factibilidadSinPartida.total, report.factibilidadSinPartida.montoTotalUSD, "En espera de aprobación presupuestaria"],
+      ["Obras Suspendidas (Capital Inmovilizado)", report.obrasSuspendidas.total, report.obrasSuspendidas.montoTotalUSD, "Obras frenadas temporal o definitivamente"],
+      ["Partidas Sobre-ejecutadas (Déficit Presupuestario)", report.partidasDesvios.totalSobreEjecutadas, report.partidasDesvios.totalDeficitUSD, "Partidas Cortas que requieren ampliación"],
+      ["Partidas Sub-ejecutadas (Superávit Remanente)", report.partidasDesvios.totalSubEjecutadas, report.partidasDesvios.totalSuperavitUSD, "Fondos aprobados sin comprometer"],
+      [""],
+      ["CONSOLIDADO DE CASHFLOW PLURIANUAL", "MONTO USD", "% DISTRIBUCIÓN"],
+      ["Flujo 2026", report.cashflow.c2026, report.cashflow.totalGlobal > 0 ? (report.cashflow.c2026 / report.cashflow.totalGlobal * 100).toFixed(1) + "%" : "0%"],
+      ["Flujo 2027", report.cashflow.c2027, report.cashflow.totalGlobal > 0 ? (report.cashflow.c2027 / report.cashflow.totalGlobal * 100).toFixed(1) + "%" : "0%"],
+      ["Flujo 2028", report.cashflow.c2028, report.cashflow.totalGlobal > 0 ? (report.cashflow.c2028 / report.cashflow.totalGlobal * 100).toFixed(1) + "%" : "0%"],
+      ["Flujo 2029", report.cashflow.c2029, report.cashflow.totalGlobal > 0 ? (report.cashflow.c2029 / report.cashflow.totalGlobal * 100).toFixed(1) + "%" : "0%"],
+      ["TOTAL CARTERA", report.cashflow.totalGlobal, "100.0%"]
+    ];
+    const wsResumen = XLSX.utils.aoa_to_sheet(wsResumenData);
+    XLSX.utils.book_append_sheet(wb, wsResumen, "Resumen_Ejecutivo");
+
+    // Hoja 2: Obras en Curso
+    const wsEnCursoData = report.obrasEnCurso.items.map(x => ({
+      'Código': x.id,
+      'Nombre / Inversión': x.nombre,
+      'Sede': x.sede,
+      'Dependencia': x.dependencia || '',
+      'Proveedor Adjudicado': x.proveedor || '',
+      'Monto Adjudicado USD': x.monto_adjudicado_usd || x.monto_total_usd || 0,
+      'Avance Físico %': x.avance_fisico || 0,
+      'Fecha Fin Obra': x.fecha_fin_obra || x.fecha_fin_etapa || '',
+      'Responsable Técnico': x.responsable || ''
+    }));
+    const wsEnCurso = XLSX.utils.json_to_sheet(wsEnCursoData);
+    XLSX.utils.book_append_sheet(wb, wsEnCurso, "Obras_En_Curso");
+
+    // Hoja 3: Factibilidades Sin Partida
+    const wsFactData = report.factibilidadSinPartida.items.map(x => ({
+      'Código': x.id,
+      'Nombre Solicitud': x.nombre,
+      'Sede': x.sede,
+      'Sector Solicitante': x.sector_solicitante || '',
+      'Motivo': x.motivo || '',
+      'Monto Estimado USD': x.monto_total_usd || x.monto_obra_usd || 0,
+      'Prioridad Técnica': x.prioridad_tecnica || 3,
+      'Creado Por': x.creado_por || '',
+      'Fecha Solicitud': x.fecha_inicio_etapa || ''
+    }));
+    const wsFact = XLSX.utils.json_to_sheet(wsFactData);
+    XLSX.utils.book_append_sheet(wb, wsFact, "Factibilidad_Sin_Partida");
+
+    // Hoja 4: Partidas Sobre-ejecutadas (Déficit)
+    const wsSobreData = report.partidasDesvios.sobreEjecutadas.map(x => ({
+      'Código': x.id,
+      'Nombre': x.nombre,
+      'Sede': x.sede,
+      'Estado': x.estado,
+      'N° Partida': x.partida,
+      'Partida Asignada USD': x.monto_partida_usd,
+      'Costo Requerido USD': x.costo_requerido_usd,
+      'Déficit USD (Partida Corta)': -x.deficit_usd,
+      'Responsable': x.responsable
+    }));
+    const wsSobre = XLSX.utils.json_to_sheet(wsSobreData);
+    XLSX.utils.book_append_sheet(wb, wsSobre, "Partidas_SobreEjecutadas");
+
+    // Hoja 5: Partidas Sub-ejecutadas (Superávit)
+    const wsSubData = report.partidasDesvios.subEjecutadas.map(x => ({
+      'Código': x.id,
+      'Nombre': x.nombre,
+      'Sede': x.sede,
+      'Estado': x.estado,
+      'N° Partida': x.partida,
+      'Partida Asignada USD': x.monto_partida_usd,
+      'Costo Requerido USD': x.costo_requerido_usd,
+      'Superávit Remanente USD': x.superavit_usd,
+      'Responsable': x.responsable
+    }));
+    const wsSub = XLSX.utils.json_to_sheet(wsSubData);
+    XLSX.utils.book_append_sheet(wb, wsSub, "Partidas_SubEjecutadas");
+
+    // Hoja 6: Obras Suspendidas
+    const wsSuspData = report.obrasSuspendidas.items.map(x => ({
+      'Código': x.id,
+      'Nombre': x.nombre,
+      'Sede': x.sede,
+      'Monto Inmovilizado USD': x.monto_total_usd || x.monto_obra_usd || 0,
+      'Observaciones / Motivo': x.observaciones || '',
+      'Responsable': x.responsable || ''
+    }));
+    const wsSusp = XLSX.utils.json_to_sheet(wsSuspData);
+    XLSX.utils.book_append_sheet(wb, wsSusp, "Obras_Suspendidas");
+
+    const fileName = `Informe_Ejecutivo_Direccion_HIBA_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, fileName);
   }
 };
 
