@@ -2177,69 +2177,69 @@ const App = {
       const obraCount = assignedObras.length;
 
       html += `
-        <tr class="border-b border-slate-100 hover:bg-slate-50 text-xs">
-          <td class="py-2.5 px-3">
+        <tr class="border-b border-slate-100 hover:bg-slate-50 text-xs group">
+          <td class="py-2.5 px-3 whitespace-nowrap">
             <div class="font-bold text-slate-800 font-mono text-blue-700">@${u.username || 'sin_usuario'}</div>
             ${u.debe_cambiar_clave ? '<span class="text-[9px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold inline-flex items-center gap-1 mt-0.5"><i data-lucide="key" class="w-2.5 h-2.5"></i> Clave Provisoria</span>' : ''}
           </td>
-          <td class="py-2.5 px-3">
+          <td class="py-2.5 px-3 whitespace-nowrap">
             <div class="font-bold text-slate-800 flex items-center gap-1">
               <span>${u.nombre}</span>
               ${isCurrent ? '<span class="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded font-semibold">TÚ</span>' : ''}
             </div>
             <div class="text-[11px] text-slate-400 font-normal">${u.email || ''}</div>
           </td>
-          <td class="py-2.5 px-3">
+          <td class="py-2.5 px-3 whitespace-nowrap">
             <span class="px-2 py-0.5 rounded font-semibold text-[10px] bg-slate-100 text-slate-700 border border-slate-200">
               ${u.dependencia || 'Sin Dependencia'}
             </span>
           </td>
-          <td class="py-2.5 px-3">
+          <td class="py-2.5 px-3 whitespace-nowrap text-center">
             <span class="px-2 py-0.5 rounded font-semibold text-[11px] ${
               u.sede === 'Central' ? 'bg-blue-50 text-blue-700' :
               u.sede === 'San Justo' ? 'bg-emerald-50 text-emerald-700' :
               u.sede === 'Periféricos' ? 'bg-amber-50 text-amber-700' : 'bg-purple-50 text-purple-700'
             }">${u.sede}</span>
           </td>
-          <td class="py-2.5 px-3 font-semibold text-slate-700 uppercase text-[10px]">${u.rol}</td>
-          <td class="py-2.5 px-3">
-            <div class="flex items-center space-x-1.5">
+          <td class="py-2.5 px-3 font-semibold text-slate-700 uppercase text-[10px] whitespace-nowrap text-center">${u.rol}</td>
+          <td class="py-2.5 px-3 whitespace-nowrap text-center">
+            <div class="flex items-center justify-center space-x-1.5">
               <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold ${
                 obraCount > 0 ? 'bg-blue-100 text-blue-800 border border-blue-200' : 'bg-slate-100 text-slate-500 border border-slate-200'
               }">
                 ${obraCount} ${obraCount === 1 ? 'obra' : 'obras'}
               </span>
               <button type="button" onclick="App.openAssignUserObrasModal('${u.id}')" 
-                      class="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded text-[10px] font-bold inline-flex items-center space-x-1 transition cursor-pointer"
+                      class="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded text-[10px] font-bold inline-flex items-center space-x-1 transition cursor-pointer shrink-0"
                       title="Asignar o desasignar obras a este usuario">
                 <i data-lucide="folder-plus" class="w-3 h-3 text-emerald-600"></i>
                 <span>Asignar</span>
               </button>
             </div>
           </td>
-          <td class="py-2.5 px-3">
+          <td class="py-2.5 px-3 whitespace-nowrap text-center">
             ${u.activo 
               ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>Acceso Habilitado</span>' 
               : '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800"><span class="w-1.5 h-1.5 rounded-full bg-rose-500 mr-1.5"></span>Acceso Revocado</span>'
             }
           </td>
-          <td class="py-2.5 px-3 text-right">
-            <div class="flex items-center justify-end space-x-1.5 flex-wrap gap-y-1">
+          <td class="py-2.5 px-3 text-right sticky-action-col bg-white group-hover:bg-slate-50 border-l border-slate-200 whitespace-nowrap min-w-[340px]">
+            <div class="flex items-center justify-end space-x-1.5 whitespace-nowrap">
               <!-- 0. Botón Asignar Cartera de Obras -->
-              <button type="button" onclick="App.openAssignUserObrasModal('${u.id}')" title="Asignar cartera de obras e infraestructura a este usuario" class="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded font-bold text-[11px] transition cursor-pointer flex items-center space-x-1">
+              <button type="button" onclick="App.openAssignUserObrasModal('${u.id}')" title="Asignar cartera de obras e infraestructura a este usuario" class="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded font-bold text-[11px] transition cursor-pointer flex items-center space-x-1 shrink-0">
                 <i data-lucide="folder-kanban" class="w-3 h-3 text-emerald-600"></i>
                 <span>Asignar</span>
               </button>
 
               <!-- 1. Botón Cambiar Permisos -->
-              <button type="button" onclick="App.openEditPermissionsModal('${u.id}')" title="Modificar rol, sede y permisos granulares" class="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded font-bold text-[11px] transition cursor-pointer flex items-center space-x-1">
+              <button type="button" onclick="App.openEditPermissionsModal('${u.id}')" title="Modificar rol, sede y permisos granulares" class="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded font-bold text-[11px] transition cursor-pointer flex items-center space-x-1 shrink-0">
                 <i data-lucide="settings" class="w-3 h-3"></i>
                 <span>Permisos</span>
               </button>
 
               <!-- 2. Botón Quitar/Habilitar Acceso -->
               ${!isCurrent ? `
-                <button type="button" onclick="App.handleToggleAccess('${u.id}')" title="${u.activo ? 'Quitar acceso al sistema' : 'Habilitar acceso al sistema'}" class="px-2 py-1 rounded font-bold text-[11px] transition cursor-pointer flex items-center space-x-1 border ${
+                <button type="button" onclick="App.handleToggleAccess('${u.id}')" title="${u.activo ? 'Quitar acceso al sistema' : 'Habilitar acceso al sistema'}" class="px-2 py-1 rounded font-bold text-[11px] transition cursor-pointer flex items-center space-x-1 border shrink-0 ${
                   u.activo ? 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200'
                 }">
                   <i data-lucide="${u.activo ? 'lock' : 'unlock'}" class="w-3 h-3"></i>
@@ -2248,21 +2248,21 @@ const App = {
               ` : ''}
 
               <!-- 3. Botón Forzar Cambio de Clave -->
-              <button type="button" onclick="App.handleForcePasswordChange('${u.id}')" title="Generar clave temporal obligatoria por olvido de contraseña" class="px-2 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded font-bold text-[11px] transition cursor-pointer flex items-center space-x-1">
+              <button type="button" onclick="App.handleForcePasswordChange('${u.id}')" title="Generar clave temporal obligatoria por olvido de contraseña" class="px-2 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded font-bold text-[11px] transition cursor-pointer flex items-center space-x-1 shrink-0">
                 <i data-lucide="key" class="w-3 h-3"></i>
                 <span>Forzar Clave</span>
               </button>
 
               <!-- 4. Botón Eliminar Definitivamente -->
               ${!isCurrent ? `
-                <button type="button" onclick="App.handleDeleteUserDirect('${u.id}')" title="Eliminar usuario definitivamente para que no vuelva a aparecer jamás" class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded font-bold text-[11px] transition cursor-pointer flex items-center space-x-1">
+                <button type="button" onclick="App.handleDeleteUserDirect('${u.id}')" title="Eliminar usuario definitivamente para que no vuelva a aparecer jamás" class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded font-bold text-[11px] transition cursor-pointer flex items-center space-x-1 shrink-0">
                   <i data-lucide="trash-2" class="w-3 h-3"></i>
                   <span>Eliminar</span>
                 </button>
               ` : ''}
 
               <!-- Simular sesión rápida -->
-              <button type="button" onclick="App.switchUserAccount('${u.id}')" title="Iniciar sesión con este perfil" class="px-1.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] font-medium transition cursor-pointer">
+              <button type="button" onclick="App.switchUserAccount('${u.id}')" title="Iniciar sesión con este perfil" class="px-1.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] font-medium transition cursor-pointer shrink-0">
                 Simular
               </button>
             </div>

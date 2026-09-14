@@ -261,3 +261,29 @@ Cuando una obra se encuentra en la etapa **"En licitación"**, el Comprador es e
    - **Saldo a Distribuir:** Monto restante y desglose de las cuotas mensuales idénticas para los meses 2 en adelante.
 4. Haga clic en **"Confirmar y Avanzar Etapa"**. Si omitió el N° de Orden de Compra o el porcentaje de anticipo, el sistema impedirá el avance y le solicitará completar el dato obligatorio.
 5. Al confirmarse, la obra pasa a **"Obras en Curso"**, se registra el N° de OC y condiciones de anticipo en el historial inmutable de auditoría y la obra retorna automáticamente al proyectista técnico para su supervisión en obra.
+
+---
+
+## 11. PANEL DE ADMINISTRACIÓN DE USUARIOS: ACCIONES ANCLADAS Y NAVEGACIÓN EN MONITORES PEQUEÑOS
+
+Para administradores que operan el sistema desde laptops (1366x768), computadoras con escalado de texto/pantalla (125% o 150%) o ventanas redimensionadas:
+
+### 11.1. Visualización Continua y Columna Fija de Acciones de Control
+1. Al acceder a **"Configurar Usuarios"** en la barra superior del perfil Administrador:
+   - La ventana de administración de cuentas se adapta holgadamente a la pantalla.
+   - La tabla conserva un ancho protegido (`1050px`) para asegurar que todos los datos (usuario, correo, dependencia, sede, rol, obras asignadas y estado) se lean con total nitidez sin amontonarse.
+2. **Columna "Acciones de Control" Anclada a la Derecha:**
+   - La columna de comandos de gestión (`Asignar`, `Permisos`, `Quitar/Habilitar Acceso`, `Forzar Clave`, `Eliminar` y `Simular`) **permanece fija y permanentemente visible en el lateral derecho de la tabla**, destacada con sombra sutil y fondo blanco interactivo.
+   - Aunque desplace la tabla hacia la izquierda para ver datos previos, los botones de acción nunca se esconden ni quedan fuera del alcance del cursor.
+
+### 11.2. Barra de Desplazamiento Horizontal (Scrollbar)
+- El contenedor de la tabla incluye una barra de scroll horizontal visible y de fácil agarre (color gris azulado contrastante sobre carril gris suave).
+- Puede deslizar la barra con el mouse o utilizar la rueda del ratón (o trackpad con dos dedos horizontalmente) para recorrer las columnas de información de cada usuario.
+
+---
+
+## 12. POLÍTICA INSTITUCIONAL DE PRESERVACIÓN DE MEMORIA TÉCNICA Y CONFIGURACIONES
+
+- **Blindaje de Decisiones de Gestión:** La plataforma SIGO-HIBA opera bajo una directiva permanente que exige actualizar la memoria técnica y el manual de usuario en cada modificación de la plataforma.
+- **Protección de Datos Maestros:** Todas las configuraciones operativas consensuadas por la administración (asignación de carteras, sedes, dependencias, partidas presupuestarias, montos auditados, reglas de factibilidad sin plazos, período contable 01/04-31/03 y distribución con anticipos de compras) se encuentran documentadas como línea de base oficial e inalterable, resguardando al sistema contra modificaciones o retrocesos no autorizados.
+

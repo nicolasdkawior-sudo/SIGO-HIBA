@@ -274,3 +274,101 @@ El reporte ejecutivo para comités de Dirección, Finanzas y Auditoría fue redi
   - El Comprador **no puede editar, modificar datos maestros ni avanzar obras en etapa Proyecto** (`canUserEditObra(item) === false` y `canUserAdvanceItem(item) === false`).
   - En las tarjetas y filas de tabla, se ocultan los botones de "Editar" y "Avanzar", mostrándose la insignia `👁️ Solo Consulta`.
   - Si el Comprador abre el modal de una obra en Proyecto, el sistema se bloquea en modo solo lectura con banner explicativo: *"Vista Preliminar para Compras (Solo Consulta): Esta obra se encuentra en etapa de Proyecto técnico. El Comprador puede visualizar su alcance para previsión de adquisiciones y pliegos, pero no puede editarla ni avanzarla hasta que pase a licitación"*.
+
+---
+
+## 10. DIRECTIVA PERMANENTE DE MANTENIMIENTO DE MEMORIA TÉCNICA, BLINDAJE DE CONFIGURACIONES Y NO REGRESIÓN
+
+### 10.1. Obligatoriedad de Actualización de Memoria en Cada Modificación
+- **Regla de Oro de Desarrollo:** A partir de esta versión, **toda modificación funcional, estética, estructural o de datos que se introduzca en la plataforma SIGO-HIBA debe ir acompañada obligatoriamente de la actualización inmediata de la Memoria Técnica (`docs/MEMORIA_TECNICA_SIGO_HIBA.md`) y del Manual de Usuario (`docs/MANUAL_DE_USUARIO_SIGO_HIBA.md`)**, tanto en la raíz como en la carpeta canónica de distribución `app/docs/`.
+- **Prohibición Estricta de Regresiones:** Queda formalmente prohibido revertir el sistema a opciones o diseños pasados que ya fueron revisados, superados o descartados por la administración institucional. El código base debe respetar invariablemente los consensos alcanzados.
+
+### 10.2. Blindaje de Configuraciones y Parámetros Operativos
+- **Inmutabilidad de Parámetros No Autorizados:** Todas las configuraciones operativas del sistema (catálogo de cuentas de usuario, roles, dependencias hospitalarias, asignaciones de carteras, sedes, partidas presupuestarias, montos, fechas contables, reglas de factibilidad sin plazos y distribución de cash flow con anticipo OC) forman parte de la memoria técnica canónica.
+- **Prevención de Cambios Arbitrarios:** Ninguna actualización o despliegue futuro podrá alterar, resetear o modificar estas configuraciones sin una solicitud explícita, documentada y autorizada por la Administración de Obras e Infraestructura del HIBA.
+
+---
+
+## 11. LÍNEA DE BASE DE CONFIGURACIÓN Y DATOS MAESTROS DEL SISTEMA (ESTADO VIGENTE AUDITADO)
+
+La siguiente línea de base documenta el estado maestro y canónico de la plataforma SIGO-HIBA para garantizar su preservación integral:
+
+### 11.1. Cartera Global de Obras (221 Obras Auditadas)
+- **Volumen Total:** 221 registros de obras e infraestructura en base de datos.
+- **Estudio de Factibilidad (94 Obras - USD 20,151,232):**
+  - **91 Obras Sin Partida Asignada:** Monto estimado total de **USD 19,616,232**. Permanecen en análisis de viabilidad técnica y médica. No poseen plazos de ejecución definidos ni cronogramas comprometidos.
+  - **3 Obras Con Partida Asignada:** Monto total de **USD 535,000**. Cuentan con partida presupuestaria asignada por la administración y avanzan a anteproyecto/proyecto según prioridad.
+  - **Regla de Asignación Administrativa Directa:** Si el Administrador asigna partida presupuestaria y monto a una obra en Factibilidad que aún no contaba con ponderación de la Dirección Médica, el sistema iguala automáticamente la criticidad médica a la técnica y avanza la obra a etapa de Proyecto, removiéndola de inmediato del listado de obras pendientes de ponderación de la Dirección Médica.
+- **Obras en Curso (Ejecución Activa):** Cartera con contratistas adjudicados, número de Orden de Compra (OC), porcentaje de anticipo contractual (Mes 1) y plazo de ejecución en meses.
+- **Etapas Intermedias:** Ante Proyecto, Proyecto y En Licitación.
+
+### 11.2. Catálogo Maestro de Usuarios, Roles y Dependencias
+El sistema cuenta con un catálogo estructurado de usuarios auditados con permisos granulares por perfil:
+1. **Administrador (`admin`):**
+   - Nombre: *Superintendencia de Obras e Infraestructura*
+   - Rol: `admin` | Sede: `Todas las Sedes` | Dependencia: `Infraestructura & Mantenimiento`
+   - Permisos: Control total, asignación de carteras, creación/edición/eliminación de usuarios, forzado de claves, configuración de partidas y cambio manual de etapas.
+2. **Proyectistas Técnicos:**
+   - `usr-proyectista-1` (*Arq. Mariana Bianchi* - Sede Central - Obra Civil)
+   - `usr-proyectista-2` (*Ing. Alejandro Gómez* - Sede San Justo - Infraestructura Hospitalaria)
+   - `usr-proyectista-3` (*Arq. Valeria Rossi* - Sede Central - Obra Civil)
+   - `usr-proyectista-4` (*Arq. Roberto Castro* - Centros Periféricos - Obra Civil / Refacciones)
+   - Rol: `proyectista` | Permisos: Gestión técnica, avance en Factibilidad, Anteproyecto, Proyecto y Obras en Curso de sus obras asignadas.
+3. **Comprador / Licitaciones:**
+   - `usr-licitaciones` (*Lic. Martín Soria*)
+   - Rol: `comprador` | Sede: `Todas las Sedes` | Dependencia: `Compras & Contrataciones`
+   - Permisos: Gestión exclusiva de la etapa "En licitación", adjudicación vinculante con carga obligatoria de Proveedor, N° de Orden de Compra (OC), Monto Adjudicado USD y Porcentaje de Anticipo OC (%). Visualización preventiva en modo Solo Lectura de la etapa "Proyecto" sin permisos de edición ni avance.
+4. **Dirección Médica & Asistencial:**
+   - `usr-dir-central` (*Dr. Marcelo Fernández* - Dirección Médica Sede Central)
+   - `usr-dir-sanjusto` (*Dra. Claudia Morales* - Dirección Médica Sede San Justo)
+   - `usr-dir-perifericos` (*Dr. Gabriel Pérez* - Dirección Médica Centros Periféricos)
+   - Rol: `direccion_medica` | Permisos: Ponderación de criticidad médica (Alta/Media/Baja), justificación clínica y aprobación de viabilidad médica en obras de Factibilidad de su jurisdicción.
+5. **Jefatura de Obras & Mantenimiento:**
+   - `usr-mant-central` (*Ing. Walter Rossi* - Sede Central)
+   - `usr-mant-sanjusto` (*Arq. Fernando Delgado* - Sede San Justo)
+   - Rol: `jefe_mantenimiento` | Dependencia: `Infraestructura & Mantenimiento`
+6. **Auditoría & Presupuesto:**
+   - `usr-auditoria` (*Contadora Sofía Benítez*)
+   - Rol: `auditor` | Sede: `Todas las Sedes` | Dependencia: `Administración & Finanzas`
+
+### 11.3. Catálogo Oficial de Dependencias Hospitalarias
+- **Dirección Médica Central**
+- **Dirección Médica San Justo**
+- **Centros Periféricos** (Incorporada formalmente para unificar la supervisión de la red de consultorios y centros ambulatorios externos del hospital)
+- **Infraestructura & Mantenimiento**
+- **Compras & Contrataciones**
+- **Administración & Finanzas**
+
+### 11.4. Sedes Hospitalarias Oficiales
+- **Central** (Sede Almagro / Potosí)
+- **San Justo** (Campus Universitario & Hospitalario San Justo)
+- **Centros Periféricos** (Red de Centros Médicos Ambulatorios)
+- **Todas las Sedes** (Jurisdicción global institucional)
+
+### 11.5. Reglas Financieras y Período Contable Canónico
+- **Período Contable Oficial:** Del 01 de Abril al 31 de Marzo del año siguiente (12 meses).
+- **Tratamiento de Ejercicios:** Desembolsos $< \text{01/04}$ no computan en el ejercicio vigente; desembolsos $> \text{31/03}$ se computan como arrastre a ejercicios futuros.
+- **Distribución de Anticipo OC y Saldo:** Mes 1 = Anticipo pactado (%); Meses 2 a N = Saldo distribuido en partes iguales.
+- **Semáforo de Plazos:** Alerta temprana preventiva en el último 15% del plazo contractual restante.
+
+---
+
+## 12. ESTÁNDARES UI/UX: TABLAS ANCHAS, SCROLLBARS VISIBLES Y COLUMNAS DE ACCIÓN ANCLADAS (STICKY)
+
+Para garantizar una experiencia visual óptima y continua en toda la organización hospitalaria, especialmente en computadoras de menor resolución (laptops estándar 1366x768, pantallas con escalado de Windows a 125%/150% o ventanas no maximizadas):
+
+### 12.1. Problema Abordado
+En pantallas estrechas, tablas de gestión complejas con múltiples columnas de datos y botones de control (como la tabla de *Administración de Usuarios y Permisos*) sufrían desbordamientos donde los botones de la derecha quedaban ocultos fuera de la vista y la barra de desplazamiento horizontal nativa era invisible o inaccesible.
+
+### 12.2. Solución de Ingeniería Implementada
+1. **Contenedor con Scrollbar Visible y Estilizado (`custom-scrollbar`):**
+   - Se implementó en `css/style.css` una barra de desplazamiento horizontal continua con track gris claro visible (`#e2e8f0`), thumb deslizante gris azulado (`#94a3b8`) con efecto hover oscurecido (`#64748b`), altura cómoda de 10px y soporte cruzado para navegadores Chromium, Safari y Firefox (`scrollbar-width: thin; scrollbar-color: #94a3b8 #e2e8f0;`).
+2. **Ancho Mínimo de Tabla Garantizado (`min-w-[1050px]`):**
+   - La tabla de usuarios posee un ancho mínimo forzado que evita el aplastamiento de nombres, correos, insignias de rol, dependencias y contadores de obras a cargo.
+3. **Columna de Acciones Anclada y Fija a la Derecha (`sticky-action-col`):**
+   - La columna cabecera y celdas de **Acciones de Control** cuentan con clase `.sticky-action-col` (`position: sticky; right: 0; z-index: 10`).
+   - Posee un ancho mínimo holgado (`min-w-[340px]`), fondo sólido (`bg-white`) con respuesta cromática al pasar el cursor (`group-hover:bg-slate-50`), borde divisor izquierdo y una sombra lateral suave (`box-shadow: -6px 0 10px -4px rgba(0, 0, 0, 0.08)`).
+   - Todos los botones de acción (`Asignar`, `Permisos`, `Quitar/Habilitar Acceso`, `Forzar Clave`, `Eliminar`, `Simular`) cuentan con propiedad `shrink-0`, impidiendo cualquier deformación o salto de línea.
+4. **Resultado Operativo:**
+   - El Administrador puede navegar y scrollear horizontalmente para inspeccionar cualquier columna de la tabla mientras **la botonera de control permanece permanentemente fija, visible y accesible en el extremo derecho de la pantalla**, garantizando control total en cualquier computadora de la institución.
+

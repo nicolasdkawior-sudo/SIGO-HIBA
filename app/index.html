@@ -1089,7 +1089,7 @@
 
   <!-- ================= MODAL: GESTIÓN DE USUARIOS Y PERMISOS (ADMIN) ================= -->
   <div id="modalUsersAdmin" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-slate-100 text-xs">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-6xl xl:max-w-7xl w-full max-h-[92vh] flex flex-col overflow-hidden border border-slate-100 text-xs">
       <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
         <div class="flex items-center space-x-2.5">
           <i data-lucide="users" class="w-5 h-5 text-blue-400"></i>
@@ -1202,26 +1202,38 @@
         </div>
 
         <div>
-          <div class="font-bold text-slate-800 mb-2 flex items-center justify-between">
-            <span>Usuarios Registrados en la Plataforma</span>
-            <span class="text-[11px] text-slate-400 font-normal">Quitar acceso, forzar cambio de clave, editar permisos y eliminación permanente</span>
+          <div class="font-bold text-slate-800 mb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+            <span class="flex items-center space-x-1.5">
+              <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
+              <span>Usuarios Registrados en la Plataforma</span>
+            </span>
+            <span class="text-[11px] text-slate-500 font-medium bg-slate-100 px-2.5 py-0.5 rounded-md border border-slate-200">
+              💡 La columna <strong>Acciones de Control</strong> permanece fija a la derecha
+            </span>
           </div>
-          <div class="border border-slate-200 rounded-xl overflow-x-auto">
-            <table class="w-full text-left min-w-[850px]">
-              <thead class="bg-slate-100 font-semibold text-slate-600 border-b border-slate-200">
+          <div class="border border-slate-200 rounded-xl overflow-x-auto custom-scrollbar shadow-xs relative bg-white">
+            <table class="w-full text-left min-w-[1050px] border-collapse">
+              <thead class="bg-slate-100 font-semibold text-slate-600 border-b border-slate-200 text-[11px]">
                 <tr>
-                  <th class="py-2.5 px-3">Usuario (Login)</th>
-                  <th class="py-2.5 px-3">Nombre & Correo</th>
-                  <th class="py-2.5 px-3">Dependencia</th>
-                  <th class="py-2.5 px-3">Sede</th>
-                  <th class="py-2.5 px-3">Rol</th>
-                  <th class="py-2.5 px-3">Obras a Cargo</th>
-                  <th class="py-2.5 px-3">Estado</th>
-                  <th class="py-2.5 px-3 text-right">Acciones de Control</th>
+                  <th class="py-2.5 px-3 whitespace-nowrap">Usuario (Login)</th>
+                  <th class="py-2.5 px-3 whitespace-nowrap">Nombre & Correo</th>
+                  <th class="py-2.5 px-3 whitespace-nowrap">Dependencia</th>
+                  <th class="py-2.5 px-3 whitespace-nowrap text-center">Sede</th>
+                  <th class="py-2.5 px-3 whitespace-nowrap text-center">Rol</th>
+                  <th class="py-2.5 px-3 whitespace-nowrap text-center">Obras a Cargo</th>
+                  <th class="py-2.5 px-3 whitespace-nowrap text-center">Estado</th>
+                  <th class="py-2.5 px-3 text-right sticky-action-col bg-slate-100 border-l border-slate-200 min-w-[340px] whitespace-nowrap">Acciones de Control</th>
                 </tr>
               </thead>
               <tbody id="adminUsersTableBody" class="divide-y divide-slate-100"></tbody>
             </table>
+          </div>
+          <div class="mt-2 flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-lg border border-slate-200 gap-1">
+            <span class="inline-flex items-center gap-1.5 font-medium">
+              <i data-lucide="info" class="w-3.5 h-3.5 text-blue-600 shrink-0"></i>
+              <span>En monitores de menor resolución, desliza la barra horizontal inferior. La columna <strong>Acciones de Control</strong> permanece anclada y visible a la derecha.</span>
+            </span>
+            <span class="text-slate-400 font-mono text-[10px] hidden sm:inline">← Desplazamiento Horizontal →</span>
           </div>
         </div>
       </div>
