@@ -562,8 +562,8 @@
                 <i data-lucide="trending-up" class="w-4 h-4"></i>
               </div>
               <div>
-                <h3 class="font-bold text-slate-800 text-sm">Matriz de Cashflow y Presupuesto Multianual</h3>
-                <p class="text-xs text-slate-400">Proyección y control de desembolsos 2026 a 2029 (Valores en USD)</p>
+                <h3 class="font-bold text-slate-800 text-sm">Matriz de Cash Flow de Obras en Curso</h3>
+                <p class="text-xs text-slate-500">Flujo financiero exclusivo de obras activas en ejecución • Período Contable Oficial (01/04 - 31/03)</p>
               </div>
             </div>
           </div>
@@ -897,14 +897,48 @@
             <label class="block font-bold text-slate-700 mb-1">Proveedor Adjudicado <span class="text-red-500">*</span>:</label>
             <input type="text" id="transProveedorAdjudicadoInput" placeholder="Ej: Techint S.A. / Constructora Central" class="w-full border-2 border-emerald-500 rounded-lg p-2 font-medium text-slate-900 bg-white">
           </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Monto Total de la Adjudicación (USD) <span class="text-red-500">*</span>:</label>
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 pl-3 flex items-center font-bold text-slate-400">USD</span>
-              <input type="text" inputmode="decimal" id="transMontoAdjudicadoInput" placeholder="Ej: 72500,50" class="w-full pl-12 border-2 border-emerald-500 rounded-lg p-2 font-mono font-bold text-emerald-900 bg-white">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Monto Total Adjudicado (USD) <span class="text-red-500">*</span>:</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center font-bold text-slate-400">USD</span>
+                <input type="text" inputmode="decimal" id="transMontoAdjudicadoInput" oninput="App.handleAdjudicacionInputChange()" placeholder="Ej: 1000000" class="w-full pl-12 border-2 border-emerald-500 rounded-lg p-2 font-mono font-bold text-emerald-900 bg-white">
+              </div>
             </div>
-            <p class="text-[10px] text-emerald-800 font-semibold mt-1">Este monto actualizará el costo adjudicado oficial de la obra.</p>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Plazo de Ejecución (Meses):</label>
+              <input type="number" min="1" max="60" id="transPlazoMesesInput" oninput="App.handleAdjudicacionInputChange()" placeholder="Ej: 10" class="w-full border border-slate-300 rounded-lg p-2 font-mono font-bold text-slate-900 bg-white">
+            </div>
           </div>
+
+          <!-- Campo de Anticipo en Orden de Compra -->
+          <div class="bg-white p-3 rounded-lg border border-emerald-300 shadow-2xs space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="block font-bold text-slate-800 text-xs flex items-center space-x-1">
+                <span>Porcentaje de Anticipo en Orden de Compra (%):</span>
+              </label>
+              <span id="transAnticipoCalculadoBadge" class="text-[11px] font-mono font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">0% = USD 0</span>
+            </div>
+            <div class="relative">
+              <input type="number" step="0.1" min="0" max="100" id="transAnticipoPorcentajeInput" oninput="App.handleAdjudicacionInputChange()" placeholder="Ej: 30" class="w-full pr-8 border-2 border-emerald-500 rounded-lg p-2 font-mono font-bold text-emerald-900 bg-white">
+              <span class="absolute inset-y-0 right-0 pr-3 flex items-center font-bold text-slate-400 text-xs">%</span>
+            </div>
+            <!-- Desglose dinámico del flujo estimado -->
+            <div id="transAnticipoDesgloseNotice" class="text-[11px] text-slate-600 bg-slate-50 p-2 rounded border border-slate-200 flex flex-col gap-0.5">
+              <div class="flex justify-between">
+                <span>Anticipo Inicial (Mes 1):</span>
+                <strong id="transDesgloseAnticipoUSD" class="text-emerald-800 font-mono">USD 0</strong>
+              </div>
+              <div class="flex justify-between">
+                <span>Saldo a Distribuir en Meses Restantes:</span>
+                <strong id="transDesgloseSaldoUSD" class="text-blue-800 font-mono">USD 0</strong>
+              </div>
+            </div>
+            <p class="text-[10px] text-emerald-800 font-medium">
+              💡 El anticipo impacta en el mes 1 y el saldo restante se distribuye en cuotas mensuales iguales durante los meses restantes de ejecución.
+            </p>
+          </div>
+
           <div class="p-2 bg-blue-50 border border-blue-200 rounded text-[11px] text-blue-800">
             🔁 Al confirmar la adjudicación, la obra <strong>retornará automáticamente al proyectista original</strong> en estado <strong>Obras en Curso</strong>.
           </div>
@@ -1688,6 +1722,35 @@
           </div>
         </div>
 
+        <!-- Condiciones de Contratación y Anticipo OC (Para Obras en Curso y Planificación Financiera) -->
+        <div id="modalObraContratacionPanel" class="bg-emerald-50/70 p-3.5 rounded-xl border border-emerald-200">
+          <div class="font-bold text-emerald-950 text-xs mb-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+            <span class="flex items-center space-x-1.5">
+              <i data-lucide="file-check" class="w-4 h-4 text-emerald-600"></i>
+              <span>Condiciones de Contratación, Orden de Compra y Anticipo Financiero</span>
+            </span>
+            <span id="modalObraAnticipoInfoBadge" class="text-[10px] text-emerald-900 bg-white px-2 py-0.5 rounded border border-emerald-300 font-bold w-fit"></span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <div>
+              <label class="block text-slate-700 text-xs font-semibold mb-1">Costo Adjudicado (USD)</label>
+              <input type="number" step="0.01" id="modalObraMontoAdjudicado" readonly class="w-full border border-emerald-300 rounded px-2.5 py-1.5 bg-white font-mono font-bold text-emerald-950">
+            </div>
+            <div>
+              <label class="block text-slate-700 text-xs font-semibold mb-1">Anticipo en OC (%)</label>
+              <input type="number" step="0.1" min="0" max="100" id="modalObraAnticipoPct" oninput="App.handleModalAnticipoChange()" class="w-full border border-emerald-300 rounded px-2.5 py-1.5 bg-white font-mono font-bold text-emerald-950">
+            </div>
+            <div>
+              <label class="block text-slate-700 text-xs font-semibold mb-1">Anticipo Mes 1 (USD)</label>
+              <input type="text" id="modalObraAnticipoUSD" readonly class="w-full border border-slate-200 rounded px-2.5 py-1.5 bg-slate-100 font-mono font-bold text-slate-700">
+            </div>
+            <div>
+              <label class="block text-slate-700 text-xs font-semibold mb-1">Plazo de Obra (Meses)</label>
+              <input type="number" min="1" max="60" id="modalObraPlazoMeses" class="w-full border border-slate-300 rounded px-2.5 py-1.5 bg-white font-mono font-bold text-slate-900">
+            </div>
+          </div>
+        </div>
+
         <!-- Prioridades (1 a 5) y Ponderación Global -->
         <div class="bg-slate-100 p-4 rounded-xl border border-slate-200">
           <div class="font-bold text-slate-800 text-xs mb-2">Evaluación y Ponderación Global (1 = Sin prioridad, 5 = Crítica)</div>
@@ -1845,7 +1908,7 @@
           <div>
             <h3 class="text-sm font-black tracking-tight text-white flex items-center space-x-2">
               <span>Tablero Ejecutivo de Dirección & Administración</span>
-              <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">One-Pager</span>
+              <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Informe Oficial (3 Páginas A4)</span>
             </h3>
             <p class="text-[11px] text-teal-200/80">Control consolidado de gestión, inversiones comprometidas, desvíos presupuestarios y cashflow institucional.</p>
           </div>

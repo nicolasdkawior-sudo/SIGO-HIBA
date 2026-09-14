@@ -352,11 +352,94 @@ var obraVencida = {
 var semVencida = DataStore.calculateSemaforo(obraVencida);
 assert("Semáforo automático vencido (Rojo) al superarse la fecha límite", semVencida.status === 'vencido');
 
+// ------------------------------------------------------------------------------
+// FASE 10: CASH FLOW DE OBRAS EN CURSO, ANTICIPOS OC Y PERÍODO CONTABLE 01/04 - 31/03
+// ------------------------------------------------------------------------------
+print("\n--- FASE 10: CASH FLOW DE OBRAS EN CURSO Y ANTICIPO ORDEN DE COMPRA ---");
+DataStore.currentUser = authLicitaciones.user;
+
+// 10.1 Creación y adjudicación con anticipo OC y plazo en meses
+var obraCFTest = {
+  id: 'OBRA-CF-ANTICIPO-1M',
+  nombre: 'Nueva Sala de Cuidados Intensivos Pediátricos',
+  tipo: 'Obra Civil',
+  sede: 'Central',
+  dependencia: 'Departamento de Proyectos Central',
+  estado: 'En licitación',
+  monto_total_usd: 1000000,
+  partida: 'PART-CF-01',
+  monto_partida_usd: 1000000,
+  fecha_inicio_etapa: '2026-05-01'
+};
+DataStore.items.unshift(obraCFTest);
+var fechaHoyStr = new Date().toISOString().split('T')[0];
+var advResult = DataStore.confirmAndAdvanceStage('OBRA-CF-ANTICIPO-1M', fechaHoyStr, null, 'Adjudicación con 30% de anticipo y 10 meses de obra según pliego', {
+  proveedor: 'Constructora del Plata S.A.',
+  montoAdjudicado: 1000000,
+  porcentajeAnticipo: 30,
+  plazoMeses: 10
+});
+
+assert("Adjudicación exitosa a 'Obras en Curso' con anticipo del 30%", advResult.success);
+var obraEnCursoGuardada = DataStore.getItemById('OBRA-CF-ANTICIPO-1M');
+obraEnCursoGuardada.fecha_inicio_etapa = '2026-05-01'; // Fijar inicio en mayo 2026 para el test de 10 meses
+DataStore.persist();
+assert("Estado pasó a 'Obras en Curso'", obraEnCursoGuardada.estado === 'Obras en Curso');
+assert("Porcentaje de anticipo registrado exactamente en 30%", obraEnCursoGuardada.anticipo_porcentaje === 30);
+assert("Monto de anticipo registrado en 300,000 USD", obraEnCursoGuardada.anticipo_monto_usd === 300000);
+assert("Plazo de obra registrado en 10 meses", obraEnCursoGuardada.plazo_meses === 10);
+
+// 10.2 Cálculo del flujo mensual con refDate fija (ej: 15 de julio de 2026)
+var refDatePrueba = new Date(2026, 6, 15); // 15 de julio de 2026
+var cfCalculado = DataStore.calculateObraCashflow(obraEnCursoGuardada, refDatePrueba);
+
+assert("Cálculo de Cash Flow detecta monto total de 1,000,000 USD", cfCalculado.montoTotalUSD === 1000000);
+assert("Anticipo de Mes 1 absorbe exactamente 300,000 USD (30%)", cfCalculado.anticipoUSD === 300000);
+assert("Saldo a prorratear en meses restantes es 700,000 USD", cfCalculado.saldoUSD === 700000);
+assert("Cuota mensual para los 9 meses restantes es de 77,777.78 USD", Math.abs(cfCalculado.cuotaMensualSaldoUSD - 77777.78) < 0.05);
+
+// 10.3 Período Contable Institucional (01/04 a 31/03)
+var accInfo = DataStore.getAccountingYearInfo(refDatePrueba);
+assert("Período contable inicia el 01/04", accInfo.startMonth === 4);
+assert("Período contable abarca 12 meses", accInfo.meses.length === 12);
+assert("Primer mes del ejercicio es Abril", accInfo.meses[0].shortLabel === 'Abr');
+assert("Último mes del ejercicio es Marzo", accInfo.meses[11].shortLabel === 'Mar');
+
+// 10.4 Exclusividad de Obras en Curso en getCashflowSummary
+var obraFactibilidad = {
+  id: 'OBRA-TEST-FACT-EXCLUIDA',
+  nombre: 'Obra en Factibilidad Excluida de CF',
+  estado: 'Estudio de Factibilidad',
+  monto_total_usd: 500000
+};
+var obraSuspendida = {
+  id: 'OBRA-TEST-SUSP-EXCLUIDA',
+  nombre: 'Obra Suspendida Excluida de CF',
+  estado: 'Suspendida',
+  monto_total_usd: 400000
+};
+DataStore.items.unshift(obraFactibilidad);
+DataStore.items.unshift(obraSuspendida);
+
+var cfSummary = DataStore.getCashflowSummary('TODOS', 'todas', '', refDatePrueba);
+var idsEnCF = cfSummary.displayList.map(function(e) { return e.item.id; });
+assert("La obra en curso SÍ figura en el Cash Flow", idsEnCF.indexOf('OBRA-CF-ANTICIPO-1M') >= 0);
+assert("La obra en factibilidad NO figura en el Cash Flow", idsEnCF.indexOf('OBRA-TEST-FACT-EXCLUIDA') === -1);
+assert("La obra suspendida NO figura en el Cash Flow", idsEnCF.indexOf('OBRA-TEST-SUSP-EXCLUIDA') === -1);
+
+// 10.5 Integridad de datos para Informe de Dirección (3 Páginas A4)
+DataStore.currentUser = authAdmin.user;
+var repDir = DataStore.getExecutiveReportData(refDatePrueba);
+assert("Informe contiene datos de Página 1 (Resumen de Cartera)", Boolean(repDir.obrasEnCurso && repDir.factibilidadSinPartida && repDir.partidasDesvios));
+assert("Informe contiene datos de Página 2 (Cash Flow Oficial 01/04 - 31/03)", Boolean(repDir.cashflowEjecucion && repDir.cashflowEjecucion.mesesTotales));
+assert("Informe contiene datos de Página 3 (Sedes, Módulos y Certificación)", Boolean(repDir.desgloseSedes && repDir.desgloseModulos && repDir.semaforos));
+
 // Limpieza de obra de prueba
 DataStore.items = DataStore.items.filter(function(it) {
   return it.id !== idObraTest && it.id !== 'SJ-WALDEMAR-01' && it.id !== 'SJ-LOPEZ-01' &&
          it.id !== 'OBRA-TEST-PMED-EXP' && it.id !== 'OBRA-TEST-PMED-DEF' &&
-         it.id !== 'OBRA-SEM-EN-PLAZO' && it.id !== 'OBRA-SEM-ALERTA-15' && it.id !== 'OBRA-SEM-VENCIDA';
+         it.id !== 'OBRA-SEM-EN-PLAZO' && it.id !== 'OBRA-SEM-ALERTA-15' && it.id !== 'OBRA-SEM-VENCIDA' &&
+         it.id !== 'OBRA-CF-ANTICIPO-1M' && it.id !== 'OBRA-TEST-FACT-EXCLUIDA' && it.id !== 'OBRA-TEST-SUSP-EXCLUIDA';
 });
 DataStore.persist();
 

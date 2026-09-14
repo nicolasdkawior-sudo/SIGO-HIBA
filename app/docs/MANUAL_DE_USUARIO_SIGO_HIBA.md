@@ -198,22 +198,37 @@ Diseñado para que la Dirección pueda delegar decenas de obras rápidamente sin
 
 ---
 
-## 7. GENERACIÓN DE INFORMES EJECUTIVOS ONE-PAGER (XLS Y PDF)
+## 7. GENERACIÓN DE INFORMES EJECUTIVOS DE DIRECCIÓN (3 PÁGINAS A4 - XLS Y PDF)
 
-1. En la barra superior, haga clic en **"Informe Ejecutivo"**.
-2. Se desplegará el panel consolidado diseñado para visualizarse completo en una sola pantalla:
-   - Resumen de Cartera Activa de Inversión USD.
-   - Desglose de obras en Factibilidad pendientes de partida.
-   - Relación de Partidas Sobreejecutadas y Sub-ejecutadas.
-   - Proyección del Cashflow anual institucional.
+1. En la barra superior, haga clic en **"Informe Ejecutivo"** (exclusivo para perfil Administrador y Dirección).
+2. Se desplegará el panel oficial estandarizado en **3 Páginas A4 horizontales**:
+   - **Página 1 (Resumen General):** KPIs consolidados de cartera, cuadrante de obras en ejecución, factibilidades en espera de partida con prioridad técnica y médica, y auditoría de desvíos en partidas presupuestarias.
+   - **Página 2 (Cash Flow Oficial 01/04 - 31/03):** 4 KPIs financieros de desembolso, curva gráfica mensual de 12 barras (Abril a Marzo) distinguiendo en color azul lo ya pagado y en verde azulado lo proyectado a pagar, y tabla analítica por obra con porcentaje de anticipo, saldo y cuota mensual.
+   - **Página 3 (Planificación Plurianual y Auditoría):** Desglose territorial por sede (Central, San Justo, Periféricos), por especialidad (Civil vs Infraestructura), auditoría de semáforos de plazo (alertas del 15% final), dictamen oficial de certificación institucional y casilleros para firmas de control.
 3. **Opciones de Descarga:**
-   - **Exportar XLS (Excel):** Descarga inmediata de un archivo `.xlsx` listo para auditorías contables.
-   - **Exportar PDF Oficial:** Compila un documento PDF vectorial de alta resolución en formato A4 apaisado con el imagotipo oficial del Hospital Italiano de Buenos Aires.
-   - **Imprimir:** Abre el diálogo de impresión del navegador aplicando la hoja de estilos limpia de impresión.
+   - **Exportar XLS (Excel):** Descarga inmediata de un archivo `.xlsx` multi-hoja con desglose pormenorizado de todas las carteras y flujos.
+   - **Exportar PDF Oficial:** Compila automáticamente el documento PDF oficial de **3 páginas A4 apaisadas** respetando saltos de página e imagotipos del Hospital Italiano de Buenos Aires.
+   - **Imprimir:** Abre el diálogo de impresión del navegador aplicando la hoja de estilos de alta fidelidad.
 
 ---
 
-## 8. SEGURIDAD, CONTRASEÑAS Y BLOQUEOS DE ACCESO
+## 8. MATRIZ INTERACTIVA DE CASH FLOW DE OBRAS EN CURSO
+
+1. En el menú de navegación principal, acceda a la pestaña **"Cashflow"**.
+2. **Exclusividad Operativa:** La matriz procesa y visualiza **únicamente obras activas en curso**. Las obras en factibilidad o suspendidas no figuran en esta pantalla para reflejar compromisos reales de tesorería.
+3. **Pautas de Contratación y Anticipo OC:**
+   - Al adjudicar una obra en la etapa licitatoria, el comprador registra el Proveedor, Monto Adjudicado, **Porcentaje de Anticipo (%)** y **Plazo en Meses ($N$)**.
+   - **Mes 1:** Recibe el desembolso total del anticipo pactado.
+   - **Meses Restantes ($N - 1$):** El saldo restante se prorratea en cuotas mensuales idénticas.
+4. **Período Contable Hospitalario (01/04 al 31/03):**
+   - El gráfico interactivo de 12 meses visualiza la caída del gasto desde Abril hasta Marzo del ejercicio contable.
+   - Los desembolsos anteriores al 01/04 no se incluyen en el flujo del ejercicio actual.
+   - Los pagos posteriores al 31/03 se totalizan en la columna **"Ej. Siguientes"** como arrastre plurianual.
+5. **Segmentación y Búsqueda:** Utilice los botones superiores para filtrar por *Obra Civil*, *Infraestructura*, estado de partida (*Con Partida* o *Pendiente*), o buscar por código o nombre de contratista.
+
+---
+
+## 9. SEGURIDAD, CONTRASEÑAS Y BLOQUEOS DE ACCESO
 
 - **Política Anti-Fuerza Bruta:** Si se ingresa una contraseña errónea 5 veces consecutivas, el sistema activará un bloqueo de seguridad por **5 minutos**. Aparecerá un temporizador en pantalla indicando el tiempo restante (`05:00`). Durante este lapso, el botón de ingreso quedará deshabilitado.
 - **Cierre de Sesión por Inactividad:** Tras 30 minutos sin movimiento del mouse o teclado, la plataforma cerrará la sesión de forma preventiva alertando al usuario y protegiendo datos médicos y presupuestarios sensibles.

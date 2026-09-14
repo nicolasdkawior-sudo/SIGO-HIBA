@@ -102,7 +102,7 @@ body {
   display: none !important;
 }
 
-/* Estilos de Impresión e Informe Ejecutivo One-Pager */
+/* Estilos de Impresión e Informe Ejecutivo en 3 Páginas A4 */
 @media print {
   body {
     background: #ffffff !important;
@@ -135,8 +135,30 @@ body {
     size: A4 landscape;
     margin: 6mm 8mm;
   }
-  .print-page {
-    page-break-inside: avoid;
-    break-inside: avoid;
+  .report-page {
+    page-break-after: always;
+    break-after: page;
+    min-height: 185mm;
+    box-sizing: border-box;
+  }
+  .report-page:last-child {
+    page-break-after: auto;
+    break-after: auto;
   }
 }
+
+.report-page {
+  box-sizing: border-box;
+}
+
+.report-page-card {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.html2pdf__page-break {
+  height: 0;
+  page-break-before: always;
+  break-before: page;
+}
+

@@ -1013,6 +1013,9 @@ const DataStore = {
     if (currentStage === 'En licitación' && nextStage === 'Obras en Curso') {
       const proveedor = (extraData?.proveedor || '').trim();
       const montoAdj = parseFloat(extraData?.montoAdjudicado) || 0;
+      const anticipoPct = Math.min(100, Math.max(0, parseFloat(extraData?.porcentajeAnticipo ?? extraData?.anticipoPorcentaje) || 0));
+      const plazoMeses = parseInt(extraData?.plazoMeses || extraData?.duracionMeses, 10) || 0;
+
       if (!proveedor) {
         return { success: false, msg: '⛔ Para avanzar a "Obras en Curso" debes indicar el Proveedor Adjudicado.' };
       }
@@ -1023,6 +1026,11 @@ const DataStore = {
       item.monto_adjudicado_usd = montoAdj;
       item.monto_total_usd = montoAdj;
       item.monto_obra_usd = montoAdj;
+      item.anticipo_porcentaje = anticipoPct;
+      item.anticipo_monto_usd = Math.round((montoAdj * (anticipoPct / 100)) * 100) / 100;
+      if (plazoMeses > 0) {
+        item.plazo_meses = plazoMeses;
+      }
       if (extraData?.fechaFinObra) {
         item.fecha_fin_obra = extraData.fechaFinObra;
       }
@@ -1091,7 +1099,11 @@ const DataStore = {
     if (nextStage === 'En licitación') {
       defaultObs = `Proyecto completado por ${this.currentUser.nombre}. Se deriva al Departamento de Compras para licitación y compulsa de precios.`;
     } else if (nextStage === 'Obras en Curso') {
-      defaultObs = `Compulsa finalizada y adjudicada a '${item.proveedor}' por USD ${this.formatUSD(item.monto_adjudicado_usd)}. Retorna al proyectista ${item.responsable} en Obras en Curso.`;
+      const antInfo = (item.anticipo_porcentaje && item.anticipo_porcentaje > 0)
+        ? ` (Anticipo OC: ${item.anticipo_porcentaje}% - USD ${this.formatUSD(item.anticipo_monto_usd)})`
+        : ` (Sin anticipo OC)`;
+      const plazoInfo = item.plazo_meses ? ` [Plazo: ${item.plazo_meses} meses]` : '';
+      defaultObs = `Compulsa finalizada y adjudicada a '${item.proveedor}' por USD ${this.formatUSD(item.monto_adjudicado_usd)}${antInfo}${plazoInfo}. Retorna al proyectista ${item.responsable} en Obras en Curso.`;
     }
 
     if (!Array.isArray(item.historial)) item.historial = [];
@@ -2028,115 +2040,388 @@ const DataStore = {
     return 0;
   },
 
-  getCashflowSummary(tipoFilter = 'TODOS', partidaFilter = 'todas', searchQuery = '') {
-    // 1. Filtrar lista base según usuario y tipo
-    let list = this.getFilteredItems({ tipo: tipoFilter });
+  // ================= PERÍODO CONTABLE INSTITUCIONAL (01/04 - 31/03) =================
+  getAccountingYearInfo(refDate = new Date()) {
+    const d = (refDate instanceof Date) ? refDate : new Date(refDate);
+    const y = isNaN(d.getFullYear()) ? new Date().getFullYear() : d.getFullYear();
+    const m = isNaN(d.getMonth()) ? (new Date().getMonth() + 1) : (d.getMonth() + 1); // 1-12
+    
+    // Período contable hospitalario: 01 de Abril al 31 de Marzo del año siguiente
+    let anioInicio, anioFin;
+    if (m >= 4) {
+      anioInicio = y;
+      anioFin = y + 1;
+    } else {
+      anioInicio = y - 1;
+      anioFin = y;
+    }
 
-    // 2. Filtrar proyectos relevantes para el Cashflow (con cashflow o con partida/monto)
-    let cfList = list.filter(x => {
-      const hasCF = x.cashflow && (x.cashflow.monto_total > 0 || x.cashflow.cashflow_2026 > 0 || x.cashflow.cashflow_2027 > 0 || x.cashflow.cashflow_2028 > 0 || x.cashflow.cashflow_2029 > 0);
-      const hasPartida = this.hasValidPartida(x);
-      const hasMonto = (x.monto_total_usd > 0 || x.monto_obra_usd > 0);
-      return hasCF || hasPartida || hasMonto;
-    });
+    const fechaInicioStr = `${anioInicio}-04-01`;
+    const fechaFinStr = `${anioFin}-03-31`;
 
-    // 3. Totales globales de la cartera seleccionada (independiente del filtro secundario de partida)
+    // 12 meses cronológicos del ejercicio: Abril Y a Marzo Y+1
+    const meses = [];
+    const nombresMeses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    
+    // Meses 4 a 12 del anioInicio
+    for (let mesIdx = 4; mesIdx <= 12; mesIdx++) {
+      const mesStr = mesIdx < 10 ? `0${mesIdx}` : `${mesIdx}`;
+      const key = `${anioInicio}-${mesStr}`;
+      const esPasado = (y > anioInicio) || (y === anioInicio && m > mesIdx);
+      const esActual = (y === anioInicio && m === mesIdx);
+      meses.push({
+        key,
+        year: anioInicio,
+        month: mesIdx,
+        label: `${nombresMeses[mesIdx - 1]} ${anioInicio}`,
+        shortLabel: nombresMeses[mesIdx - 1],
+        esPasado,
+        esActual,
+        esFuturo: !esPasado && !esActual
+      });
+    }
+    // Meses 1 a 3 del anioFin
+    for (let mesIdx = 1; mesIdx <= 3; mesIdx++) {
+      const mesStr = `0${mesIdx}`;
+      const key = `${anioFin}-${mesStr}`;
+      const esPasado = (y > anioFin) || (y === anioFin && m > mesIdx);
+      const esActual = (y === anioFin && m === mesIdx);
+      meses.push({
+        key,
+        year: anioFin,
+        month: mesIdx,
+        label: `${nombresMeses[mesIdx - 1]} ${anioFin}`,
+        shortLabel: nombresMeses[mesIdx - 1],
+        esPasado,
+        esActual,
+        esFuturo: !esPasado && !esActual
+      });
+    }
+
+    return {
+      anioInicio,
+      anioFin,
+      startMonth: 4,
+      endMonth: 3,
+      fechaInicio: fechaInicioStr,
+      fechaFin: fechaFinStr,
+      label: `Ejercicio ${anioInicio} - ${anioFin}`,
+      currentYear: y,
+      currentMonth: m,
+      currentKey: `${y}-${m < 10 ? '0' + m : m}`,
+      meses
+    };
+  },
+
+  // ================= CÁLCULO DE CASH FLOW POR OBRA ACTIVA EN CURSO =================
+  calculateObraCashflow(item, refDate = new Date()) {
+    // REGLA CRÍTICA USUARIO: El cash flow debe considerarse SOLO con las obras activas en curso.
+    // Ni las suspendidas ni en factibilidad deben aparecer ni computar en cash flow.
+    if (!item || item.estado !== 'Obras en Curso') {
+      return {
+        aplicaCashflow: false,
+        motivoExclusion: !item ? 'Obra no encontrada' : (
+          item.estado === 'Estudio de Factibilidad' || item.estado === 'Ante Proyecto' 
+            ? 'En Factibilidad (Excluido de Cash Flow)' 
+            : ((item.estado && item.estado.toLowerCase().includes('suspendid'))
+                ? 'Suspendida (Excluido de Cash Flow)' 
+                : `Estado '${item.estado}' (Excluido de Cash Flow)`)
+        ),
+        montoTotalUSD: 0,
+        anticipoPct: 0,
+        anticipoUSD: 0,
+        saldoUSD: 0,
+        plazoMeses: 0,
+        duracionMeses: 0,
+        cuotaMensualSaldoUSD: 0,
+        cuotas: [],
+        ejerciciosAnterioresUSD: 0,
+        ejercicioActualUSD: 0,
+        ejercicioActualPagadoUSD: 0,
+        ejercicioActualProyectadoUSD: 0,
+        ejerciciosSiguientesUSD: 0,
+        distribucionMensual: {}
+      };
+    }
+
+    const accountingInfo = this.getAccountingYearInfo(refDate);
+    const montoTotal = item.monto_adjudicado_usd || item.monto_total_usd || item.monto_obra_usd || 0;
+    const anticipoPct = Math.min(100, Math.max(0, parseFloat(item.anticipo_porcentaje) || 0));
+    const anticipoUSD = Math.round((montoTotal * (anticipoPct / 100)) * 100) / 100;
+    const saldoUSD = Math.round((montoTotal - anticipoUSD) * 100) / 100;
+
+    // Determinar fecha de inicio
+    let startDateStr = item.fecha_inicio_etapa || item.fecha_inicio || item.fecha_adjudicacion;
+    if (!startDateStr && Array.isArray(item.historial)) {
+      const hEnCurso = item.historial.find(h => h.estado_nuevo === 'Obras en Curso');
+      if (hEnCurso && hEnCurso.fecha) startDateStr = hEnCurso.fecha;
+    }
+    if (!startDateStr) {
+      startDateStr = `${accountingInfo.anioInicio}-04-01`;
+    }
+
+    const startParts = startDateStr.split('-');
+    let startYear = parseInt(startParts[0], 10) || accountingInfo.anioInicio;
+    let startMonth = parseInt(startParts[1], 10) || 4; // 1-12
+
+    // Determinar plazo en meses (N)
+    let plazoMeses = parseInt(item.plazo_meses, 10);
+    if (!plazoMeses || plazoMeses <= 0) {
+      const endDateStr = item.fecha_fin_obra || item.fecha_fin_etapa;
+      if (endDateStr) {
+        const endParts = endDateStr.split('-');
+        const endYear = parseInt(endParts[0], 10);
+        const endMonth = parseInt(endParts[1], 10);
+        if (endYear && endMonth) {
+          const delta = (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
+          plazoMeses = Math.max(1, delta);
+        }
+      }
+    }
+    if (!plazoMeses || plazoMeses <= 0) {
+      plazoMeses = 6; // Estándar 180 días de Obras en Curso
+    }
+
+    // Distribución matemática real:
+    // Mes 1: Anticipo acordado (o M/N si no hay anticipo)
+    // Meses 2..N: Saldo (M - Anticipo) distribuido en los N - 1 meses restantes
+    const cuotas = [];
+    let acumuladoCuotas = 0;
+    let ejerciciosAnterioresUSD = 0;
+    let ejercicioActualUSD = 0;
+    let ejercicioActualPagadoUSD = 0;
+    let ejercicioActualProyectadoUSD = 0;
+    let ejerciciosSiguientesUSD = 0;
+    const distribucionMensual = {};
+
+    for (let k = 0; k < plazoMeses; k++) {
+      const curMonthIdx = (startMonth - 1 + k) % 12; // 0-11
+      const curMonth = curMonthIdx + 1; // 1-12
+      const curYear = startYear + Math.floor((startMonth - 1 + k) / 12);
+      const monthStr = curMonth < 10 ? `0${curMonth}` : `${curMonth}`;
+      const key = `${curYear}-${monthStr}`;
+
+      let montoMes = 0;
+      let tipoCuota = 'cuota_saldo';
+
+      if (plazoMeses === 1) {
+        montoMes = montoTotal;
+        tipoCuota = anticipoPct > 0 ? 'anticipo_total' : 'pago_unico';
+      } else if (k === 0) {
+        if (anticipoPct > 0) {
+          montoMes = anticipoUSD;
+          tipoCuota = 'anticipo';
+        } else {
+          montoMes = Math.round((montoTotal / plazoMeses) * 100) / 100;
+          tipoCuota = 'cuota_saldo';
+        }
+      } else {
+        if (anticipoPct > 0) {
+          montoMes = Math.round((saldoUSD / (plazoMeses - 1)) * 100) / 100;
+        } else {
+          montoMes = Math.round((montoTotal / plazoMeses) * 100) / 100;
+        }
+        tipoCuota = 'cuota_saldo';
+      }
+
+      // Ajuste de redondeo en última cuota
+      if (k === plazoMeses - 1) {
+        montoMes = Math.round((montoTotal - acumuladoCuotas) * 100) / 100;
+      }
+      acumuladoCuotas += montoMes;
+
+      const dateComp = `${key}-01`;
+      let clasificacionPeriodo = 'ejercicio_actual';
+
+      if (dateComp < accountingInfo.fechaInicio) {
+        // Ejercicio Anterior: EXCLUIR de totales del ejercicio en curso
+        clasificacionPeriodo = 'anterior';
+        ejerciciosAnterioresUSD += montoMes;
+      } else if (dateComp > accountingInfo.fechaFin) {
+        // Ejercicios Siguientes: Arrastre post 31/03
+        clasificacionPeriodo = 'siguiente';
+        ejerciciosSiguientesUSD += montoMes;
+      } else {
+        // Ejercicio Actual (01/04 al 31/03)
+        clasificacionPeriodo = 'ejercicio_actual';
+        ejercicioActualUSD += montoMes;
+        distribucionMensual[key] = (distribucionMensual[key] || 0) + montoMes;
+
+        if (key < accountingInfo.currentKey) {
+          ejercicioActualPagadoUSD += montoMes;
+        } else {
+          ejercicioActualProyectadoUSD += montoMes;
+        }
+      }
+
+      cuotas.push({
+        indiceMes: k + 1,
+        year: curYear,
+        month: curMonth,
+        key,
+        monto: montoMes,
+        tipo: tipoCuota,
+        clasificacion: clasificacionPeriodo,
+        esPasado: key < accountingInfo.currentKey
+      });
+    }
+
+    return {
+      aplicaCashflow: true,
+      montoTotalUSD: montoTotal,
+      anticipoPct: anticipoPct,
+      anticipoUSD: anticipoUSD,
+      saldoUSD: saldoUSD,
+      plazoMeses: plazoMeses,
+      duracionMeses: plazoMeses,
+      cuotaMensualSaldoUSD: plazoMeses > 1 ? Math.round((saldoUSD / (plazoMeses - 1)) * 100) / 100 : (plazoMeses === 1 ? saldoUSD : 0),
+      fechaInicio: startDateStr,
+      cuotas: cuotas,
+      ejerciciosAnterioresUSD: Math.round(ejerciciosAnterioresUSD * 100) / 100,
+      ejercicioActualUSD: Math.round(ejercicioActualUSD * 100) / 100,
+      ejercicioActualPagadoUSD: Math.round(ejercicioActualPagadoUSD * 100) / 100,
+      ejercicioActualProyectadoUSD: Math.round(ejercicioActualProyectadoUSD * 100) / 100,
+      ejerciciosSiguientesUSD: Math.round(ejerciciosSiguientesUSD * 100) / 100,
+      distribucionMensual: distribucionMensual
+    };
+  },
+
+  // ================= CONSOLIDADO DE CASH FLOW (SOLO OBRAS EN CURSO) =================
+  getCashflowSummary(tipoFilter = 'TODOS', partidaFilter = 'todas', searchQuery = '', refDate = new Date()) {
+    const all = this.items || [];
+    const accountingInfo = this.getAccountingYearInfo(refDate);
+
+    // REGLA CRÍTICA USUARIO: El cash flow debe considerarse SOLO con las obras activas en curso.
+    // Ni las suspendidas ni en factibilidad deben figurar en cash flow.
+    let enCursoList = all.filter(x => x.estado === 'Obras en Curso');
+
+    // Filtro por permisos de usuario según Sede / Dependencia
+    if (this.currentUser && !this.isAdmin() && this.currentUser.rol !== 'visualizador') {
+      const uSede = this.currentUser.sede;
+      const uDep = this.currentUser.dependencia;
+      if (uSede && uSede !== 'Todas') {
+        enCursoList = enCursoList.filter(x => x.sede === uSede || this.matchesSanJustoUnified(uDep, x.dependencia));
+      }
+    }
+
+    // Filtro por Módulo / Tipo
+    if (tipoFilter && tipoFilter !== 'TODOS') {
+      enCursoList = enCursoList.filter(x => x.tipo === tipoFilter);
+    }
+
+    // Totales consolidados de la cartera en ejecución
     let totalCarteraUSD = 0;
     let totalAsignadoPartidasUSD = 0;
     let countConPartida = 0;
     let countSinPartida = 0;
     let totalSinPartidaUSD = 0;
-    let tot2026Global = 0, tot2027Global = 0, tot2028Global = 0, tot2029Global = 0;
+    let totalAnticiposUSD = 0;
+    let totalSaldoUSD = 0;
+    let totalEjercicioActualUSD = 0;
+    let totalYaPagadoUSD = 0;
+    let totalProyectadoUSD = 0;
+    let totalEjerciciosSiguientesUSD = 0;
+    let totalEjerciciosAnterioresUSD = 0;
 
-    cfList.forEach(x => {
-      const mTotal = (x.cashflow && x.cashflow.monto_total > 0) 
-        ? x.cashflow.monto_total 
-        : (x.monto_total_usd || x.monto_obra_usd || 0);
+    const mesesTotales = {};
+    accountingInfo.meses.forEach(m => {
+      mesesTotales[m.key] = 0;
+    });
 
-      totalCarteraUSD += mTotal;
-
-      if (x.cashflow) {
-        tot2026Global += x.cashflow.cashflow_2026 || 0;
-        tot2027Global += x.cashflow.cashflow_2027 || 0;
-        tot2028Global += x.cashflow.cashflow_2028 || 0;
-        tot2029Global += x.cashflow.cashflow_2029 || 0;
-      } else {
-        tot2026Global += mTotal;
-      }
+    const listWithCF = enCursoList.map(x => {
+      const cf = this.calculateObraCashflow(x, refDate);
+      totalCarteraUSD += cf.montoTotalUSD;
+      totalAnticiposUSD += cf.anticipoUSD;
+      totalSaldoUSD += cf.saldoUSD;
+      totalEjercicioActualUSD += cf.ejercicioActualUSD;
+      totalYaPagadoUSD += cf.ejercicioActualPagadoUSD;
+      totalProyectadoUSD += cf.ejercicioActualProyectadoUSD;
+      totalEjerciciosSiguientesUSD += cf.ejerciciosSiguientesUSD;
+      totalEjerciciosAnterioresUSD += cf.ejerciciosAnterioresUSD;
 
       if (this.hasValidPartida(x)) {
         countConPartida++;
-        const mPart = this.getItemMontoPartida(x);
-        totalAsignadoPartidasUSD += mPart;
+        totalAsignadoPartidasUSD += this.getItemMontoPartida(x);
       } else {
         countSinPartida++;
-        totalSinPartidaUSD += mTotal;
+        totalSinPartidaUSD += cf.montoTotalUSD;
       }
+
+      Object.keys(cf.distribucionMensual).forEach(k => {
+        if (mesesTotales[k] !== undefined) {
+          mesesTotales[k] += cf.distribucionMensual[k];
+        }
+      });
+
+      return {
+        item: x,
+        cf: cf
+      };
     });
 
-    // 4. Aplicar filtro secundario de partida (todas, con_partida, sin_partida)
-    let displayList = cfList;
+    // Filtros secundarios de búsqueda y partida
+    let displayList = listWithCF;
     if (partidaFilter === 'con_partida') {
-      displayList = cfList.filter(x => this.hasValidPartida(x));
+      displayList = displayList.filter(entry => this.hasValidPartida(entry.item));
     } else if (partidaFilter === 'sin_partida') {
-      displayList = cfList.filter(x => !this.hasValidPartida(x));
+      displayList = displayList.filter(entry => !this.hasValidPartida(entry.item));
     }
 
-    // 5. Aplicar búsqueda de texto si se proporcionó
     if (searchQuery && searchQuery.trim() !== '') {
       const q = searchQuery.toLowerCase().trim();
-      displayList = displayList.filter(x => 
-        (x.id || '').toLowerCase().includes(q) ||
-        (x.nombre || '').toLowerCase().includes(q) ||
-        (x.partida || '').toLowerCase().includes(q) ||
-        (x.sede || '').toLowerCase().includes(q) ||
-        (x.tipo || '').toLowerCase().includes(q)
-      );
+      displayList = displayList.filter(entry => {
+        const x = entry.item;
+        return (x.id || '').toLowerCase().includes(q) ||
+          (x.nombre || '').toLowerCase().includes(q) ||
+          (x.partida || '').toLowerCase().includes(q) ||
+          (x.sede || '').toLowerCase().includes(q) ||
+          (x.proveedor || '').toLowerCase().includes(q) ||
+          (x.tipo || '').toLowerCase().includes(q);
+      });
     }
 
-    // 6. Subtotales específicos de los elementos mostrados en pantalla
+    // Subtotales de lo mostrado en pantalla
     let displayTotGral = 0;
-    let displayTot2026 = 0, displayTot2027 = 0, displayTot2028 = 0, displayTot2029 = 0;
     let displayTotPartidas = 0;
+    let displayTotEjercicio = 0;
+    let displayTotYaPagado = 0;
+    let displayTotProyectado = 0;
+    let displayTotSiguientes = 0;
 
-    displayList.forEach(x => {
-      const mTotal = (x.cashflow && x.cashflow.monto_total > 0) 
-        ? x.cashflow.monto_total 
-        : (x.monto_total_usd || x.monto_obra_usd || 0);
-      displayTotGral += mTotal;
-
-      if (x.cashflow) {
-        displayTot2026 += x.cashflow.cashflow_2026 || 0;
-        displayTot2027 += x.cashflow.cashflow_2027 || 0;
-        displayTot2028 += x.cashflow.cashflow_2028 || 0;
-        displayTot2029 += x.cashflow.cashflow_2029 || 0;
-      } else {
-        displayTot2026 += mTotal;
-      }
-
-      if (this.hasValidPartida(x)) {
-        displayTotPartidas += this.getItemMontoPartida(x);
+    displayList.forEach(entry => {
+      displayTotGral += entry.cf.montoTotalUSD;
+      displayTotEjercicio += entry.cf.ejercicioActualUSD;
+      displayTotYaPagado += entry.cf.ejercicioActualPagadoUSD;
+      displayTotProyectado += entry.cf.ejercicioActualProyectadoUSD;
+      displayTotSiguientes += entry.cf.ejerciciosSiguientesUSD;
+      if (this.hasValidPartida(entry.item)) {
+        displayTotPartidas += this.getItemMontoPartida(entry.item);
       }
     });
 
     return {
-      displayList,
-      totalCarteraUSD,
-      totalAsignadoPartidasUSD,
+      accountingInfo,
+      totalObras: enCursoList.length,
+      totalCarteraUSD: Math.round(totalCarteraUSD * 100) / 100,
+      totalAnticiposUSD: Math.round(totalAnticiposUSD * 100) / 100,
+      totalSaldoUSD: Math.round(totalSaldoUSD * 100) / 100,
+      totalAsignadoPartidasUSD: Math.round(totalAsignadoPartidasUSD * 100) / 100,
       countConPartida,
       countSinPartida,
-      totalSinPartidaUSD,
-      tot2026Global,
-      tot2027Global,
-      tot2028Global,
-      tot2029Global,
-      totalObras: cfList.length,
-      displayTotGral,
-      displayTot2026,
-      displayTot2027,
-      displayTot2028,
-      displayTot2029,
-      displayTotPartidas,
+      totalSinPartidaUSD: Math.round(totalSinPartidaUSD * 100) / 100,
+      totalEjercicioActualUSD: Math.round(totalEjercicioActualUSD * 100) / 100,
+      totalYaPagadoUSD: Math.round(totalYaPagadoUSD * 100) / 100,
+      totalProyectadoUSD: Math.round(totalProyectadoUSD * 100) / 100,
+      totalEjerciciosSiguientesUSD: Math.round(totalEjerciciosSiguientesUSD * 100) / 100,
+      totalEjerciciosAnterioresUSD: Math.round(totalEjerciciosAnterioresUSD * 100) / 100,
+      mesesTotales,
+      displayList,
+      displayTotGral: Math.round(displayTotGral * 100) / 100,
+      displayTotPartidas: Math.round(displayTotPartidas * 100) / 100,
+      displayTotEjercicio: Math.round(displayTotEjercicio * 100) / 100,
+      displayTotYaPagado: Math.round(displayTotYaPagado * 100) / 100,
+      displayTotProyectado: Math.round(displayTotProyectado * 100) / 100,
+      displayTotSiguientes: Math.round(displayTotSiguientes * 100) / 100,
       tipoFilter,
       partidaFilter
     };
@@ -2574,9 +2859,10 @@ const DataStore = {
     };
   },
 
-  // ================= DATOS PARA INFORME EJECUTIVO DE DIRECCIÓN =================
-  getExecutiveReportData() {
+  // ================= DATOS PARA INFORME EJECUTIVO DE DIRECCIÓN (3 PÁGINAS A4) =================
+  getExecutiveReportData(refDate = new Date()) {
     const all = this.items || [];
+    const accountingInfo = this.getAccountingYearInfo(refDate);
 
     // 1. Obras en Curso
     const enCurso = all.filter(x => x.estado === 'Obras en Curso');
@@ -2601,21 +2887,10 @@ const DataStore = {
     const suspendidas = all.filter(x => (x.estado || '').toLowerCase().includes('suspendid'));
     const totSuspendidasUSD = suspendidas.reduce((acc, x) => acc + (x.monto_total_usd || x.monto_obra_usd || 0), 0);
 
-    // 4. Consolidado Plurianual de Cashflow
-    let tot2026 = 0, tot2027 = 0, tot2028 = 0, tot2029 = 0;
-    all.forEach(x => {
-      if (x.cashflow && typeof x.cashflow === 'object') {
-        tot2026 += parseFloat(x.cashflow.cashflow_2026) || 0;
-        tot2027 += parseFloat(x.cashflow.cashflow_2027) || 0;
-        tot2028 += parseFloat(x.cashflow.cashflow_2028) || 0;
-        tot2029 += parseFloat(x.cashflow.cashflow_2029) || 0;
-      } else {
-        tot2026 += x.monto_total_usd || x.monto_obra_usd || 0;
-      }
-    });
-    const totCashflowGlobal = tot2026 + tot2027 + tot2028 + tot2029;
+    // 4. Cash Flow Detallado de Obras en Curso (Ejercicio Oficial 01/04 a 31/03)
+    const cashflowEjecucion = this.getCashflowSummary('TODOS', 'todas', '', refDate);
 
-    // 5. Control de Partidas: Sobre-ejecutadas (Partida Corta / Déficit) vs Sub-ejecutadas (Superávit / Remanente)
+    // 5. Control de Partidas: Sobre-ejecutadas (Déficit) vs Sub-ejecutadas (Superávit)
     const sobreEjecutadas = [];
     const subEjecutadas = [];
     let totDeficit = 0;
@@ -2660,11 +2935,39 @@ const DataStore = {
     sobreEjecutadas.sort((a, b) => b.deficit_usd - a.deficit_usd);
     subEjecutadas.sort((a, b) => b.superavit_usd - a.superavit_usd);
 
+    // 6. Análisis Estratégico para Página 3: Desglose por Sede, Módulo y Semáforos
+    const desgloseSedes = { Central: 0, 'San Justo': 0, 'Periféricos': 0 };
+    const desgloseModulos = { 'Obra Civil': 0, 'Infraestructura': 0 };
+    enCurso.forEach(x => {
+      const m = x.monto_adjudicado_usd || x.monto_total_usd || x.monto_obra_usd || 0;
+      const s = x.sede || 'Central';
+      desgloseSedes[s] = (desgloseSedes[s] || 0) + m;
+      const t = x.tipo || 'Obra Civil';
+      desgloseModulos[t] = (desgloseModulos[t] || 0) + m;
+    });
+
+    const semaforos = { en_plazo: 0, por_vencer: 0, vencido: 0, sin_plazo: 0, alertas: [] };
+    enCurso.forEach(x => {
+      const sem = this.calculateSemaforo(x);
+      if (sem.status === 'en_plazo') semaforos.en_plazo++;
+      else if (sem.status === 'por_vencer') {
+        semaforos.por_vencer++;
+        semaforos.alertas.push({ item: x, sem });
+      } else if (sem.status === 'vencido') {
+        semaforos.vencido++;
+        semaforos.alertas.push({ item: x, sem });
+      } else {
+        semaforos.sin_plazo++;
+      }
+    });
+
     return {
       fechaGeneracion: new Date().toISOString(),
       fechaEmision: new Date().toLocaleString(),
       emisor: this.currentUser ? `${this.currentUser.nombre} (${this.currentUser.rol.toUpperCase()})` : 'Dirección General',
       totalObras: all.length,
+      accountingInfo,
+      // PÁGINA 1: ESTADO GENERAL DE CARTERA
       obrasEnCurso: {
         total: enCurso.length,
         montoTotalUSD: totEnCursoUSD,
@@ -2682,13 +2985,6 @@ const DataStore = {
         montoTotalUSD: totSuspendidasUSD,
         items: suspendidas
       },
-      cashflow: {
-        c2026: tot2026,
-        c2027: tot2027,
-        c2028: tot2028,
-        c2029: tot2029,
-        totalGlobal: totCashflowGlobal
-      },
       partidasDesvios: {
         totalSobreEjecutadas: sobreEjecutadas.length,
         totalDeficitUSD: totDeficit,
@@ -2697,7 +2993,13 @@ const DataStore = {
         totalSuperavitUSD: totSuperavit,
         subEjecutadas: subEjecutadas,
         balanceNetoUSD: totSuperavit - totDeficit
-      }
+      },
+      // PÁGINA 2: CASH FLOW EJERCICIO CONTABLE (01/04 A 31/03)
+      cashflowEjecucion,
+      // PÁGINA 3: PLANIFICACIÓN PLURIANUAL Y AUDITORÍA
+      desgloseSedes,
+      desgloseModulos,
+      semaforos
     };
   },
 
@@ -2714,41 +3016,49 @@ const DataStore = {
     // Hoja 1: Resumen Ejecutivo
     const wsResumenData = [
       ["HOSPITAL ITALIANO DE BUENOS AIRES - DIRECCIÓN GENERAL & ADMINISTRACIÓN"],
-      ["INFORME EJECUTIVO DE CONTROL DE GESTIÓN Y CONTROL PRESUPUESTARIO"],
+      ["INFORME EJECUTIVO DE CONTROL DE GESTIÓN Y CONTROL PRESUPUESTARIO (3 PÁGINAS)"],
       ["Fecha de Emisión:", new Date().toLocaleString()],
       ["Emisor:", report.emisor],
+      ["Período Fiscal:", report.accountingInfo ? report.accountingInfo.label : "01/04 al 31/03"],
       [""],
       ["INDICADORES CLAVE (KPIS)", "CANTIDAD", "MONTO TOTAL (USD)", "DETALLE ADICIONAL"],
-      ["Obras en Curso (Ejecución)", report.obrasEnCurso.total, report.obrasEnCurso.montoTotalUSD, `Avance Físico Promedio: ${report.obrasEnCurso.avancePromedio}%`],
+      ["Obras en Curso (Ejecución Activa)", report.obrasEnCurso.total, report.obrasEnCurso.montoTotalUSD, `Avance Físico Promedio: ${report.obrasEnCurso.avancePromedio}%`],
       ["Factibilidad sin Partida (Pendientes Dirección)", report.factibilidadSinPartida.total, report.factibilidadSinPartida.montoTotalUSD, "En espera de aprobación presupuestaria"],
       ["Obras Suspendidas (Capital Inmovilizado)", report.obrasSuspendidas.total, report.obrasSuspendidas.montoTotalUSD, "Obras frenadas temporal o definitivamente"],
       ["Partidas Sobre-ejecutadas (Déficit Presupuestario)", report.partidasDesvios.totalSobreEjecutadas, report.partidasDesvios.totalDeficitUSD, "Partidas Cortas que requieren ampliación"],
       ["Partidas Sub-ejecutadas (Superávit Remanente)", report.partidasDesvios.totalSubEjecutadas, report.partidasDesvios.totalSuperavitUSD, "Fondos aprobados sin comprometer"],
       [""],
-      ["CONSOLIDADO DE CASHFLOW PLURIANUAL", "MONTO USD", "% DISTRIBUCIÓN"],
-      ["Flujo 2026", report.cashflow.c2026, report.cashflow.totalGlobal > 0 ? (report.cashflow.c2026 / report.cashflow.totalGlobal * 100).toFixed(1) + "%" : "0%"],
-      ["Flujo 2027", report.cashflow.c2027, report.cashflow.totalGlobal > 0 ? (report.cashflow.c2027 / report.cashflow.totalGlobal * 100).toFixed(1) + "%" : "0%"],
-      ["Flujo 2028", report.cashflow.c2028, report.cashflow.totalGlobal > 0 ? (report.cashflow.c2028 / report.cashflow.totalGlobal * 100).toFixed(1) + "%" : "0%"],
-      ["Flujo 2029", report.cashflow.c2029, report.cashflow.totalGlobal > 0 ? (report.cashflow.c2029 / report.cashflow.totalGlobal * 100).toFixed(1) + "%" : "0%"],
-      ["TOTAL CARTERA", report.cashflow.totalGlobal, "100.0%"]
+      ["CASH FLOW DEL EJERCICIO CONTABLE (01/04 - 31/03)", "MONTO USD", "% DE EJERCICIO"],
+      ["Total Programado en el Ejercicio", report.cashflowEjecucion.totalEjercicioActualUSD, "100.0%"],
+      ["Ya Pagado / Devengado en el Ejercicio", report.cashflowEjecucion.totalYaPagadoUSD, report.cashflowEjecucion.totalEjercicioActualUSD > 0 ? ((report.cashflowEjecucion.totalYaPagadoUSD / report.cashflowEjecucion.totalEjercicioActualUSD) * 100).toFixed(1) + "%" : "0%"],
+      ["Saldo Proyectado a Pagar en el Ejercicio", report.cashflowEjecucion.totalProyectadoUSD, report.cashflowEjecucion.totalEjercicioActualUSD > 0 ? ((report.cashflowEjecucion.totalProyectadoUSD / report.cashflowEjecucion.totalEjercicioActualUSD) * 100).toFixed(1) + "%" : "0%"],
+      ["Compromisos / Impacto Ejercicios Siguientes", report.cashflowEjecucion.totalEjerciciosSiguientesUSD, "Arrastre futuro"]
     ];
     const wsResumen = XLSX.utils.aoa_to_sheet(wsResumenData);
     XLSX.utils.book_append_sheet(wb, wsResumen, "Resumen_Ejecutivo");
 
-    // Hoja 2: Obras en Curso
-    const wsEnCursoData = report.obrasEnCurso.items.map(x => ({
-      'Código': x.id,
-      'Nombre / Inversión': x.nombre,
-      'Sede': x.sede,
-      'Dependencia': x.dependencia || '',
-      'Proveedor Adjudicado': x.proveedor || '',
-      'Monto Adjudicado USD': x.monto_adjudicado_usd || x.monto_total_usd || 0,
-      'Avance Físico %': x.avance_fisico || 0,
-      'Fecha Fin Obra': x.fecha_fin_obra || x.fecha_fin_etapa || '',
-      'Responsable Técnico': x.responsable || ''
-    }));
-    const wsEnCurso = XLSX.utils.json_to_sheet(wsEnCursoData);
-    XLSX.utils.book_append_sheet(wb, wsEnCurso, "Obras_En_Curso");
+    // Hoja 2: Cash Flow Obras en Curso
+    const wsCFData = (report.cashflowEjecucion.displayList || []).map(entry => {
+      const x = entry.item;
+      const cf = entry.cf;
+      return {
+        'Código': x.id,
+        'Nombre Obra': x.nombre,
+        'Sede': x.sede,
+        'Proveedor Adjudicado': x.proveedor || '',
+        'Monto Adjudicado USD': cf.montoTotalUSD,
+        '% Anticipo OC': cf.anticipoPct + '%',
+        'Anticipo USD': cf.anticipoUSD,
+        'Saldo USD': cf.saldoUSD,
+        'Plazo (Meses)': cf.plazoMeses,
+        'Ya Pagado Ejercicio USD': cf.ejercicioActualPagadoUSD,
+        'Pendiente Ejercicio USD': cf.ejercicioActualProyectadoUSD,
+        'Total Ejercicio Contable USD': cf.ejercicioActualUSD,
+        'Impacto Ejercicios Siguientes USD': cf.ejerciciosSiguientesUSD
+      };
+    });
+    const wsCF = XLSX.utils.json_to_sheet(wsCFData);
+    XLSX.utils.book_append_sheet(wb, wsCF, "Cashflow_Obras_En_Curso");
 
     // Hoja 3: Factibilidades Sin Partida
     const wsFactData = report.factibilidadSinPartida.items.map(x => ({

@@ -1224,92 +1224,88 @@ const App = {
       btnPartSin.className = `px-2.5 py-1.5 rounded-lg transition cursor-pointer ${this.cashflowFilterPartida === 'sin_partida' ? 'bg-white shadow-xs font-bold text-amber-800 border border-slate-200' : 'text-amber-700 hover:text-amber-900 font-semibold'}`;
     }
 
-    // 3. Obtener métricas y datos calculados desde DataStore
+    // 3. Obtener métricas y datos calculados desde DataStore (SOLO Obras en Curso, Período 01/04 - 31/03)
     const summary = DataStore.getCashflowSummary(this.cashflowFilterTipo, this.cashflowFilterPartida, this.cashflowSearch);
 
     // 4. Renderizar Tarjetas de Resumen KPI
     const kpiContainer = document.getElementById('cashflowKpiCards');
     if (kpiContainer) {
-      const pctCob = summary.totalCarteraUSD > 0 
-        ? Math.round((summary.totalAsignadoPartidasUSD / summary.totalCarteraUSD) * 100) 
-        : 0;
-
       kpiContainer.innerHTML = `
-        <!-- KPI 1: TOTAL ASIGNADO EN DINERO (PARTIDAS) -->
-        <div class="bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-4 rounded-xl border border-emerald-200 shadow-2xs">
-          <div class="flex items-center justify-between">
-            <span class="text-[11px] font-bold text-emerald-800 uppercase tracking-wider flex items-center space-x-1">
-              <i data-lucide="badge-dollar-sign" class="w-3.5 h-3.5 text-emerald-600"></i>
-              <span>Total Asignado en Partidas</span>
-            </span>
-            <span class="text-[10px] font-black bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-full">
-              ${summary.countConPartida} obras
-            </span>
-          </div>
-          <div class="text-xl sm:text-2xl font-black text-emerald-950 mt-1.5">
-            ${DataStore.formatUSD(summary.totalAsignadoPartidasUSD)}
-          </div>
-          <div class="text-[11px] text-emerald-700 font-semibold mt-1 flex items-center space-x-1">
-            <i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-600"></i>
-            <span>Suma total de partidas asignadas (${pctCob}% de cartera)</span>
-          </div>
-        </div>
-
-        <!-- KPI 2: TOTAL CARTERA PROYECTADA -->
-        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-2xs">
-          <div class="flex items-center justify-between">
-            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center space-x-1">
-              <i data-lucide="layers" class="w-3.5 h-3.5 text-blue-600"></i>
-              <span>Presupuesto Cartera Proyectada</span>
-            </span>
-            <span class="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-              ${summary.totalObras} proyectos
-            </span>
-          </div>
-          <div class="text-xl sm:text-2xl font-black text-slate-900 mt-1.5">
-            ${DataStore.formatUSD(summary.totalCarteraUSD)}
-          </div>
-          <div class="text-[11px] text-slate-500 font-medium mt-1">
-            Segmento: <strong>${this.cashflowFilterTipo === 'TODOS' ? 'Todo el Cashflow (Consolidado)' : this.cashflowFilterTipo}</strong>
-          </div>
-        </div>
-
-        <!-- KPI 3: DESEMBOLSOS MULTIANUALES -->
-        <div class="bg-blue-50/60 p-4 rounded-xl border border-blue-100 shadow-2xs">
+        <!-- KPI 1: TOTAL CARTERA EN CURSO -->
+        <div class="bg-gradient-to-br from-blue-50 to-indigo-50/70 p-4 rounded-xl border border-blue-200 shadow-2xs">
           <div class="flex items-center justify-between">
             <span class="text-[11px] font-bold text-blue-800 uppercase tracking-wider flex items-center space-x-1">
-              <i data-lucide="calendar" class="w-3.5 h-3.5 text-blue-600"></i>
-              <span>Desembolso 2026 - 2027</span>
+              <i data-lucide="activity" class="w-3.5 h-3.5 text-blue-600"></i>
+              <span>Cartera Activa en Ejecución</span>
             </span>
-            <span class="text-[10px] font-bold bg-blue-200/80 text-blue-900 px-2 py-0.5 rounded-full">
-              Bienio Inmediato
+            <span class="text-[10px] font-black bg-blue-200 text-blue-900 px-2 py-0.5 rounded-full">
+              ${summary.totalObras} obras en curso
             </span>
           </div>
           <div class="text-xl sm:text-2xl font-black text-blue-950 mt-1.5">
-            ${DataStore.formatUSD(summary.tot2026Global + summary.tot2027Global)}
+            ${DataStore.formatUSD(summary.totalCarteraUSD)}
           </div>
-          <div class="text-[10px] text-blue-800/80 font-semibold mt-1 flex items-center justify-between">
-            <span>2026: <strong>${DataStore.formatUSD(summary.tot2026Global)}</strong></span>
-            <span>2027: <strong>${DataStore.formatUSD(summary.tot2027Global)}</strong></span>
+          <div class="text-[11px] text-blue-700 font-medium mt-1 flex items-center space-x-1">
+            <i data-lucide="shield-check" class="w-3 h-3 text-blue-600"></i>
+            <span>Exclusivo obras en curso (excluye factibilidad y suspendidas)</span>
           </div>
         </div>
 
-        <!-- KPI 4: PENDIENTE DE ASIGNACIÓN -->
+        <!-- KPI 2: EJERCICIO CONTABLE ACTUAL (01/04 - 31/03) -->
+        <div class="bg-gradient-to-br from-emerald-50 to-teal-50/70 p-4 rounded-xl border border-emerald-200 shadow-2xs">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-emerald-800 uppercase tracking-wider flex items-center space-x-1">
+              <i data-lucide="calendar" class="w-3.5 h-3.5 text-emerald-600"></i>
+              <span>Ejercicio ${summary.accountingInfo.label} (01/04 - 31/03)</span>
+            </span>
+            <span class="text-[10px] font-bold bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-full">
+              Oficial HIBA
+            </span>
+          </div>
+          <div class="text-xl sm:text-2xl font-black text-emerald-950 mt-1.5">
+            ${DataStore.formatUSD(summary.totalEjercicioActualUSD)}
+          </div>
+          <div class="text-[10px] text-emerald-800 font-semibold mt-1 flex items-center justify-between pt-0.5 border-t border-emerald-200/60">
+            <span>Pagado: <strong class="text-blue-800">${DataStore.formatUSD(summary.totalYaPagadoUSD)}</strong></span>
+            <span>Proyectado: <strong class="text-teal-800">${DataStore.formatUSD(summary.totalProyectadoUSD)}</strong></span>
+          </div>
+        </div>
+
+        <!-- KPI 3: ANTICIPOS DE ORDEN DE COMPRA (MES 1) -->
         <div class="bg-amber-50/60 p-4 rounded-xl border border-amber-200 shadow-2xs">
           <div class="flex items-center justify-between">
             <span class="text-[11px] font-bold text-amber-800 uppercase tracking-wider flex items-center space-x-1">
-              <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-600"></i>
-              <span>Pendiente de Asignar Partida</span>
+              <i data-lucide="badge-percent" class="w-3.5 h-3.5 text-amber-600"></i>
+              <span>Anticipos Órdenes de Compra</span>
             </span>
             <span class="text-[10px] font-bold bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full">
-              ${summary.countSinPartida} obras
+              Mes 1 Adjudicado
             </span>
           </div>
           <div class="text-xl sm:text-2xl font-black text-amber-950 mt-1.5">
-            ${DataStore.formatUSD(summary.totalSinPartidaUSD)}
+            ${DataStore.formatUSD(summary.totalAnticiposUSD)}
           </div>
-          <div class="text-[11px] text-amber-700 font-semibold mt-1">
-            En Factibilidad o sin asignación presupuestaria formal
+          <div class="text-[11px] text-amber-700 font-medium mt-1">
+            Saldo de ${DataStore.formatUSD(summary.totalSaldoUSD)} prorrateado en cuotas mensuales
+          </div>
+        </div>
+
+        <!-- KPI 4: COMPROMISOS PLURIANUALES (POST 31/03) -->
+        <div class="bg-purple-50/60 p-4 rounded-xl border border-purple-200 shadow-2xs">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-purple-800 uppercase tracking-wider flex items-center space-x-1">
+              <i data-lucide="fast-forward" class="w-3.5 h-3.5 text-purple-600"></i>
+              <span>Arrastre Ejercicios Siguientes</span>
+            </span>
+            <span class="text-[10px] font-bold bg-purple-200 text-purple-900 px-2 py-0.5 rounded-full">
+              Post 31/03
+            </span>
+          </div>
+          <div class="text-xl sm:text-2xl font-black text-purple-950 mt-1.5">
+            ${DataStore.formatUSD(summary.totalEjerciciosSiguientesUSD)}
+          </div>
+          <div class="text-[11px] text-purple-700 font-medium mt-1">
+            Compromisos contractuales que superan el ejercicio fiscal
           </div>
         </div>
       `;
@@ -1320,34 +1316,84 @@ const App = {
       cashflowContainer.innerHTML = `
         <div class="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-200">
           <i data-lucide="folder-search" class="w-10 h-10 text-slate-300 mx-auto mb-2"></i>
-          <p class="text-sm font-bold text-slate-600">No se encontraron obras para los filtros seleccionados</p>
-          <p class="text-xs text-slate-400 mt-1">Prueba cambiando el tipo de obra o el filtro de partida presupuestaria.</p>
+          <p class="text-sm font-bold text-slate-600">No se encontraron obras activas en curso para los filtros seleccionados</p>
+          <p class="text-xs text-slate-400 mt-1">Recordatorio: El Cash Flow incluye exclusivamente obras en estado 'Obras en Curso'.</p>
         </div>
       `;
       if (window.lucide) lucide.createIcons();
       return;
     }
 
-    let html = `
+    // 5.1 Gráfico Mensual de Barras (12 Meses: Abr a Mar)
+    const maxMesVal = Math.max(...Object.values(summary.mesesTotales), 1);
+    let barGraphHtml = `
+      <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 pb-2 border-b border-slate-200">
+          <div class="flex items-center space-x-2">
+            <i data-lucide="bar-chart-3" class="w-4 h-4 text-blue-600"></i>
+            <span class="text-xs font-bold text-slate-800">Distribución Mensual del Gasto • Ejercicio Contable ${summary.accountingInfo.label} (01/04 al 31/03)</span>
+          </div>
+          <div class="flex items-center space-x-3 text-[11px]">
+            <span class="inline-flex items-center space-x-1 text-blue-800 font-semibold">
+              <span class="w-2.5 h-2.5 rounded-sm bg-blue-600 inline-block"></span>
+              <span>Ya Pagado: <strong>${DataStore.formatUSD(summary.totalYaPagadoUSD)}</strong></span>
+            </span>
+            <span class="inline-flex items-center space-x-1 text-teal-800 font-semibold">
+              <span class="w-2.5 h-2.5 rounded-sm bg-teal-500 inline-block"></span>
+              <span>Proyectado: <strong>${DataStore.formatUSD(summary.totalProyectadoUSD)}</strong></span>
+            </span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-6 sm:grid-cols-12 gap-1.5 pt-2">
+          ${summary.accountingInfo.meses.map(m => {
+            const val = summary.mesesTotales[m.key] || 0;
+            const pct = Math.min(100, Math.max(8, Math.round((val / maxMesVal) * 100)));
+            const barBg = m.isPast ? 'bg-blue-600' : 'bg-teal-500';
+            const badgeBg = m.isPast ? 'bg-blue-100 text-blue-800' : 'bg-teal-100 text-teal-800';
+            const statusLabel = m.isPast ? 'Pagado' : 'Proy.';
+
+            return `
+              <div class="flex flex-col items-center bg-white p-2 rounded-lg border border-slate-200/80 shadow-2xs">
+                <span class="text-[10px] font-bold text-slate-700 uppercase">${m.label}</span>
+                <span class="text-[8px] font-mono text-slate-400">${m.year}</span>
+                
+                <div class="w-full bg-slate-100 rounded-sm h-14 flex items-end my-1 p-0.5">
+                  <div class="w-full ${barBg} rounded-xs transition-all duration-300" style="height: ${pct}%" title="${m.label} ${m.year}: ${DataStore.formatUSD(val)}"></div>
+                </div>
+
+                <span class="text-[9px] font-bold font-mono text-slate-900 leading-none">${DataStore.formatUSD(val)}</span>
+                <span class="text-[8px] font-semibold px-1 rounded mt-1 ${badgeBg}">${statusLabel}</span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+
+    let html = barGraphHtml + `
       <div class="overflow-x-auto">
         <table class="w-full text-left text-xs border-collapse">
           <thead>
             <tr class="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200">
               <th class="py-3 px-3">Sede</th>
               <th class="py-3 px-3">Módulo</th>
-              <th class="py-3 px-3">Proyecto / Obra</th>
+              <th class="py-3 px-3">Proyecto & Adjudicatario</th>
               <th class="py-3 px-3">Partida Presupuestaria</th>
               <th class="py-3 px-3 text-right">Monto Total USD</th>
-              <th class="py-3 px-3 text-right">2026</th>
-              <th class="py-3 px-3 text-right">2027</th>
-              <th class="py-3 px-3 text-right">2028</th>
-              <th class="py-3 px-3 text-right">2029</th>
+              <th class="py-3 px-3 text-center">Anticipo OC</th>
+              <th class="py-3 px-3 text-center">Plazo & Saldo</th>
+              <th class="py-3 px-3 text-right">Ejercicio ${summary.accountingInfo.label}</th>
+              <th class="py-3 px-3 text-right">Ej. Siguientes</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
     `;
 
-    summary.displayList.forEach(x => {
+    summary.displayList.forEach(entry => {
+      const x = entry.item;
+      const cf = entry.cf;
+
       const isInfra = (x.tipo === 'Infraestructura');
       const tipoBadge = isInfra 
         ? `<span class="bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-md font-bold text-[10px]">⚡ Infraestructura</span>`
@@ -1368,26 +1414,39 @@ const App = {
              Sin Partida
            </span>`;
 
-      const mTotal = (x.cashflow && x.cashflow.monto_total > 0) ? x.cashflow.monto_total : (x.monto_total_usd || x.monto_obra_usd || 0);
-      const c2026 = (x.cashflow && x.cashflow.cashflow_2026) || (!x.cashflow ? mTotal : 0);
-      const c2027 = (x.cashflow && x.cashflow.cashflow_2027) || 0;
-      const c2028 = (x.cashflow && x.cashflow.cashflow_2028) || 0;
-      const c2029 = (x.cashflow && x.cashflow.cashflow_2029) || 0;
-
       html += `
         <tr class="hover:bg-slate-50 cursor-pointer transition" onclick="App.openObraModal('${x.id}')">
           <td class="py-2.5 px-3 font-semibold text-slate-600 whitespace-nowrap">${x.sede}</td>
           <td class="py-2.5 px-3 whitespace-nowrap">${tipoBadge}</td>
           <td class="py-2.5 px-3">
             <div class="font-bold text-slate-800 text-xs">${x.nombre}</div>
-            <div class="text-[10px] text-slate-400 font-mono">${x.id} • ${x.estado || 'Estudio'}</div>
+            <div class="text-[10px] text-slate-500 font-mono">
+              <span class="font-bold text-blue-700">${x.id}</span> • Proveedor: <strong class="text-slate-700">${x.proveedor || 'Sin adjudicar'}</strong>
+            </div>
           </td>
           <td class="py-2.5 px-3 whitespace-nowrap">${partidaBadge}</td>
-          <td class="py-2.5 px-3 text-right font-black text-slate-900">${DataStore.formatUSD(mTotal)}</td>
-          <td class="py-2.5 px-3 text-right text-slate-700 font-medium">${DataStore.formatUSD(c2026)}</td>
-          <td class="py-2.5 px-3 text-right text-slate-700 font-medium">${DataStore.formatUSD(c2027)}</td>
-          <td class="py-2.5 px-3 text-right text-slate-700 font-medium">${DataStore.formatUSD(c2028)}</td>
-          <td class="py-2.5 px-3 text-right text-slate-700 font-medium">${DataStore.formatUSD(c2029)}</td>
+          <td class="py-2.5 px-3 text-right font-black text-slate-900">${DataStore.formatUSD(cf.montoTotalUSD)}</td>
+          <td class="py-2.5 px-3 text-center whitespace-nowrap">
+            <span class="bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded text-[10px] block">
+              ${cf.anticipoPct}% (${DataStore.formatUSD(cf.anticipoUSD)})
+            </span>
+            <span class="text-[9px] text-slate-400 mt-0.5 block">Mes 1</span>
+          </td>
+          <td class="py-2.5 px-3 text-center whitespace-nowrap">
+            <span class="font-bold text-slate-700 text-[11px]">${cf.duracionMeses} meses</span>
+            <span class="text-[10px] text-slate-500 block font-mono">${DataStore.formatUSD(cf.cuotaMensualSaldoUSD)}/mes</span>
+          </td>
+          <td class="py-2.5 px-3 text-right whitespace-nowrap">
+            <div class="font-black text-slate-900 text-xs">${DataStore.formatUSD(cf.ejercicioActualUSD)}</div>
+            <div class="text-[10px] space-x-1 mt-0.5">
+              <span class="text-blue-700 font-semibold">Pag: ${DataStore.formatUSD(cf.ejercicioActualPagadoUSD)}</span>
+              <span class="text-slate-300">|</span>
+              <span class="text-teal-700 font-semibold">Proy: ${DataStore.formatUSD(cf.ejercicioActualProyectadoUSD)}</span>
+            </div>
+          </td>
+          <td class="py-2.5 px-3 text-right font-bold text-purple-700 whitespace-nowrap">
+            ${cf.ejerciciosSiguientesUSD > 0 ? DataStore.formatUSD(cf.ejerciciosSiguientesUSD) : '<span class="text-slate-300 font-normal">-</span>'}
+          </td>
         </tr>
       `;
     });
@@ -1397,17 +1456,24 @@ const App = {
           <tfoot>
             <tr class="bg-slate-200/90 font-bold text-slate-900 border-t-2 border-slate-300">
               <td colspan="3" class="py-3 px-3 text-xs uppercase tracking-wider font-extrabold">
-                TOTALES MOSTRADOS (${summary.displayList.length} obras)
+                TOTALES MOSTRADOS (${summary.displayList.length} obras en curso)
               </td>
               <td class="py-3 px-3 text-xs font-black text-emerald-800">
                 <span class="text-[10px] text-emerald-700 block font-normal uppercase">Asignado Partidas:</span>
                 ${DataStore.formatUSD(summary.displayTotPartidas)}
               </td>
               <td class="py-3 px-3 text-right text-sm font-black text-slate-900">${DataStore.formatUSD(summary.displayTotGral)}</td>
-              <td class="py-3 px-3 text-right font-bold text-slate-800">${DataStore.formatUSD(summary.displayTot2026)}</td>
-              <td class="py-3 px-3 text-right font-bold text-slate-800">${DataStore.formatUSD(summary.displayTot2027)}</td>
-              <td class="py-3 px-3 text-right font-bold text-slate-800">${DataStore.formatUSD(summary.displayTot2028)}</td>
-              <td class="py-3 px-3 text-right font-bold text-slate-800">${DataStore.formatUSD(summary.displayTot2029)}</td>
+              <td class="py-3 px-3 text-center font-bold text-amber-900 text-xs">
+                ${DataStore.formatUSD(summary.totalAnticiposUSD)}
+              </td>
+              <td class="py-3 px-3 text-center font-bold text-slate-700 text-xs">
+                Saldo: ${DataStore.formatUSD(summary.totalSaldoUSD)}
+              </td>
+              <td class="py-3 px-3 text-right font-black text-slate-900 text-xs">
+                <div>${DataStore.formatUSD(summary.displayTotEjercicio)}</div>
+                <div class="text-[9px] font-normal text-slate-600">Pag: ${DataStore.formatUSD(summary.displayTotYaPagado)} | Proy: ${DataStore.formatUSD(summary.displayTotProyectado)}</div>
+              </td>
+              <td class="py-3 px-3 text-right font-black text-purple-900 text-xs">${DataStore.formatUSD(summary.displayTotSiguientes)}</td>
             </tr>
           </tfoot>
         </table>
@@ -1694,12 +1760,18 @@ const App = {
     const containerAdjudicacion = document.getElementById('transAdjudicacionContainer');
     const inputProveedor = document.getElementById('transProveedorAdjudicadoInput');
     const inputMontoAdj = document.getElementById('transMontoAdjudicadoInput');
+    const inputAnticipo = document.getElementById('transAnticipoPorcentajeInput');
+    const inputPlazo = document.getElementById('transPlazoMesesInput');
+
     if (containerAdjudicacion) {
       if (currentStage === 'En licitación' && nextStage === 'Obras en Curso') {
         containerAdjudicacion.classList.remove('hidden');
         if (inputProveedor) inputProveedor.value = item.proveedor || '';
         const defMontoAdj = item.monto_adjudicado_usd || item.monto_total_usd || item.monto_obra_usd || '';
         if (inputMontoAdj) inputMontoAdj.value = defMontoAdj > 0 ? defMontoAdj : '';
+        if (inputAnticipo) inputAnticipo.value = (item.anticipo_porcentaje !== undefined && item.anticipo_porcentaje !== null) ? item.anticipo_porcentaje : 0;
+        if (inputPlazo) inputPlazo.value = item.plazo_meses || 10;
+        this.handleAdjudicacionInputChange();
       } else {
         containerAdjudicacion.classList.add('hidden');
       }
@@ -1709,10 +1781,41 @@ const App = {
     if (window.lucide) lucide.createIcons();
   },
 
+  handleAdjudicacionInputChange() {
+    const inputMonto = document.getElementById('transMontoAdjudicadoInput');
+    const inputAnticipo = document.getElementById('transAnticipoPorcentajeInput');
+    const inputPlazo = document.getElementById('transPlazoMesesInput');
+    const badge = document.getElementById('transAnticipoCalculadoBadge');
+    const elAnticipoUSD = document.getElementById('transDesgloseAnticipoUSD');
+    const elSaldoUSD = document.getElementById('transDesgloseSaldoUSD');
+
+    const monto = DataStore.parseCurrency(inputMonto ? inputMonto.value : 0) || 0;
+    const pct = Math.min(100, Math.max(0, parseFloat(inputAnticipo ? inputAnticipo.value : 0) || 0));
+    const plazo = parseInt(inputPlazo ? inputPlazo.value : 0, 10) || 10;
+
+    const anticipoUSD = Math.round((monto * (pct / 100)) * 100) / 100;
+    const saldoUSD = Math.round((monto - anticipoUSD) * 100) / 100;
+
+    if (badge) {
+      badge.innerText = `${pct}% = USD ${DataStore.formatUSD(anticipoUSD)}`;
+    }
+    if (elAnticipoUSD) {
+      elAnticipoUSD.innerText = `USD ${DataStore.formatUSD(anticipoUSD)} (${pct}% en Mes 1)`;
+    }
+    if (elSaldoUSD) {
+      const mesesRestantes = Math.max(1, plazo - 1);
+      const cuotaMensual = Math.round((saldoUSD / mesesRestantes) * 100) / 100;
+      elSaldoUSD.innerText = `USD ${DataStore.formatUSD(saldoUSD)} (${mesesRestantes} meses de USD ${DataStore.formatUSD(cuotaMensual)} c/u)`;
+    }
+  },
+
   confirmTransition() {
     const id = document.getElementById('transItemId').value;
     const item = DataStore.getItemById(id);
     if (!item) return;
+
+    const u = DataStore.currentUser;
+    const isAdmin = DataStore.isAdmin();
 
     if (!u || u.solo_lectura || u.rol === 'visualizador' || (!u.puede_avanzar && !u.puede_asignar_partida)) {
       alert("⛔ Acceso Denegado: Tu perfil es de solo lectura y no tiene autorización para avanzar etapas.");
@@ -1807,6 +1910,8 @@ const App = {
     if (currentStage === 'En licitación' && nextStage === 'Obras en Curso') {
       const proveedor = (document.getElementById('transProveedorAdjudicadoInput')?.value || '').trim();
       const montoAdj = DataStore.parseCurrency(document.getElementById('transMontoAdjudicadoInput')?.value) || 0;
+      const anticipoPct = Math.min(100, Math.max(0, parseFloat(document.getElementById('transAnticipoPorcentajeInput')?.value) || 0));
+      const plazoMeses = parseInt(document.getElementById('transPlazoMesesInput')?.value, 10) || 0;
 
       if (!proveedor) {
         alert("⚠️ Debes indicar el Proveedor Adjudicado para avanzar a 'Obras en Curso'.");
@@ -1820,6 +1925,8 @@ const App = {
       }
       extraData.proveedor = proveedor;
       extraData.montoAdjudicado = montoAdj;
+      extraData.porcentajeAnticipo = anticipoPct;
+      if (plazoMeses > 0) extraData.plazoMeses = plazoMeses;
     }
 
     const res = DataStore.confirmAndAdvanceStage(id, compDate, null, notes, extraData);
@@ -2641,295 +2748,666 @@ const App = {
       return val.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
     };
 
+    const maxMesVal = Math.max(...Object.values(report.cashflowEjecucion.mesesTotales), 1);
+    const totCartera = report.cashflowEjecucion.totalCarteraUSD || 1;
+
     let html = `
-      <!-- MEMBRETE OFICIAL HOSPITAL ITALIANO DE BUENOS AIRES -->
-      <div class="border-b-2 border-slate-900 pb-3 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div class="flex items-center space-x-3.5">
-          <img src="img/logo-hospital-italiano-icon.png" alt="Hospital Italiano" class="w-12 h-12 object-contain shrink-0">
-          <div>
-            <h1 class="text-base font-black text-slate-900 tracking-tight leading-none uppercase">Hospital Italiano de Buenos Aires</h1>
-            <h2 class="text-xs font-bold text-blue-900 mt-1">Dirección de Infraestructura y Obras • Dirección General</h2>
-            <div class="text-[10px] text-slate-500 font-mono mt-0.5">SISTEMA INTEGRAL DE GESTIÓN DE OBRAS E INVERSIONES (SIGO)</div>
-          </div>
-        </div>
-        <div class="sm:text-right text-xs">
-          <div class="flex sm:justify-end items-center space-x-1.5 mb-0.5">
-            <span class="bg-rose-100 text-rose-800 border border-rose-300 text-[9px] font-black px-2 py-0.2 rounded-full uppercase tracking-wider">Confidencial</span>
-            <span class="bg-slate-100 text-slate-700 text-[9px] font-bold px-2 py-0.2 rounded-full">One-Pager</span>
-          </div>
-          <div class="text-[11px] text-slate-700">Fecha de Emisión: <strong>${report.fechaEmision}</strong></div>
-          <div class="text-[10px] text-slate-500">Emitido por: <strong>${report.emisor}</strong></div>
-        </div>
-      </div>
-
-      <!-- 4 TARJETAS KPI DE DIRECCIÓN -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+      <!-- ========================================================================= -->
+      <!-- PÁGINA 1: RESUMEN EJECUTIVO & ESTADO GENERAL DE CARTERA                   -->
+      <!-- ========================================================================= -->
+      <div class="report-page report-page-1 bg-white p-5 sm:p-6 rounded-xl border border-slate-200 shadow-sm print:border-none print:shadow-none print:p-0">
         
-        <!-- KPI 1: Obras en Curso -->
-        <div class="bg-gradient-to-br from-blue-50 to-indigo-50/70 border border-blue-200 rounded-xl p-3.5 shadow-2xs">
-          <div class="flex items-center justify-between text-blue-900 mb-1">
-            <span class="font-bold text-[10px] uppercase tracking-wider">Obras en Ejecución</span>
-            <i data-lucide="activity" class="w-4 h-4 text-blue-600"></i>
-          </div>
-          <div class="text-xl font-black text-slate-900">${report.obrasEnCurso.total} <span class="text-xs font-semibold text-slate-500">obras</span></div>
-          <div class="text-xs font-bold text-blue-800 mt-0.5">US$ ${fmt(report.obrasEnCurso.montoTotalUSD)}</div>
-          <div class="mt-2 flex items-center justify-between text-[10px] text-slate-500">
-            <span>Avance Físico Promedio:</span>
-            <strong class="text-blue-900">${report.obrasEnCurso.avancePromedio}%</strong>
-          </div>
-          <div class="w-full bg-blue-200 rounded-full h-1.5 mt-1 overflow-hidden">
-            <div class="bg-blue-600 h-1.5 rounded-full" style="width: ${Math.min(100, report.obrasEnCurso.avancePromedio)}%"></div>
-          </div>
-        </div>
-
-        <!-- KPI 2: Factibilidad en Espera (Sin Partida) -->
-        <div class="bg-gradient-to-br from-amber-50 to-orange-50/70 border border-amber-200 rounded-xl p-3.5 shadow-2xs">
-          <div class="flex items-center justify-between text-amber-900 mb-1">
-            <span class="font-bold text-[10px] uppercase tracking-wider">Factibilidad sin Partida</span>
-            <i data-lucide="clock" class="w-4 h-4 text-amber-600"></i>
-          </div>
-          <div class="text-xl font-black text-slate-900">${report.factibilidadSinPartida.total} <span class="text-xs font-semibold text-slate-500">en espera</span></div>
-          <div class="text-xs font-bold text-amber-800 mt-0.5">US$ ${fmt(report.factibilidadSinPartida.montoTotalUSD)} <span class="text-[9px] font-normal text-slate-500">(solicitado)</span></div>
-          <div class="mt-2 text-[10px] bg-amber-100/80 text-amber-900 font-bold px-2 py-0.5 rounded flex items-center space-x-1">
-            <i data-lucide="alert-triangle" class="w-3 h-3 text-amber-700 shrink-0"></i>
-            <span>Pendiente definición de Dirección</span>
-          </div>
-        </div>
-
-        <!-- KPI 3: Desvíos Presupuestarios en Partidas -->
-        <div class="bg-gradient-to-br from-rose-50 to-pink-50/70 border border-rose-200 rounded-xl p-3.5 shadow-2xs">
-          <div class="flex items-center justify-between text-rose-900 mb-1">
-            <span class="font-bold text-[10px] uppercase tracking-wider">Desvíos Presupuestarios</span>
-            <i data-lucide="trending-down" class="w-4 h-4 text-rose-600"></i>
-          </div>
-          <div class="flex items-center justify-between">
+        <!-- MEMBRETE OFICIAL PÁGINA 1 -->
+        <div class="border-b-2 border-slate-900 pb-3 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center space-x-3.5">
+            <img src="img/logo-hospital-italiano-icon.png" alt="Hospital Italiano" class="w-12 h-12 object-contain shrink-0">
             <div>
-              <div class="text-sm font-black text-rose-700 leading-tight">-${fmt(report.partidasDesvios.totalDeficitUSD)} USD</div>
-              <div class="text-[10px] text-slate-500 font-medium">${report.partidasDesvios.totalSobreEjecutadas} partidas sobre-ejecutadas</div>
-            </div>
-            <div class="text-right">
-              <div class="text-xs font-bold text-emerald-700 leading-tight">+${fmt(report.partidasDesvios.totalSuperavitUSD)} USD</div>
-              <div class="text-[10px] text-slate-500 font-medium">${report.partidasDesvios.totalSubEjecutadas} sub-ejecutadas</div>
+              <h1 class="text-base font-black text-slate-900 tracking-tight leading-none uppercase">Hospital Italiano de Buenos Aires</h1>
+              <h2 class="text-xs font-bold text-blue-900 mt-1">Dirección de Infraestructura y Obras • Dirección General</h2>
+              <div class="text-[10px] text-slate-500 font-mono mt-0.5">SISTEMA INTEGRAL DE GESTIÓN DE OBRAS E INVERSIONES (SIGO)</div>
             </div>
           </div>
-          <div class="mt-2 text-[10px] text-slate-500 border-t border-rose-200/60 pt-1 flex justify-between">
-            <span>Partidas con ajuste requerido:</span>
-            <strong class="text-rose-900">${report.partidasDesvios.totalSobreEjecutadas + report.partidasDesvios.totalSubEjecutadas}</strong>
+          <div class="sm:text-right text-xs">
+            <div class="flex sm:justify-end items-center space-x-1.5 mb-0.5">
+              <span class="bg-rose-100 text-rose-800 border border-rose-300 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">Confidencial</span>
+              <span class="bg-blue-100 text-blue-900 text-[9px] font-bold px-2 py-0.5 rounded-full">Pág 1 de 3 • Resumen General</span>
+            </div>
+            <div class="text-[11px] text-slate-700">Fecha de Emisión: <strong>${report.fechaEmision}</strong></div>
+            <div class="text-[10px] text-slate-500">Emitido por: <strong>${report.emisor}</strong></div>
           </div>
         </div>
 
-        <!-- KPI 4: Obras Suspendidas (Capital Inmovilizado) -->
-        <div class="bg-gradient-to-br from-slate-100 to-slate-200/60 border border-slate-300 rounded-xl p-3.5 shadow-2xs">
-          <div class="flex items-center justify-between text-slate-700 mb-1">
-            <span class="font-bold text-[10px] uppercase tracking-wider">Obras Suspendidas</span>
-            <i data-lucide="pause-circle" class="w-4 h-4 text-slate-600"></i>
+        <!-- 4 TARJETAS KPI DE DIRECCIÓN -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4 report-page-card">
+          
+          <!-- KPI 1: Obras en Curso -->
+          <div class="bg-gradient-to-br from-blue-50 to-indigo-50/70 border border-blue-200 rounded-xl p-3.5 shadow-2xs">
+            <div class="flex items-center justify-between text-blue-900 mb-1">
+              <span class="font-bold text-[10px] uppercase tracking-wider">Obras en Ejecución</span>
+              <i data-lucide="activity" class="w-4 h-4 text-blue-600"></i>
+            </div>
+            <div class="text-xl font-black text-slate-900">${report.obrasEnCurso.total} <span class="text-xs font-semibold text-slate-500">obras</span></div>
+            <div class="text-xs font-bold text-blue-800 mt-0.5">US$ ${fmt(report.obrasEnCurso.montoTotalUSD)}</div>
+            <div class="mt-2 flex items-center justify-between text-[10px] text-slate-500">
+              <span>Avance Físico Promedio:</span>
+              <strong class="text-blue-900">${report.obrasEnCurso.avancePromedio}%</strong>
+            </div>
+            <div class="w-full bg-blue-200 rounded-full h-1.5 mt-1 overflow-hidden">
+              <div class="bg-blue-600 h-1.5 rounded-full" style="width: ${Math.min(100, report.obrasEnCurso.avancePromedio)}%"></div>
+            </div>
           </div>
-          <div class="text-xl font-black text-slate-900">${report.obrasSuspendidas.total} <span class="text-xs font-semibold text-slate-500">en pausa</span></div>
-          <div class="text-xs font-bold text-slate-700 mt-0.5">US$ ${fmt(report.obrasSuspendidas.montoTotalUSD)}</div>
-          <div class="mt-2 text-[10px] bg-slate-200/80 text-slate-700 font-semibold px-2 py-0.5 rounded flex items-center space-x-1">
-            <i data-lucide="lock" class="w-3 h-3 text-slate-500 shrink-0"></i>
-            <span>Capital inmovilizado en cartera</span>
+
+          <!-- KPI 2: Factibilidad en Espera (Sin Partida) -->
+          <div class="bg-gradient-to-br from-amber-50 to-orange-50/70 border border-amber-200 rounded-xl p-3.5 shadow-2xs">
+            <div class="flex items-center justify-between text-amber-900 mb-1">
+              <span class="font-bold text-[10px] uppercase tracking-wider">Factibilidad sin Partida</span>
+              <i data-lucide="clock" class="w-4 h-4 text-amber-600"></i>
+            </div>
+            <div class="text-xl font-black text-slate-900">${report.factibilidadSinPartida.total} <span class="text-xs font-semibold text-slate-500">en espera</span></div>
+            <div class="text-xs font-bold text-amber-800 mt-0.5">US$ ${fmt(report.factibilidadSinPartida.montoTotalUSD)} <span class="text-[9px] font-normal text-slate-500">(solicitado)</span></div>
+            <div class="mt-2 text-[10px] bg-amber-100/80 text-amber-900 font-bold px-2 py-0.5 rounded flex items-center space-x-1">
+              <i data-lucide="alert-triangle" class="w-3 h-3 text-amber-700 shrink-0"></i>
+              <span>Pendiente definición de Dirección</span>
+            </div>
           </div>
+
+          <!-- KPI 3: Desvíos Presupuestarios en Partidas -->
+          <div class="bg-gradient-to-br from-rose-50 to-pink-50/70 border border-rose-200 rounded-xl p-3.5 shadow-2xs">
+            <div class="flex items-center justify-between text-rose-900 mb-1">
+              <span class="font-bold text-[10px] uppercase tracking-wider">Desvíos Presupuestarios</span>
+              <i data-lucide="trending-down" class="w-4 h-4 text-rose-600"></i>
+            </div>
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-sm font-black text-rose-700 leading-tight">-${fmt(report.partidasDesvios.totalDeficitUSD)} USD</div>
+                <div class="text-[10px] text-slate-500 font-medium">${report.partidasDesvios.totalSobreEjecutadas} partidas con déficit</div>
+              </div>
+              <div class="text-right">
+                <div class="text-xs font-bold text-emerald-700 leading-tight">+${fmt(report.partidasDesvios.totalSuperavitUSD)} USD</div>
+                <div class="text-[10px] text-slate-500 font-medium">${report.partidasDesvios.totalSubEjecutadas} con remanente</div>
+              </div>
+            </div>
+            <div class="mt-2 text-[10px] text-slate-500 border-t border-rose-200/60 pt-1 flex justify-between">
+              <span>Partidas con ajuste requerido:</span>
+              <strong class="text-rose-900">${report.partidasDesvios.totalSobreEjecutadas + report.partidasDesvios.totalSubEjecutadas}</strong>
+            </div>
+          </div>
+
+          <!-- KPI 4: Obras Suspendidas (Capital Inmovilizado) -->
+          <div class="bg-gradient-to-br from-slate-100 to-slate-200/60 border border-slate-300 rounded-xl p-3.5 shadow-2xs">
+            <div class="flex items-center justify-between text-slate-700 mb-1">
+              <span class="font-bold text-[10px] uppercase tracking-wider">Obras Suspendidas</span>
+              <i data-lucide="pause-circle" class="w-4 h-4 text-slate-600"></i>
+            </div>
+            <div class="text-xl font-black text-slate-900">${report.obrasSuspendidas.total} <span class="text-xs font-semibold text-slate-500">en pausa</span></div>
+            <div class="text-xs font-bold text-slate-700 mt-0.5">US$ ${fmt(report.obrasSuspendidas.montoTotalUSD)}</div>
+            <div class="mt-2 text-[10px] bg-slate-200/80 text-slate-700 font-semibold px-2 py-0.5 rounded flex items-center space-x-1">
+              <i data-lucide="lock" class="w-3 h-3 text-slate-500 shrink-0"></i>
+              <span>Capital inmovilizado en cartera</span>
+            </div>
+          </div>
+
         </div>
 
-      </div>
+        <!-- 3 CUADRANTES DE CONTROL EJECUTIVO -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 report-page-card">
 
-      <!-- GRID DE 4 CUADRANTES DE CONTROL EJECUTIVO -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+          <!-- CUADRANTE 1: OBRAS EN CURSO (EJECUCIÓN ACTIVA) -->
+          <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200">
+                <h3 class="font-black text-xs text-slate-900 flex items-center space-x-1.5">
+                  <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+                  <span>Obras en Ejecución Activa (${report.obrasEnCurso.total})</span>
+                </h3>
+                <span class="text-[10px] font-bold text-blue-700 font-mono">Total: US$ ${fmt(report.obrasEnCurso.montoTotalUSD)}</span>
+              </div>
 
-        <!-- CUADRANTE 1: OBRAS EN CURSO (EJECUCIÓN ACTIVA) -->
-        <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50 flex flex-col justify-between">
-          <div>
-            <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200">
-              <h3 class="font-black text-xs text-slate-900 flex items-center space-x-1.5">
-                <span class="w-2 h-2 rounded-full bg-blue-600"></span>
-                <span>Obras en Curso de Ejecución (${report.obrasEnCurso.total})</span>
-              </h3>
-              <span class="text-[10px] font-bold text-blue-700 font-mono">Total: US$ ${fmt(report.obrasEnCurso.montoTotalUSD)}</span>
-            </div>
-
-            <div class="overflow-x-auto max-h-[190px] overflow-y-auto">
-              <table class="w-full text-[11px] text-left">
-                <thead class="bg-slate-200/60 text-slate-600 font-bold sticky top-0">
-                  <tr>
-                    <th class="py-1 px-1.5">Cód</th>
-                    <th class="py-1 px-1.5">Proyecto</th>
-                    <th class="py-1 px-1.5">Sede</th>
-                    <th class="py-1 px-1.5 text-right">Inversión USD</th>
-                    <th class="py-1 px-1.5 text-center">Avance</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-200">
-                  ${report.obrasEnCurso.items.length === 0 ? `
-                    <tr><td colspan="5" class="py-3 text-center text-slate-400">No hay obras en curso actualmente</td></tr>
-                  ` : report.obrasEnCurso.items.slice(0, 7).map(item => `
-                    <tr class="hover:bg-white transition">
-                      <td class="py-1 px-1.5 font-mono font-bold text-blue-700">${item.id}</td>
-                      <td class="py-1 px-1.5 font-bold text-slate-800 max-w-[170px] truncate" title="${item.nombre}">${item.nombre}</td>
-                      <td class="py-1 px-1.5 text-slate-600">${item.sede}</td>
-                      <td class="py-1 px-1.5 text-right font-mono font-bold text-slate-900">$${fmt(item.monto_adjudicado_usd || item.monto_total_usd || 0)}</td>
-                      <td class="py-1 px-1.5 text-center">
-                        <div class="inline-flex items-center space-x-1">
+              <div class="overflow-x-auto max-h-[200px] overflow-y-auto">
+                <table class="w-full text-[11px] text-left">
+                  <thead class="bg-slate-200/60 text-slate-600 font-bold sticky top-0">
+                    <tr>
+                      <th class="py-1 px-1.5">Cód</th>
+                      <th class="py-1 px-1.5">Proyecto & Proveedor</th>
+                      <th class="py-1 px-1.5">Sede</th>
+                      <th class="py-1 px-1.5 text-right">Inversión USD</th>
+                      <th class="py-1 px-1.5 text-center">Avance</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-200">
+                    ${report.obrasEnCurso.items.length === 0 ? `
+                      <tr><td colspan="5" class="py-3 text-center text-slate-400">No hay obras en curso actualmente</td></tr>
+                    ` : report.obrasEnCurso.items.slice(0, 6).map(item => `
+                      <tr class="hover:bg-white transition">
+                        <td class="py-1 px-1.5 font-mono font-bold text-blue-700">${item.id}</td>
+                        <td class="py-1 px-1.5">
+                          <div class="font-bold text-slate-800 max-w-[170px] truncate" title="${item.nombre}">${item.nombre}</div>
+                          <div class="text-[9px] text-slate-500 truncate">${item.proveedor || 'Sin adjudicar'}</div>
+                        </td>
+                        <td class="py-1 px-1.5 text-slate-600">${item.sede}</td>
+                        <td class="py-1 px-1.5 text-right font-mono font-bold text-slate-900">$${fmt(item.monto_adjudicado_usd || item.monto_total_usd || 0)}</td>
+                        <td class="py-1 px-1.5 text-center">
                           <span class="font-bold text-[10px] text-slate-700">${item.avance_fisico || 0}%</span>
-                        </div>
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            ${report.obrasEnCurso.items.length > 6 ? `
+              <div class="text-[10px] text-slate-400 text-right pt-1 mt-1 border-t border-slate-200">Mostrando 6 de ${report.obrasEnCurso.items.length} obras activas. Ver tabla completa en Pág. 2 y XLSX.</div>
+            ` : ''}
+          </div>
+
+          <!-- CUADRANTE 2: FACTIBILIDADES SIN PARTIDA -->
+          <div class="border border-amber-200 rounded-xl p-3.5 bg-amber-50/30 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between pb-2 mb-2 border-b border-amber-200">
+                <h3 class="font-black text-xs text-amber-950 flex items-center space-x-1.5">
+                  <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                  <span>Factibilidades sin Partida Asignada (${report.factibilidadSinPartida.total})</span>
+                </h3>
+                <span class="text-[10px] font-bold text-amber-800 font-mono">Solicitado: US$ ${fmt(report.factibilidadSinPartida.montoTotalUSD)}</span>
+              </div>
+
+              <div class="overflow-x-auto max-h-[200px] overflow-y-auto">
+                <table class="w-full text-[11px] text-left">
+                  <thead class="bg-amber-100/60 text-amber-900 font-bold sticky top-0">
+                    <tr>
+                      <th class="py-1 px-1.5">Cód</th>
+                      <th class="py-1 px-1.5">Solicitud</th>
+                      <th class="py-1 px-1.5">Sede</th>
+                      <th class="py-1 px-1.5 text-center">Criticidad</th>
+                      <th class="py-1 px-1.5 text-right">Estimado USD</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-amber-100">
+                    ${report.factibilidadSinPartida.items.length === 0 ? `
+                      <tr><td colspan="5" class="py-3 text-center text-slate-400">No hay factibilidades pendientes de partida</td></tr>
+                    ` : report.factibilidadSinPartida.items.slice(0, 6).map(item => `
+                      <tr class="hover:bg-white transition">
+                        <td class="py-1 px-1.5 font-mono font-bold text-amber-700">${item.id}</td>
+                        <td class="py-1 px-1.5 font-bold text-slate-800 max-w-[150px] truncate" title="${item.nombre}">${item.nombre}</td>
+                        <td class="py-1 px-1.5 text-slate-600">${item.sede}</td>
+                        <td class="py-1 px-1.5 text-center">
+                          <span class="font-bold text-[10px] ${item.prioridad_ponderada_default ? 'text-amber-700' : 'text-blue-700'}">
+                            ${item.prioridad_medica || item.prioridad_tecnica || 3}★ ${item.prioridad_ponderada_default ? '(Def)' : ''}
+                          </span>
+                        </td>
+                        <td class="py-1 px-1.5 text-right font-mono font-bold text-amber-900">$${fmt(item.monto_total_usd || item.monto_obra_usd || 0)}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="text-[10px] text-amber-800 font-semibold pt-1 mt-1 border-t border-amber-200 flex justify-between items-center">
+              <span>⚠️ Requieren asignación de partida y prioridad médica por Dirección</span>
+              <span class="text-slate-400 font-normal">Sin fondos asignados</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- AUDITORÍA DE PARTIDAS: CUADRANTE INFERIOR DE PÁGINA 1 -->
+        <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50 report-page-card">
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200">
+            <h3 class="font-black text-xs text-slate-900 flex items-center space-x-1.5">
+              <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+              <span>Auditoría de Desvíos Presupuestarios en Partidas (${report.partidasDesvios.totalSobreEjecutadas + report.partidasDesvios.totalSubEjecutadas} identificadas)</span>
+            </h3>
+            <span class="text-[10px] font-bold ${report.partidasDesvios.balanceNetoUSD >= 0 ? 'text-emerald-700' : 'text-rose-700'}">
+              Balance Neto: ${report.partidasDesvios.balanceNetoUSD >= 0 ? '+' : ''}$${fmt(report.partidasDesvios.balanceNetoUSD)} USD
+            </span>
+          </div>
+
+          <div class="overflow-x-auto max-h-[160px] overflow-y-auto">
+            <table class="w-full text-[11px] text-left">
+              <thead class="bg-slate-200/60 text-slate-600 font-bold sticky top-0">
+                <tr>
+                  <th class="py-1 px-1.5">Partida</th>
+                  <th class="py-1 px-1.5">Obra / Proyecto</th>
+                  <th class="py-1 px-1.5">Estado</th>
+                  <th class="py-1 px-1.5 text-right">Asignado USD</th>
+                  <th class="py-1 px-1.5 text-right">Requerido USD</th>
+                  <th class="py-1 px-1.5 text-right">Desvío USD</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200">
+                ${(report.partidasDesvios.sobreEjecutadas.concat(report.partidasDesvios.subEjecutadas)).length === 0 ? `
+                  <tr><td colspan="6" class="py-3 text-center text-slate-400">Todas las partidas coinciden exactamente con el costo requerido</td></tr>
+                ` : (report.partidasDesvios.sobreEjecutadas.concat(report.partidasDesvios.subEjecutadas)).slice(0, 5).map(item => {
+                  const isDeficit = item.deficit_usd > 0;
+                  return `
+                    <tr class="hover:bg-white transition">
+                      <td class="py-1 px-1.5 font-mono font-bold text-slate-700">${item.partida}</td>
+                      <td class="py-1 px-1.5 font-semibold text-slate-800 max-w-[200px] truncate" title="${item.nombre}">${item.id} - ${item.nombre}</td>
+                      <td class="py-1 px-1.5 text-slate-500">${item.estado}</td>
+                      <td class="py-1 px-1.5 text-right font-mono text-slate-600">$${fmt(item.monto_partida_usd)}</td>
+                      <td class="py-1 px-1.5 text-right font-mono text-slate-600">$${fmt(item.costo_requerido_usd)}</td>
+                      <td class="py-1 px-1.5 text-right font-mono font-bold ${isDeficit ? 'text-rose-600' : 'text-emerald-600'}">
+                        ${isDeficit ? `-$${fmt(item.deficit_usd)}` : `+$${fmt(item.superavit_usd)}`}
                       </td>
                     </tr>
-                  `).join('')}
-                </tbody>
-              </table>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div class="text-[10px] text-slate-500 pt-1 mt-1 border-t border-slate-200 flex justify-between">
+            <span class="text-rose-700 font-bold">Rojo: Partida Corta (Requiere Ampliación)</span>
+            <span class="text-emerald-700 font-bold">Verde: Remanente Presupuestario Liberable</span>
+          </div>
+        </div>
+
+        <!-- PIE INSTITUCIONAL PÁGINA 1 -->
+        <div class="pt-3 mt-4 border-t-2 border-slate-900 flex flex-col sm:flex-row items-center justify-between text-[10px] text-slate-500 gap-3 report-page-card">
+          <div class="flex items-center space-x-2">
+            <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
+            <span>SIGO HIBA • Documento de auditoría oficial • Pág. 1 de 3: Resumen Ejecutivo</span>
+          </div>
+          <div class="flex items-center space-x-6 text-slate-700 font-semibold">
+            <div class="border-t border-slate-400 pt-0.5 w-32 text-center text-[9px]">Dir. Infraestructura</div>
+            <div class="border-t border-slate-400 pt-0.5 w-32 text-center text-[9px]">Dirección General</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SALTO DE PÁGINA A4 PARA PDF E IMPRESIÓN -->
+      <div class="html2pdf__page-break my-6 border-b-2 border-dashed border-slate-300"></div>
+
+      <!-- ========================================================================= -->
+      <!-- PÁGINA 2: CASH FLOW OFICIAL DE OBRAS EN CURSO (01/04 A 31/03)              -->
+      <!-- ========================================================================= -->
+      <div class="report-page report-page-2 bg-white p-5 sm:p-6 rounded-xl border border-slate-200 shadow-sm print:border-none print:shadow-none print:p-0">
+        
+        <!-- MEMBRETE OFICIAL PÁGINA 2 -->
+        <div class="border-b-2 border-slate-900 pb-3 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center space-x-3.5">
+            <img src="img/logo-hospital-italiano-icon.png" alt="Hospital Italiano" class="w-12 h-12 object-contain shrink-0">
+            <div>
+              <h1 class="text-base font-black text-slate-900 tracking-tight leading-none uppercase">Hospital Italiano de Buenos Aires</h1>
+              <h2 class="text-xs font-bold text-blue-900 mt-1">Dirección de Finanzas & Dirección de Infraestructura</h2>
+              <div class="text-[10px] text-slate-500 font-mono mt-0.5">CASH FLOW OFICIAL DE OBRAS EN CURSO • EJERCICIO CONTABLE ${report.accountingInfo.label} (01/04/${report.accountingInfo.startYear} - 31/03/${report.accountingInfo.endYear})</div>
             </div>
           </div>
-          ${report.obrasEnCurso.items.length > 7 ? `
-            <div class="text-[10px] text-slate-400 text-right pt-1 mt-1 border-t border-slate-200">Mostrando 7 de ${report.obrasEnCurso.items.length} obras en ejecución. Ver tabla completa en XLSX.</div>
+          <div class="sm:text-right text-xs">
+            <div class="flex sm:justify-end items-center space-x-1.5 mb-0.5">
+              <span class="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">Flujo Oficial</span>
+              <span class="bg-teal-100 text-teal-900 text-[9px] font-bold px-2 py-0.5 rounded-full">Pág 2 de 3 • Cash Flow Contable</span>
+            </div>
+            <div class="text-[11px] text-slate-700">Cartera: <strong>${report.cashflowEjecucion.totalObras} obras activas en curso</strong></div>
+            <div class="text-[10px] text-slate-500">Excluye factibilidades y obras suspendidas</div>
+          </div>
+        </div>
+
+        <!-- 4 KPIS FINANCIEROS DEL CASH FLOW -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4 report-page-card">
+          
+          <div class="bg-gradient-to-br from-blue-50 to-indigo-50/70 border border-blue-200 rounded-xl p-3.5 shadow-2xs">
+            <div class="flex items-center justify-between text-blue-900 mb-1">
+              <span class="font-bold text-[10px] uppercase tracking-wider">Cartera en Ejecución</span>
+              <i data-lucide="activity" class="w-4 h-4 text-blue-600"></i>
+            </div>
+            <div class="text-xl font-black text-slate-900">US$ ${fmt(report.cashflowEjecucion.totalCarteraUSD)}</div>
+            <div class="text-[10px] text-blue-700 font-semibold mt-1">${report.cashflowEjecucion.totalObras} contratos vigentes adjudicados</div>
+          </div>
+
+          <div class="bg-gradient-to-br from-emerald-50 to-teal-50/70 border border-emerald-200 rounded-xl p-3.5 shadow-2xs">
+            <div class="flex items-center justify-between text-emerald-900 mb-1">
+              <span class="font-bold text-[10px] uppercase tracking-wider">Ejercicio ${report.accountingInfo.label} (01/04 - 31/03)</span>
+              <i data-lucide="calendar" class="w-4 h-4 text-emerald-600"></i>
+            </div>
+            <div class="text-xl font-black text-emerald-950">US$ ${fmt(report.cashflowEjecucion.totalEjercicioActualUSD)}</div>
+            <div class="text-[10px] text-emerald-800 font-semibold mt-1 flex justify-between">
+              <span>Pagado: <strong class="text-blue-800">$${fmt(report.cashflowEjecucion.totalYaPagadoUSD)}</strong></span>
+              <span>Proyectado: <strong class="text-teal-800">$${fmt(report.cashflowEjecucion.totalProyectadoUSD)}</strong></span>
+            </div>
+          </div>
+
+          <div class="bg-amber-50/60 border border-amber-200 rounded-xl p-3.5 shadow-2xs">
+            <div class="flex items-center justify-between text-amber-900 mb-1">
+              <span class="font-bold text-[10px] uppercase tracking-wider">Total Anticipos OC (Mes 1)</span>
+              <i data-lucide="badge-percent" class="w-4 h-4 text-amber-600"></i>
+            </div>
+            <div class="text-xl font-black text-amber-950">US$ ${fmt(report.cashflowEjecucion.totalAnticiposUSD)}</div>
+            <div class="text-[10px] text-amber-700 font-medium mt-1">Saldo de $${fmt(report.cashflowEjecucion.totalSaldoUSD)} prorrateado en cuotas</div>
+          </div>
+
+          <div class="bg-purple-50/60 border border-purple-200 rounded-xl p-3.5 shadow-2xs">
+            <div class="flex items-center justify-between text-purple-900 mb-1">
+              <span class="font-bold text-[10px] uppercase tracking-wider">Arrastre Ejercicios Futuros</span>
+              <i data-lucide="fast-forward" class="w-4 h-4 text-purple-600"></i>
+            </div>
+            <div class="text-xl font-black text-purple-950">US$ ${fmt(report.cashflowEjecucion.totalEjerciciosSiguientesUSD)}</div>
+            <div class="text-[10px] text-purple-700 font-medium mt-1">Compromisos plurianuales post-31/03</div>
+          </div>
+
+        </div>
+
+        <!-- GRÁFICO DE 12 BARRAS MENSUALES (ABRIL A MARZO) -->
+        <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50 mb-4 report-page-card">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-200">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="bar-chart-3" class="w-4 h-4 text-blue-600"></i>
+              <span class="text-xs font-bold text-slate-800">Curva de Caída del Gasto de Inversiones • Ejercicio Contable ${report.accountingInfo.label} (12 Meses)</span>
+            </div>
+            <div class="flex items-center space-x-3 text-[11px]">
+              <span class="inline-flex items-center space-x-1 text-blue-800 font-semibold">
+                <span class="w-2.5 h-2.5 rounded-xs bg-blue-600 inline-block"></span>
+                <span>Ya Pagado: <strong>US$ ${fmt(report.cashflowEjecucion.totalYaPagadoUSD)}</strong></span>
+              </span>
+              <span class="inline-flex items-center space-x-1 text-teal-800 font-semibold">
+                <span class="w-2.5 h-2.5 rounded-xs bg-teal-500 inline-block"></span>
+                <span>Proyectado a Pagar: <strong>US$ ${fmt(report.cashflowEjecucion.totalProyectadoUSD)}</strong></span>
+              </span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-6 sm:grid-cols-12 gap-1.5 pt-1">
+            ${report.accountingInfo.meses.map(m => {
+              const val = report.cashflowEjecucion.mesesTotales[m.key] || 0;
+              const pct = Math.min(100, Math.max(8, Math.round((val / maxMesVal) * 100)));
+              const barBg = m.isPast ? 'bg-blue-600' : 'bg-teal-500';
+              const badgeBg = m.isPast ? 'bg-blue-100 text-blue-800' : 'bg-teal-100 text-teal-800';
+              const statusLabel = m.isPast ? 'Pagado' : 'Proy.';
+
+              return `
+                <div class="flex flex-col items-center bg-white p-1.5 rounded-lg border border-slate-200/80 shadow-2xs">
+                  <span class="text-[10px] font-bold text-slate-700 uppercase">${m.label}</span>
+                  <span class="text-[8px] font-mono text-slate-400">${m.year}</span>
+                  
+                  <div class="w-full bg-slate-100 rounded-sm h-14 flex items-end my-1 p-0.5">
+                    <div class="w-full ${barBg} rounded-xs transition-all duration-300" style="height: ${pct}%" title="${m.label} ${m.year}: US$ ${fmt(val)}"></div>
+                  </div>
+
+                  <span class="text-[9px] font-bold font-mono text-slate-900 leading-none">$${fmt(val)}</span>
+                  <span class="text-[7px] font-semibold px-1 rounded mt-1 ${badgeBg}">${statusLabel}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- TABLA DETALLADA DE CASH FLOW POR OBRA EN CURSO -->
+        <div class="border border-slate-200 rounded-xl p-3 bg-white report-page-card">
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200">
+            <h3 class="font-black text-xs text-slate-900 flex items-center space-x-1.5">
+              <i data-lucide="layers" class="w-4 h-4 text-slate-600"></i>
+              <span>Detalle Contractual y Flujo por Obra en Curso (${report.cashflowEjecucion.displayList.length} proyectos)</span>
+            </h3>
+            <span class="text-[10px] text-slate-500">Anticipos absorbidos en Mes 1 • Saldo distribuido en meses restantes</span>
+          </div>
+
+          <div class="overflow-x-auto max-h-[220px] overflow-y-auto">
+            <table class="w-full text-left text-[11px] border-collapse">
+              <thead class="bg-slate-100 text-slate-700 font-semibold sticky top-0">
+                <tr>
+                  <th class="py-1.5 px-2">Cód</th>
+                  <th class="py-1.5 px-2">Proyecto & Contratista</th>
+                  <th class="py-1.5 px-2">Sede</th>
+                  <th class="py-1.5 px-2 text-right">Monto OC</th>
+                  <th class="py-1.5 px-2 text-center">Anticipo OC</th>
+                  <th class="py-1.5 px-2 text-center">Plazo</th>
+                  <th class="py-1.5 px-2 text-right">Ejercicio ${report.accountingInfo.label}</th>
+                  <th class="py-1.5 px-2 text-right">Ej. Siguientes</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                ${report.cashflowEjecucion.displayList.slice(0, 8).map(entry => {
+                  const x = entry.item;
+                  const cf = entry.cf;
+                  return `
+                    <tr class="hover:bg-slate-50 transition">
+                      <td class="py-1 px-2 font-mono font-bold text-blue-700">${x.id}</td>
+                      <td class="py-1 px-2">
+                        <div class="font-bold text-slate-800 max-w-[180px] truncate" title="${x.nombre}">${x.nombre}</div>
+                        <div class="text-[9px] text-slate-500 font-medium">${x.proveedor || 'Sin contratista registrado'}</div>
+                      </td>
+                      <td class="py-1 px-2 text-slate-600">${x.sede}</td>
+                      <td class="py-1 px-2 text-right font-mono font-bold text-slate-900">$${fmt(cf.montoTotalUSD)}</td>
+                      <td class="py-1 px-2 text-center">
+                        <span class="bg-amber-100 text-amber-900 font-bold px-1.5 py-0.5 rounded text-[9px]">
+                          ${cf.anticipoPct}% ($${fmt(cf.anticipoUSD)})
+                        </span>
+                      </td>
+                      <td class="py-1 px-2 text-center font-medium text-slate-700">
+                        ${cf.duracionMeses} m
+                      </td>
+                      <td class="py-1 px-2 text-right font-mono font-bold text-slate-900">
+                        <div>$${fmt(cf.ejercicioActualUSD)}</div>
+                        <div class="text-[9px] font-normal text-slate-500">Pag: $${fmt(cf.ejercicioActualPagadoUSD)} | Proy: $${fmt(cf.ejercicioActualProyectadoUSD)}</div>
+                      </td>
+                      <td class="py-1 px-2 text-right font-mono font-bold text-purple-700">
+                        ${cf.ejerciciosSiguientesUSD > 0 ? `$${fmt(cf.ejerciciosSiguientesUSD)}` : '-'}
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+              <tfoot>
+                <tr class="bg-slate-100 font-bold text-slate-900 border-t border-slate-200">
+                  <td colspan="3" class="py-2 px-2 uppercase text-[10px]">TOTALES OFICIALES (${report.cashflowEjecucion.totalObras} obras)</td>
+                  <td class="py-2 px-2 text-right font-black">$${fmt(report.cashflowEjecucion.totalCarteraUSD)}</td>
+                  <td class="py-2 px-2 text-center text-amber-900 font-black">$${fmt(report.cashflowEjecucion.totalAnticiposUSD)}</td>
+                  <td class="py-2 px-2 text-center text-slate-500 text-[10px]">Saldo: $${fmt(report.cashflowEjecucion.totalSaldoUSD)}</td>
+                  <td class="py-2 px-2 text-right font-black text-emerald-900">$${fmt(report.cashflowEjecucion.totalEjercicioActualUSD)}</td>
+                  <td class="py-2 px-2 text-right font-black text-purple-900">$${fmt(report.cashflowEjecucion.totalEjerciciosSiguientesUSD)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          ${report.cashflowEjecucion.displayList.length > 8 ? `
+            <div class="text-[10px] text-slate-400 text-right pt-1 mt-1 border-t border-slate-200">Mostrando 8 de ${report.cashflowEjecucion.displayList.length} obras en ejecución. Detalle completo disponible en el módulo interactivo y XLSX.</div>
           ` : ''}
         </div>
 
-        <!-- CUADRANTE 2: FACTIBILIDADES SIN PARTIDA (PENDIENTES DE DEFINICIÓN) -->
-        <div class="border border-amber-200 rounded-xl p-3.5 bg-amber-50/30 flex flex-col justify-between">
-          <div>
-            <div class="flex items-center justify-between pb-2 mb-2 border-b border-amber-200">
-              <h3 class="font-black text-xs text-amber-950 flex items-center space-x-1.5">
-                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                <span>Factibilidades sin Partida Asignada (${report.factibilidadSinPartida.total})</span>
-              </h3>
-              <span class="text-[10px] font-bold text-amber-800 font-mono">Solicitado: US$ ${fmt(report.factibilidadSinPartida.montoTotalUSD)}</span>
-            </div>
-
-            <div class="overflow-x-auto max-h-[190px] overflow-y-auto">
-              <table class="w-full text-[11px] text-left">
-                <thead class="bg-amber-100/60 text-amber-900 font-bold sticky top-0">
-                  <tr>
-                    <th class="py-1 px-1.5">Cód</th>
-                    <th class="py-1 px-1.5">Solicitud</th>
-                    <th class="py-1 px-1.5">Sede</th>
-                    <th class="py-1 px-1.5">Solicitante</th>
-                    <th class="py-1 px-1.5 text-right">Estimado USD</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-amber-100">
-                  ${report.factibilidadSinPartida.items.length === 0 ? `
-                    <tr><td colspan="5" class="py-3 text-center text-slate-400">No hay factibilidades pendientes de partida</td></tr>
-                  ` : report.factibilidadSinPartida.items.slice(0, 7).map(item => `
-                    <tr class="hover:bg-white transition">
-                      <td class="py-1 px-1.5 font-mono font-bold text-amber-700">${item.id}</td>
-                      <td class="py-1 px-1.5 font-bold text-slate-800 max-w-[170px] truncate" title="${item.nombre}">${item.nombre}</td>
-                      <td class="py-1 px-1.5 text-slate-600">${item.sede}</td>
-                      <td class="py-1 px-1.5 text-slate-500 text-[10px]">${item.creado_por || item.sector_solicitante || 'S/D'}</td>
-                      <td class="py-1 px-1.5 text-right font-mono font-bold text-amber-900">$${fmt(item.monto_total_usd || item.monto_obra_usd || 0)}</td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-            </div>
+        <!-- PIE INSTITUCIONAL PÁGINA 2 -->
+        <div class="pt-3 mt-4 border-t-2 border-slate-900 flex flex-col sm:flex-row items-center justify-between text-[10px] text-slate-500 gap-3 report-page-card">
+          <div class="flex items-center space-x-2">
+            <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
+            <span>SIGO HIBA • Período Contable 01/04 - 31/03 • Pág. 2 de 3: Cash Flow Oficial</span>
           </div>
-          <div class="text-[10px] text-amber-800 font-semibold pt-1 mt-1 border-t border-amber-200 flex justify-between items-center">
-            <span>⚠️ Requieren asignación de presupuesto por parte de Dirección</span>
-            <span class="text-slate-400 font-normal">Sin fondos asignados</span>
+          <div class="flex items-center space-x-6 text-slate-700 font-semibold">
+            <div class="border-t border-slate-400 pt-0.5 w-32 text-center text-[9px]">Dir. Finanzas</div>
+            <div class="border-t border-slate-400 pt-0.5 w-32 text-center text-[9px]">Dirección General</div>
           </div>
         </div>
 
-        <!-- CUADRANTE 3: DESVÍOS DE PARTIDAS (SOBRE Y SUB EJECUTADAS) -->
-        <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50 flex flex-col justify-between">
-          <div>
-            <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200">
-              <h3 class="font-black text-xs text-slate-900 flex items-center space-x-1.5">
-                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-                <span>Auditoría de Partidas: Sobre-ejecutadas vs Sub-ejecutadas</span>
-              </h3>
-              <span class="text-[10px] font-bold text-slate-500">Total: ${report.partidasDesvios.totalSobreEjecutadas + report.partidasDesvios.totalSubEjecutadas} con desvío</span>
-            </div>
+      </div>
 
-            <div class="overflow-x-auto max-h-[190px] overflow-y-auto">
-              <table class="w-full text-[11px] text-left">
-                <thead class="bg-slate-200/60 text-slate-600 font-bold sticky top-0">
-                  <tr>
-                    <th class="py-1 px-1.5">Partida</th>
-                    <th class="py-1 px-1.5">Obra / Proyecto</th>
-                    <th class="py-1 px-1.5 text-right">Asignado</th>
-                    <th class="py-1 px-1.5 text-right">Requerido</th>
-                    <th class="py-1 px-1.5 text-right">Desvío USD</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-200">
-                  ${(report.partidasDesvios.sobreEjecutadas.concat(report.partidasDesvios.subEjecutadas)).length === 0 ? `
-                    <tr><td colspan="5" class="py-3 text-center text-slate-400">Todas las partidas coinciden exactamente con el costo requerido</td></tr>
-                  ` : (report.partidasDesvios.sobreEjecutadas.concat(report.partidasDesvios.subEjecutadas)).slice(0, 6).map(item => {
-                    const isDeficit = item.deficit_usd > 0;
-                    return `
-                      <tr class="hover:bg-white transition">
-                        <td class="py-1 px-1.5 font-mono font-bold text-slate-700">${item.partida}</td>
-                        <td class="py-1 px-1.5 font-semibold text-slate-800 max-w-[150px] truncate" title="${item.nombre}">${item.id} - ${item.nombre}</td>
-                        <td class="py-1 px-1.5 text-right font-mono text-slate-600">$${fmt(item.monto_partida_usd)}</td>
-                        <td class="py-1 px-1.5 text-right font-mono text-slate-600">$${fmt(item.costo_requerido_usd)}</td>
-                        <td class="py-1 px-1.5 text-right font-mono font-bold ${isDeficit ? 'text-rose-600' : 'text-emerald-600'}">
-                          ${isDeficit ? `-$${fmt(item.deficit_usd)}` : `+$${fmt(item.superavit_usd)}`}
-                        </td>
-                      </tr>
-                    `;
-                  }).join('')}
-                </tbody>
-              </table>
+      <!-- SALTO DE PÁGINA A4 PARA PDF E IMPRESIÓN -->
+      <div class="html2pdf__page-break my-6 border-b-2 border-dashed border-slate-300"></div>
+
+      <!-- ========================================================================= -->
+      <!-- PÁGINA 3: PLANIFICACIÓN PLURIANUAL, ANÁLISIS TERRITORIAL Y FIRMAS          -->
+      <!-- ========================================================================= -->
+      <div class="report-page report-page-3 bg-white p-5 sm:p-6 rounded-xl border border-slate-200 shadow-sm print:border-none print:shadow-none print:p-0">
+        
+        <!-- MEMBRETE OFICIAL PÁGINA 3 -->
+        <div class="border-b-2 border-slate-900 pb-3 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center space-x-3.5">
+            <img src="img/logo-hospital-italiano-icon.png" alt="Hospital Italiano" class="w-12 h-12 object-contain shrink-0">
+            <div>
+              <h1 class="text-base font-black text-slate-900 tracking-tight leading-none uppercase">Hospital Italiano de Buenos Aires</h1>
+              <h2 class="text-xs font-bold text-blue-900 mt-1">Comité Directivo • Auditoría y Control de Gestión</h2>
+              <div class="text-[10px] text-slate-500 font-mono mt-0.5">PLANIFICACIÓN PLURIANUAL, ANÁLISIS TERRITORIAL Y DICTAMEN DE CERTIFICACIÓN</div>
             </div>
           </div>
-          <div class="text-[10px] text-slate-500 pt-1 mt-1 border-t border-slate-200 flex justify-between">
-            <span class="text-rose-700 font-bold">Rojo: Partida Corta (Ampliación)</span>
-            <span class="text-emerald-700 font-bold">Verde: Remanente Liberable</span>
+          <div class="sm:text-right text-xs">
+            <div class="flex sm:justify-end items-center space-x-1.5 mb-0.5">
+              <span class="bg-indigo-100 text-indigo-900 border border-indigo-300 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">Auditoría Final</span>
+              <span class="bg-purple-100 text-purple-900 text-[9px] font-bold px-2 py-0.5 rounded-full">Pág 3 de 3 • Certificación</span>
+            </div>
+            <div class="text-[11px] text-slate-700">Estado de Cartera: <strong>Consolidada</strong></div>
+            <div class="text-[10px] text-slate-500">Dictamen con validez ejecutiva</div>
           </div>
         </div>
 
-        <!-- CUADRANTE 4: CONSOLIDADO DE CASHFLOW PLURIANUAL -->
-        <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50 flex flex-col justify-between">
-          <div>
+        <!-- 4 BLOQUES DE ANÁLISIS ESTRATÉGICO -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 report-page-card">
+
+          <!-- BLOQUE 1: ANÁLISIS TERRITORIAL (SEDES) -->
+          <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50">
             <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200">
               <h3 class="font-black text-xs text-slate-900 flex items-center space-x-1.5">
-                <span class="w-2 h-2 rounded-full bg-teal-600"></span>
-                <span>Curva de Cashflow Plurianual Consolidado (2026-2029)</span>
+                <i data-lucide="map-pin" class="w-4 h-4 text-blue-600"></i>
+                <span>Distribución Territorial por Sede (En Ejecución)</span>
               </h3>
-              <span class="text-[10px] font-bold text-teal-800 font-mono">Total Cartera: US$ ${fmt(report.cashflow.totalGlobal)}</span>
+              <span class="text-[10px] font-bold text-slate-500">100% Cartera</span>
             </div>
 
-            <!-- Tabla de Flujo Financiero -->
-            <div class="space-y-2 pt-1">
-              ${[
-                { anio: '2026', monto: report.cashflow.c2026, color: 'bg-blue-600' },
-                { anio: '2027', monto: report.cashflow.c2027, color: 'bg-indigo-600' },
-                { anio: '2028', monto: report.cashflow.c2028, color: 'bg-teal-600' },
-                { anio: '2029+', monto: report.cashflow.c2029, color: 'bg-emerald-600' }
-              ].map(cf => {
-                const pct = report.cashflow.totalGlobal > 0 ? (cf.monto / report.cashflow.totalGlobal * 100) : 0;
+            <div class="space-y-2.5 pt-1">
+              ${['Central', 'San Justo', 'Periféricos'].map(s => {
+                const val = report.desgloseSedes[s] || 0;
+                const pct = Math.round((val / totCartera) * 100);
                 return `
                   <div>
-                    <div class="flex justify-between text-[11px] mb-0.5">
-                      <span class="font-bold text-slate-700">Año ${cf.anio}</span>
-                      <span class="font-mono font-bold text-slate-900">US$ ${fmt(cf.monto)} <span class="text-[10px] text-slate-400 font-normal">(${pct.toFixed(1)}%)</span></span>
+                    <div class="flex justify-between text-[11px] mb-0.5 font-bold">
+                      <span class="text-slate-700">Sede ${s}</span>
+                      <span class="text-slate-900 font-mono">US$ ${fmt(val)} <span class="text-slate-400 font-normal">(${pct}%)</span></span>
                     </div>
                     <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
-                      <div class="${cf.color} h-2 rounded-full" style="width: ${pct}%"></div>
+                      <div class="bg-blue-600 h-2 rounded-full" style="width: ${pct}%"></div>
                     </div>
                   </div>
                 `;
               }).join('')}
             </div>
           </div>
-          
-          <div class="text-[10px] text-slate-500 pt-2 mt-2 border-t border-slate-200 flex justify-between items-center">
-            <span>Flujo proyectado por compromisos contractuales</span>
-            <span class="font-bold text-slate-800">100.0% Distribuido</span>
+
+          <!-- BLOQUE 2: ESPECIALIDAD / MÓDULO -->
+          <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50">
+            <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200">
+              <h3 class="font-black text-xs text-slate-900 flex items-center space-x-1.5">
+                <i data-lucide="layers" class="w-4 h-4 text-purple-600"></i>
+                <span>Distribución por Especialidad / Módulo</span>
+              </h3>
+              <span class="text-[10px] font-bold text-slate-500">Civil vs Infra</span>
+            </div>
+
+            <div class="space-y-2.5 pt-1">
+              ${[
+                { label: 'Obras Civiles (Edilicias / Arquitectura)', key: 'Obra Civil', color: 'bg-blue-600' },
+                { label: 'Infraestructura (Electromecánica / Gases / Redes)', key: 'Infraestructura', color: 'bg-purple-600' }
+              ].map(m => {
+                const val = report.desgloseModulos[m.key] || 0;
+                const pct = Math.round((val / totCartera) * 100);
+                return `
+                  <div>
+                    <div class="flex justify-between text-[11px] mb-0.5 font-bold">
+                      <span class="text-slate-700">${m.label}</span>
+                      <span class="text-slate-900 font-mono">US$ ${fmt(val)} <span class="text-slate-400 font-normal">(${pct}%)</span></span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                      <div class="${m.color} h-2 rounded-full" style="width: ${pct}%"></div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          <!-- BLOQUE 3: CONTROL DE SEMÁFOROS Y PLAZOS CONTRACTUALES -->
+          <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50">
+            <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200">
+              <h3 class="font-black text-xs text-slate-900 flex items-center space-x-1.5">
+                <i data-lucide="clock" class="w-4 h-4 text-amber-600"></i>
+                <span>Semáforos de Plazos Contractuales</span>
+              </h3>
+              <span class="text-[10px] text-slate-500">Alerta 15% final</span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 pt-1 text-center">
+              <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-2">
+                <span class="text-[10px] font-bold text-emerald-800 uppercase block">En Plazo</span>
+                <span class="text-lg font-black text-emerald-950">${report.semaforos.en_plazo}</span>
+                <span class="text-[9px] text-emerald-600 block">Cronograma OK</span>
+              </div>
+              <div class="bg-amber-50 border border-amber-200 rounded-lg p-2">
+                <span class="text-[10px] font-bold text-amber-800 uppercase block">Por Vencer</span>
+                <span class="text-lg font-black text-amber-950">${report.semaforos.por_vencer}</span>
+                <span class="text-[9px] text-amber-700 block">Último 15% plazo</span>
+              </div>
+              <div class="bg-rose-50 border border-rose-200 rounded-lg p-2">
+                <span class="text-[10px] font-bold text-rose-800 uppercase block">Vencidos</span>
+                <span class="text-lg font-black text-rose-950">${report.semaforos.vencido}</span>
+                <span class="text-[9px] text-rose-700 block">Excedieron fecha</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- BLOQUE 4: IMPACTO PLURIANUAL DE LA CARTERA -->
+          <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50">
+            <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200">
+              <h3 class="font-black text-xs text-slate-900 flex items-center space-x-1.5">
+                <i data-lucide="trending-up" class="w-4 h-4 text-emerald-600"></i>
+                <span>Impacto Plurianual de Inversiones</span>
+              </h3>
+              <span class="text-[10px] font-bold text-slate-500">Ejercicio vs Arrastre</span>
+            </div>
+
+            <div class="space-y-2 pt-1 text-[11px]">
+              <div class="flex justify-between font-bold">
+                <span class="text-slate-700">Ejercicio Actual (${report.accountingInfo.label}):</span>
+                <span class="text-emerald-800 font-mono">US$ ${fmt(report.cashflowEjecucion.totalEjercicioActualUSD)} (${Math.round((report.cashflowEjecucion.totalEjercicioActualUSD / totCartera) * 100)}%)</span>
+              </div>
+              <div class="flex justify-between font-bold">
+                <span class="text-slate-700">Arrastre Ejercicios Siguientes (Post-31/03):</span>
+                <span class="text-purple-800 font-mono">US$ ${fmt(report.cashflowEjecucion.totalEjerciciosSiguientesUSD)} (${Math.round((report.cashflowEjecucion.totalEjerciciosSiguientesUSD / totCartera) * 100)}%)</span>
+              </div>
+              <div class="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden flex mt-2">
+                <div class="bg-emerald-600 h-2.5" style="width: ${Math.round((report.cashflowEjecucion.totalEjercicioActualUSD / totCartera) * 100)}%"></div>
+                <div class="bg-purple-600 h-2.5" style="width: ${Math.round((report.cashflowEjecucion.totalEjerciciosSiguientesUSD / totCartera) * 100)}%"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- DICTAMEN FORMAL DE CERTIFICACIÓN INSTITUCIONAL -->
+        <div class="border-2 border-slate-800 rounded-xl p-4 bg-slate-50 mb-4 report-page-card">
+          <div class="flex items-center space-x-2 text-slate-900 font-black text-xs mb-1 uppercase tracking-wider">
+            <i data-lucide="award" class="w-4 h-4 text-blue-700"></i>
+            <span>Dictamen Oficial de Auditoría y Certificación de Inversiones</span>
+          </div>
+          <p class="text-[11px] text-slate-700 leading-relaxed text-justify">
+            Se certifica formalmente que el presente informe de 3 páginas emitido por el <strong>Sistema Integral de Gestión de Obras (SIGO HIBA)</strong> consolida fielmente la totalidad de obras activas en curso valuadas en <strong>US$ ${fmt(report.cashflowEjecucion.totalCarteraUSD)}</strong>, con una afectación financiera para el ejercicio contable oficial <strong>${report.accountingInfo.label}</strong> (01/04 al 31/03) por <strong>US$ ${fmt(report.cashflowEjecucion.totalEjercicioActualUSD)}</strong>, y un arrastre para ejercicios subsiguientes por <strong>US$ ${fmt(report.cashflowEjecucion.totalEjerciciosSiguientesUSD)}</strong>. Los anticipos pactados en órdenes de compra y los saldos mensuales fueron distribuidos según las pautas contractuales de la Institución.
+          </p>
+        </div>
+
+        <!-- CASILLEROS DE FIRMAS FORMALES -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 pb-2 report-page-card">
+          <div class="border-t-2 border-slate-700 pt-2 text-center">
+            <div class="text-xs font-bold text-slate-900">Control Presupuestario & Partidas</div>
+            <div class="text-[10px] text-slate-500">Dirección de Infraestructura</div>
+            <div class="text-[9px] text-slate-400 font-mono mt-2">Firma y Sello</div>
+          </div>
+          <div class="border-t-2 border-slate-700 pt-2 text-center">
+            <div class="text-xs font-bold text-slate-900">Dirección de Compras & Contrataciones</div>
+            <div class="text-[10px] text-slate-500">Administración General</div>
+            <div class="text-[9px] text-slate-400 font-mono mt-2">Firma y Sello</div>
+          </div>
+          <div class="border-t-2 border-slate-700 pt-2 text-center">
+            <div class="text-xs font-bold text-slate-900">Dirección General / Consejo Directivo</div>
+            <div class="text-[10px] text-slate-500">Hospital Italiano de Buenos Aires</div>
+            <div class="text-[9px] text-slate-400 font-mono mt-2">Firma y Sello</div>
           </div>
         </div>
 
-      </div>
+        <!-- PIE INSTITUCIONAL PÁGINA 3 -->
+        <div class="pt-3 mt-4 border-t-2 border-slate-900 flex flex-col sm:flex-row items-center justify-between text-[10px] text-slate-500 gap-3 report-page-card">
+          <div class="flex items-center space-x-2">
+            <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i>
+            <span>SIGO HIBA • Documento oficial auditado • Pág. 3 de 3: Planificación, Auditoría y Firmas</span>
+          </div>
+          <div class="text-[9px] text-slate-400 font-mono">
+            ID Emisión: HIBA-DIR-${report.accountingInfo.startYear}-${new Date().getTime().toString().slice(-6)}
+          </div>
+        </div>
 
-      <!-- PIE INSTITUCIONAL DE AUDITORÍA Y FIRMAS -->
-      <div class="pt-3 border-t-2 border-slate-900 flex flex-col sm:flex-row items-center justify-between text-[10px] text-slate-500 gap-3">
-        <div class="flex items-center space-x-2">
-          <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
-          <span>Documento emitido formalmente por el Sistema SIGO HIBA. Válido para comités de Dirección y Auditoría Interna.</span>
-        </div>
-        <div class="flex items-center space-x-6 text-slate-700 font-semibold">
-          <div class="border-t border-slate-400 pt-0.5 w-32 text-center text-[9px]">Dir. Infraestructura</div>
-          <div class="border-t border-slate-400 pt-0.5 w-32 text-center text-[9px]">Dirección General</div>
-        </div>
       </div>
     `;
 
@@ -2957,17 +3435,18 @@ const App = {
       return;
     }
 
-    this.showToast('⏳ Generando PDF Oficial del Informe Ejecutivo...');
+    this.showToast('⏳ Generando PDF Oficial del Informe Ejecutivo (3 Páginas A4)...');
     const opt = {
-      margin:       [6, 8, 6, 8],
-      filename:     `Informe_Ejecutivo_Direccion_HIBA_${new Date().toISOString().slice(0, 10)}.pdf`,
+      margin:       [4, 6, 4, 6],
+      filename:     `Informe_Ejecutivo_Direccion_HIBA_3Paginas_${new Date().toISOString().slice(0, 10)}.pdf`,
       image:        { type: 'jpeg', quality: 0.98 },
       html2canvas:  { scale: 2, useCORS: true, logging: false },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
+      pagebreak:    { mode: ['css', 'legacy'], after: '.report-page', avoid: '.report-page-card' }
     };
 
     html2pdf().set(opt).from(element).save().then(() => {
-      App.showToast('✅ PDF Oficial descargado correctamente.');
+      App.showToast('✅ PDF Oficial de 3 Páginas descargado correctamente.');
     }).catch(err => {
       console.error('Error generando PDF:', err);
       window.print();
@@ -3764,8 +4243,36 @@ const App = {
     setVal('modalObraPrioridadFin', pond.valor || 1);
     setVal('modalObraObservaciones', item.observaciones || '');
 
+    // Condiciones de Contratación y Anticipo OC
+    const panelContratacion = document.getElementById('modalObraContratacionPanel');
+    if (panelContratacion) {
+      setVal('modalObraMontoAdjudicado', item.monto_adjudicado_usd || item.monto_total_usd || montoObra || 0);
+      setVal('modalObraAnticipoPct', (item.anticipo_porcentaje !== undefined && item.anticipo_porcentaje !== null) ? item.anticipo_porcentaje : 0);
+      setVal('modalObraPlazoMeses', item.plazo_meses || '');
+      this.handleModalAnticipoChange();
+    }
+
     // Calcular instantáneamente precio por m2 y actualizar desglose con signos
     this.calculateModalUsdM2();
+  },
+
+  handleModalAnticipoChange() {
+    const elMonto = document.getElementById('modalObraMontoAdjudicado');
+    const elPct = document.getElementById('modalObraAnticipoPct');
+    const elUSD = document.getElementById('modalObraAnticipoUSD');
+    const badge = document.getElementById('modalObraAnticipoInfoBadge');
+
+    const monto = parseFloat(elMonto ? elMonto.value : 0) || 0;
+    const pct = Math.min(100, Math.max(0, parseFloat(elPct ? elPct.value : 0) || 0));
+    const anticipoUSD = Math.round((monto * (pct / 100)) * 100) / 100;
+    const saldoUSD = Math.round((monto - anticipoUSD) * 100) / 100;
+
+    if (elUSD) elUSD.value = `USD ${DataStore.formatUSD(anticipoUSD)}`;
+    if (badge) {
+      badge.innerText = pct > 0 
+        ? `Anticipo OC: ${pct}% (USD ${DataStore.formatUSD(anticipoUSD)}) • Saldo Restante: USD ${DataStore.formatUSD(saldoUSD)}`
+        : `Sin anticipo pactado en OC (100% distribuido uniformemente)`;
+    }
   },
 
   handleModalResponsableSelectChange(val) {
@@ -4346,6 +4853,20 @@ const App = {
     item.fecha_fin_obra = newFechaFinGlobal;
     item.prioridad_tecnica = parseFloat(getVal('modalObraPrioridadTec')) || 1;
     item.prioridad_medica = parseFloat(getVal('modalObraPrioridadMed')) || null;
+
+    // Anticipo en Orden de Compra y Plazo de Ejecución
+    const inputAnticipoPct = document.getElementById('modalObraAnticipoPct');
+    if (inputAnticipoPct) {
+      const aPct = Math.min(100, Math.max(0, parseFloat(inputAnticipoPct.value) || 0));
+      item.anticipo_porcentaje = aPct;
+      const baseMonto = item.monto_adjudicado_usd || newMontoTotal;
+      item.anticipo_monto_usd = Math.round((baseMonto * (aPct / 100)) * 100) / 100;
+    }
+    const inputPlazoMeses = document.getElementById('modalObraPlazoMeses');
+    if (inputPlazoMeses && inputPlazoMeses.value) {
+      const pMeses = parseInt(inputPlazoMeses.value, 10) || 0;
+      if (pMeses > 0) item.plazo_meses = pMeses;
+    }
 
     const pond = DataStore.getPonderacionGlobal(item);
     item.prioridad_final = pond.valor;

@@ -191,3 +191,56 @@ El flujo de avance de cada obra se rige por la siguiente secuencia canónica:
    - Políticas RLS (Row Level Security) estrictas en PostgreSQL.
 4. **Cierre de Sesión por Inactividad:**
    - Temporizador de 30 minutos de inactividad que cierra la sesión activa automáticamente y devuelve al usuario a la pantalla de acceso institucional.
+
+---
+
+## 7. REGLA CANÓNICA DE CASH FLOW DE OBRAS EN CURSO Y PERÍODO CONTABLE (01/04 - 31/03)
+
+### 7.1. Exclusividad Estricta de Obras Activas en Curso
+- **Alcance del Cash Flow:** El flujo financiero institucional computa **única y exclusivamente** las obras activas en ejecución (`estado === 'Obras en Curso'`).
+- **Exclusión Absoluta:** Las obras en *Estudio de Factibilidad*, *Ante Proyecto*, *Proyecto*, *En licitación* o *Suspendidas* **NO aparecen ni computan en el Cash Flow**, evitando distorsiones financieras causadas por iniciativas no adjudicadas o capital inmovilizado.
+
+### 7.2. Anticipo de Orden de Compra (%) y Distribución del Saldo
+- **Captura en Adjudicación:** Al adjudicar la compulsa, el Comprador registra:
+  - Proveedor adjudicatario.
+  - Monto adjudicado total en USD.
+  - **Porcentaje de Anticipo (%)** pactado contractualmente en la Orden de Compra (OC).
+  - **Plazo de Ejecución en Meses ($N$).**
+- **Algoritmo de Caída del Flujo:**
+  - **Mes 1 (Desembolso Inicial):** Absorbe íntegramente el anticipo pactado:
+    $$\text{Anticipo USD} = \text{Monto Total} \times \frac{\text{Porcentaje Anticipo}}{100}$$
+  - **Meses 2 a $N$ ($N - 1$ meses restantes):** El saldo remanente se distribuye de manera estrictamente uniforme:
+    $$\text{Saldo USD} = \text{Monto Total} - \text{Anticipo USD}$$
+    $$\text{Cuota Mensual} = \frac{\text{Saldo USD}}{N - 1}$$
+  - **Caso Testigo:** Para una obra de USD 1.000.000 a 10 meses con 30% de anticipo: Mes 1 = USD 300.000; Meses 2 a 10 = USD 77.777,78 cada mes.
+
+### 7.3. Período Contable Oficial del HIBA (01/04 al 31/03)
+- **Ciclo Fiscal Institucional:** El ejercicio económico hospitalario inicia el 1° de Abril y finaliza el 31 de Marzo del año siguiente (12 meses: Abr, May, Jun, Jul, Ago, Sep, Oct, Nov, Dic, Ene, Feb, Mar).
+- **Tratamiento de Ejercicios:**
+  - **Ejercicios Anteriores ($< \text{01/04}$):** Se **excluyen formalmente** de la curva de cash flow del ejercicio actual para no arrastrar gastos devengados en períodos cerrados.
+  - **Ejercicio en Curso:** Se computa mes a mes diferenciando lo **Ya Pagado** (meses transcurridos) de lo **Proyectado a Pagar** (mes en curso y meses subsiguientes).
+  - **Ejercicios Siguientes ($> \text{31/03}$):** Se totalizan como **Arrastre Plurianual Futuro**, exponiendo con claridad el impacto presupuestario que trasciende al ejercicio vigente.
+
+---
+
+## 8. INFORME OFICIAL A LA DIRECCIÓN GENERAL (3 PÁGINAS A4 LANDSCAPE)
+
+El reporte ejecutivo para comités de Dirección, Finanzas y Auditoría fue rediseñado y estandarizado en un formato de **3 Páginas A4 horizontales**, optimizado para visualización web interactiva, impresión física y exportación a PDF:
+
+1. **Página 1 — Resumen Ejecutivo & Estado General de Cartera:**
+   - Membrete oficial del Hospital Italiano de Buenos Aires con sello institucional de auditoría.
+   - 4 KPIs C-Level: Obras en Ejecución, Factibilidades sin Partida, Desvíos Presupuestarios en Partidas y Obras Suspendidas.
+   - Cuadrante de Obras en Curso con montos y avance físico ponderado.
+   - Cuadrante de Factibilidades en Espera con criticidades técnicas y médicas.
+   - Auditoría de Partidas Presupuestarias con desglose de sobre-ejecutadas (déficit) y sub-ejecutadas (remanente liberable).
+2. **Página 2 — Cash Flow Oficial de Obras en Curso (01/04 a 31/03):**
+   - 4 KPIs Financieros: Cartera en Curso, Presupuesto Ejercicio (Pagado vs Proyectado), Total Anticipos OC (Mes 1) y Arrastre Ejercicios Futuros.
+   - Gráfico de barras de 12 meses (Abril a Marzo) con la curva mensual de caída del gasto de inversiones, coloreando en azul sólido lo pagado y en verde azulado lo proyectado.
+   - Tabla detallada por obra en ejecución con anticipo OC (Mes 1), plazo, saldo mensual y afectación al ejercicio.
+3. **Página 3 — Planificación Plurianual, Análisis Territorial y Certificación:**
+   - Análisis Territorial por Sede: Central, San Justo y Centros Periféricos.
+   - Distribución por Especialidad / Módulo: Obra Civil vs Infraestructura Hospitalaria.
+   - Control de Semáforos Contractuales y alertas del 15% final del plazo.
+   - Dictamen Institucional de Auditoría y Certificación de Inversiones con validez ejecutiva.
+   - Casilleros formales para 3 firmas: Responsable de Partidas, Director de Compras/Contrataciones y Dirección General / Consejo Directivo.
+
