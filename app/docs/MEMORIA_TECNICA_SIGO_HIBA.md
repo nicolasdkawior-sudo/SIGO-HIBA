@@ -393,4 +393,34 @@ En pantallas estrechas, tablas de gestión complejas con múltiples columnas de 
   3. Selector de Dependencia en la Ficha de Obra (`#modalObraDependenciaSelect`).
   4. Filtros de visualización por dependencia en el Tablero Principal y en la Asignación de Obras.
 
+---
+
+## 14. CONCILIACIÓN FIDEDIGNA DE CARTERA: TOTAL UNIVERSO HOSPITAL (221 OBRAS) VS. CARTERA ACTIVA (94 / 97 PROYECTOS) Y ALCANCE DE ROLES
+
+### 14.1. Fundamentación Matemática y Reconciliación Auditada
+Para garantizar máxima transparencia y certeza entre todas las vistas de SIGO HIBA:
+1. **Universo Maestro Total del Hospital Italiano (221 Obras - USD 58,433,749.23):**
+   - Corresponde a la totalidad de registros históricos y vigentes del archivo oficial de seguimiento (`Seguimiento_Obras_HIBA_2025.xlsx`).
+   - Desglose exhaustivo por estado:
+     * **En Proyecto:** 53 obras (USD 20,102,952.29).
+     * **En Licitación:** 16 obras (USD 3,809,000.00).
+     * **Obras en Curso:** 25 obras (USD 6,932,577.00).
+     * **Estudio de Factibilidad / Ante Proyecto:** 94 obras (USD 20,183,232.00) - obras en análisis preliminar sin partida presupuestaria.
+     * **Obras Finalizadas:** 24 obras (USD 1,817,687.94) - obras concluidas.
+     * **Obras Suspendidas:** 7 obras (USD 5,588,300.00) - obras congeladas temporalmente.
+     * **Conciliación Total:** $53 + 16 + 25 + 94 + 24 + 7 = \mathbf{221\ obras}$.
+
+2. **Cartera Activa en Pantalla Principal (94 Proyectos Base / 97 en Sesión Activa):**
+   - Mide de forma estricta y deliberada las inversiones con compromiso firme de ejecución: `Proyecto` + `En licitación` + `Obras en Curso` ($53 + 16 + 25 = \mathbf{94\ obras}$, USD 30,844,529.29).
+   - En sesiones con obras avanzadas desde Factibilidad mediante asignación presupuestaria, asciende a 97 proyectos activos (USD 30,569,529.29).
+   - Excluye deliberadamente Factibilidad (sin partida asignada), Finalizadas y Suspendidas.
+
+### 14.2. Alcance por Rol en el Panel de Administración de Usuarios
+- **Rol Administrador (`admin` / `nicolas`):**
+  - Posee por estatuto institucional la supervisión, control y auditoría del 100% de las obras de la institución.
+  - La interfaz de usuario refleja con claridad técnica: `Supervisión Total (221 obras)` con insignia distintiva púrpura y tooltip explicativo, evitando cualquier confusión con una asignación operativa personal de jefatura de obra.
+- **Roles Operativos (Jefes de Obra / PM, Compradores):**
+  - Reflejan su volumen exacto de proyectos asignados a su cargo (ej. Arq. Palmioli: 8 obras; Ing. Waldemar: 14 obras; Arq. Cossano: 3 obras; Compras: 16 obras; etc.).
+
+
 
