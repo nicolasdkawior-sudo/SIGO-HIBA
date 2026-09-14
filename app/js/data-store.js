@@ -907,8 +907,8 @@ const DataStore = {
         msg: `⛔ Acceso Denegado: No tienes autorización para avanzar esta obra en su etapa actual.` 
       };
     }
-    if (this.currentUser.solo_lectura || this.currentUser.rol === 'visualizador' || !this.currentUser.puede_avanzar) {
-      return { success: false, msg: '⛔ Acceso Denegado: Tu rol no tiene permiso para certificar ni avanzar etapas' };
+    if (this.currentUser.solo_lectura || this.currentUser.rol === 'visualizador') {
+      return { success: false, msg: '⛔ Acceso Denegado: Tu perfil es de solo lectura y no tiene autorización para avanzar etapas.' };
     }
 
     const currentStage = item.estado;
@@ -1649,7 +1649,6 @@ const DataStore = {
   canUserAdvanceItem(item) {
     if (!this.currentUser || !item) return false;
     if (this.currentUser.solo_lectura || this.currentUser.rol === 'visualizador') return false;
-    if (this.currentUser.puede_avanzar === false) return false;
     if (this.isAdmin()) return true;
 
     // Si la obra está en Estudio de Factibilidad:
@@ -1657,6 +1656,8 @@ const DataStore = {
     if (item.estado === 'Estudio de Factibilidad' || item.estado === 'Ante Proyecto') {
       return Boolean(this.currentUser.puede_asignar_partida || this.currentUser.rol === 'admin' || this.currentUser.rol === 'direccion_medica');
     }
+
+    if (this.currentUser.puede_avanzar === false) return false;
 
     // Si la obra está en etapa 'En licitación':
     // Solo el comprador (rol 'licitaciones') o el Admin pueden certificar la adjudicación

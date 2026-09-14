@@ -1689,9 +1689,7 @@ const App = {
     const item = DataStore.getItemById(id);
     if (!item) return;
 
-    const u = DataStore.currentUser;
-    const isAdmin = DataStore.isAdmin();
-    if (!u || u.solo_lectura || u.rol === 'visualizador' || !u.puede_avanzar) {
+    if (!u || u.solo_lectura || u.rol === 'visualizador' || (!u.puede_avanzar && !u.puede_asignar_partida)) {
       alert("⛔ Acceso Denegado: Tu perfil es de solo lectura y no tiene autorización para avanzar etapas.");
       return;
     }
@@ -3327,7 +3325,7 @@ const App = {
       return true;
     } else {
       if (lockoutBox) lockoutBox.classList.add('hidden');
-      if (submitBtn && !submitBtn.dataset.busy) {
+      if (submitBtn && !(submitBtn.dataset && submitBtn.dataset.busy)) {
         submitBtn.disabled = false;
         if (!submitBtn.innerHTML.includes('arrow-right')) {
           submitBtn.innerHTML = '<span>Ingresar al Sistema</span><i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>';
@@ -3403,6 +3401,7 @@ const App = {
     }
 
     if (submitBtn) {
+      if (!submitBtn.dataset) submitBtn.dataset = {};
       submitBtn.dataset.busy = 'true';
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<span>Verificando credenciales...</span>';
@@ -3461,7 +3460,7 @@ const App = {
       }
     } finally {
       if (submitBtn) {
-        delete submitBtn.dataset.busy;
+        if (submitBtn.dataset) delete submitBtn.dataset.busy;
         if (!SecurityManager.isLocked() && !DataStore.currentUser) {
           submitBtn.disabled = false;
           submitBtn.innerHTML = '<span>Ingresar al Sistema</span><i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>';
