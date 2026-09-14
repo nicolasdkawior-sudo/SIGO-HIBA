@@ -1050,6 +1050,11 @@ const App = {
             <span class="px-2 py-0.5 text-[11px] rounded border ${pond.colorClass} block text-center font-bold">
               ${pond.valor}★ ${pond.esCritico ? 'CRÍTICO' : ''}
             </span>
+            ${item.prioridad_medica_ponderada_default ? `
+              <span class="text-[9px] text-amber-800 bg-amber-50 border border-amber-300 px-1 py-0.2 rounded font-bold block text-center mt-1" title="Criticidad médica ponderada por default por no contar con criticidad de Dirección">
+                Default (Médica = Técnica)
+              </span>
+            ` : ''}
           </td>
           <td class="py-3 px-4">
             <span class="px-2.5 py-1 text-xs font-semibold rounded-md ${sem.class}">${sem.label}</span>
@@ -1506,6 +1511,16 @@ const App = {
     const defMonto = item.monto_partida_usd || item.monto_total_usd || item.monto_obra_usd || (item.cashflow ? item.cashflow.monto_total : '') || '';
     document.getElementById('inputMontoPartida').value = (defMonto > 0) ? defMonto : '';
 
+    // Mostrar prioridad técnica de referencia y pre-cargar prioridad médica
+    const spanTec = document.getElementById('spanPrioridadTecnicaVal');
+    const pTec = item.prioridad_tecnica || 3;
+    if (spanTec) spanTec.innerText = `${pTec}★ (${DataStore.getNivelPrioridadLabel(pTec)})`;
+
+    const selMed = document.getElementById('inputPrioridadMedicaPartida');
+    if (selMed) {
+      selMed.value = (!item.prioridad_medica_ponderada_default && item.prioridad_medica) ? String(item.prioridad_medica) : '';
+    }
+
     document.getElementById('modalAsignarPartida').classList.remove('hidden');
     this.checkPartidaCortaModalAsignar();
     if (window.lucide) lucide.createIcons();
@@ -1542,6 +1557,7 @@ const App = {
     const id = document.getElementById('partidaItemId').value;
     const num = document.getElementById('inputNumeroPartida').value.trim();
     const monto = document.getElementById('inputMontoPartida').value.trim();
+    const pMed = document.getElementById('inputPrioridadMedicaPartida')?.value || null;
 
     const montoVal = DataStore.parseCurrency(monto);
     if (!monto || montoVal <= 0) {
@@ -1549,11 +1565,14 @@ const App = {
       return;
     }
 
-    const res = DataStore.asignarPartidaPresupuestaria(id, num, monto);
+    const res = DataStore.asignarPartidaPresupuestaria(id, num, monto, pMed);
     if (res.success) {
       this.closeAsignarPartidaModal();
       this.render();
-      this.showToast(`Partida N° ${res.partida} asignada por ${DataStore.formatUSD(res.monto_partida_usd)}. Habilitada para Proyecto.`);
+      const defaultNote = res.prioridad_medica_ponderada_default
+        ? ' [Criticidad médica ponderada por default igual a técnica por no contar con criticidad de Dirección]'
+        : '';
+      this.showToast(`Partida N° ${res.partida} asignada por ${DataStore.formatUSD(res.monto_partida_usd)}${defaultNote}. Habilitada para Proyecto.`);
     } else {
       alert(res.msg);
     }
@@ -1639,6 +1658,10 @@ const App = {
       if (quickPartidaInput) quickPartidaInput.value = item.partida || '';
       const defMonto = item.monto_partida_usd || item.monto_total_usd || item.monto_obra_usd || (item.cashflow ? item.cashflow.monto_total : '') || '';
       if (quickMontoInput) quickMontoInput.value = (defMonto > 0) ? defMonto : '';
+      const quickPmedInput = document.getElementById('transQuickPrioridadMedicaInput');
+      if (quickPmedInput) {
+        quickPmedInput.value = (!item.prioridad_medica_ponderada_default && item.prioridad_medica) ? String(item.prioridad_medica) : '';
+      }
       if (warnSinPartida) warnSinPartida.classList.remove('hidden');
       if (inputQuickPartida) {
         if (u.puede_asignar_partida || isAdmin) {
@@ -1652,6 +1675,8 @@ const App = {
       if (inputQuickPartida) inputQuickPartida.classList.add('hidden');
       if (quickPartidaInput) quickPartidaInput.value = '';
       if (quickMontoInput) quickMontoInput.value = '';
+      const quickPmedInput = document.getElementById('transQuickPrioridadMedicaInput');
+      if (quickPmedInput) quickPmedInput.value = '';
     }
 
     const alertFinal = document.getElementById('transFinalNotice');
@@ -1747,7 +1772,8 @@ const App = {
           return;
         }
         const montoToAssign = enteredMonto || item.monto_partida_usd || item.monto_total_usd || item.monto_obra_usd;
-        const partRes = DataStore.asignarPartidaPresupuestaria(id, enteredPartida, montoToAssign);
+        const quickPmed = document.getElementById('transQuickPrioridadMedicaInput')?.value || null;
+        const partRes = DataStore.asignarPartidaPresupuestaria(id, enteredPartida, montoToAssign, quickPmed);
         if (!partRes.success) {
           alert(partRes.msg);
           return;
@@ -3731,6 +3757,10 @@ const App = {
     setVal('modalObraFechaFinGlobal', item.fecha_fin_obra || '');
     setVal('modalObraPrioridadTec', item.prioridad_tecnica || 1);
     setVal('modalObraPrioridadMed', item.prioridad_medica || '');
+    const badgeDefaultMed = document.getElementById('modalObraPrioridadMedDefaultBadge');
+    if (badgeDefaultMed) {
+      badgeDefaultMed.classList.toggle('hidden', !item.prioridad_medica_ponderada_default);
+    }
     setVal('modalObraPrioridadFin', pond.valor || 1);
     setVal('modalObraObservaciones', item.observaciones || '');
 

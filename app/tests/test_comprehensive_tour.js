@@ -272,9 +272,91 @@ assert("Tiempo de bloqueo mayor a cero", SecurityManager.getRemainingLockoutSeco
 SecurityManager.recordSuccessfulLogin();
 assert("Reseteo exitoso del bloqueo tras autenticación legítima", !SecurityManager.isLocked());
 
+// ------------------------------------------------------------------------------
+// FASE 9: REGLAS CANÓNICAS DE PRIORIDAD MÉDICA Y SEMÁFORO AUTOMÁTICO AL 15%
+// ------------------------------------------------------------------------------
+print("\n--- FASE 9: REGLAS DE PRIORIDAD MÉDICA DEFAULT Y SEMÁFORO AL 15% ---");
+// 9.1 Asignación con prioridad médica explícita
+var obraPmedExp = {
+  id: 'OBRA-TEST-PMED-EXP',
+  nombre: 'Prueba Prioridad Médica Explícita',
+  tipo: 'Obra Civil',
+  sede: 'Central',
+  dependencia: 'Departamento de Proyectos Central',
+  estado: 'Estudio de Factibilidad',
+  prioridad_tecnica: 2,
+  prioridad_medica: null,
+  monto_total_usd: 10000
+};
+DataStore.items.unshift(obraPmedExp);
+DataStore.currentUser = authMedica.user;
+var resExp = DataStore.asignarPartidaPresupuestaria('OBRA-TEST-PMED-EXP', 'PART-EXP-01', 10000, 4);
+var itemExp = DataStore.getItemById('OBRA-TEST-PMED-EXP');
+assert("Prioridad médica asignada explícitamente (4★)", resExp.success && itemExp.prioridad_medica === 4 && !itemExp.prioridad_medica_ponderada_default);
+
+// 9.2 Asignación sin prioridad médica (Fallback automático a técnica con indicación de default)
+var obraPmedDef = {
+  id: 'OBRA-TEST-PMED-DEF',
+  nombre: 'Prueba Prioridad Médica Default',
+  tipo: 'Obra Civil',
+  sede: 'San Justo',
+  dependencia: 'Departamento de Mantenimiento y Proyectos San Justo',
+  estado: 'Estudio de Factibilidad',
+  prioridad_tecnica: 5,
+  prioridad_medica: null,
+  monto_total_usd: 15000
+};
+DataStore.items.unshift(obraPmedDef);
+var resDef = DataStore.asignarPartidaPresupuestaria('OBRA-TEST-PMED-DEF', 'PART-DEF-01', 15000, '');
+var itemDef = DataStore.getItemById('OBRA-TEST-PMED-DEF');
+assert("Criticidad médica adopta automáticamente la técnica (5★)", resDef.success && itemDef.prioridad_medica === 5);
+assert("Obra marcada con ponderación por default", itemDef.prioridad_medica_ponderada_default === true);
+assert("Historial indica que se ponderó por default por no contar con criticidad de Dirección", itemDef.prioridad_medica_origen.indexOf('Default') >= 0);
+
+// 9.3 Semáforo 100% automático: 15% antes del plazo final
+var dHoy = new Date();
+var d10DiasAtras = new Date(dHoy.getTime() - (10 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0];
+var d90DiasAdelante = new Date(dHoy.getTime() + (90 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0];
+var obraEnPlazo = {
+  id: 'OBRA-SEM-EN-PLAZO',
+  estado: 'Proyecto',
+  fecha_inicio_etapa: d10DiasAtras,
+  fecha_fin_etapa: d90DiasAdelante,
+  requiere_plazo_etapa: false
+};
+var semEnPlazo = DataStore.calculateSemaforo(obraEnPlazo);
+assert("Semáforo en plazo (Verde) cuando restan más del 15% del plazo", semEnPlazo.status === 'en_plazo');
+
+// Obra en el 15% final (duración 100 días, empezó hace 88 días, restan 12 días <= 15 días de alerta)
+var d88DiasAtras = new Date(dHoy.getTime() - (88 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0];
+var d12DiasAdelante = new Date(dHoy.getTime() + (12 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0];
+var obraAlerta15 = {
+  id: 'OBRA-SEM-ALERTA-15',
+  estado: 'Proyecto',
+  fecha_inicio_etapa: d88DiasAtras,
+  fecha_fin_etapa: d12DiasAdelante,
+  requiere_plazo_etapa: false
+};
+var semAlerta15 = DataStore.calculateSemaforo(obraAlerta15);
+assert("Semáforo automático por vencer (Amarillo) al ingresar en el 15% final del plazo", semAlerta15.status === 'por_vencer');
+
+// Obra vencida (fecha límite hace 3 días)
+var d3DiasAtras = new Date(dHoy.getTime() - (3 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0];
+var obraVencida = {
+  id: 'OBRA-SEM-VENCIDA',
+  estado: 'Proyecto',
+  fecha_inicio_etapa: d88DiasAtras,
+  fecha_fin_etapa: d3DiasAtras,
+  requiere_plazo_etapa: false
+};
+var semVencida = DataStore.calculateSemaforo(obraVencida);
+assert("Semáforo automático vencido (Rojo) al superarse la fecha límite", semVencida.status === 'vencido');
+
 // Limpieza de obra de prueba
 DataStore.items = DataStore.items.filter(function(it) {
-  return it.id !== idObraTest && it.id !== 'SJ-WALDEMAR-01' && it.id !== 'SJ-LOPEZ-01';
+  return it.id !== idObraTest && it.id !== 'SJ-WALDEMAR-01' && it.id !== 'SJ-LOPEZ-01' &&
+         it.id !== 'OBRA-TEST-PMED-EXP' && it.id !== 'OBRA-TEST-PMED-DEF' &&
+         it.id !== 'OBRA-SEM-EN-PLAZO' && it.id !== 'OBRA-SEM-ALERTA-15' && it.id !== 'OBRA-SEM-VENCIDA';
 });
 DataStore.persist();
 

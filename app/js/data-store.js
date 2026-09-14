@@ -773,8 +773,30 @@ const DataStore = {
     return newItem;
   },
 
+  parsePrioridad(val) {
+    if (val === null || val === undefined || val === '') return null;
+    const num = parseFloat(val);
+    if (!isNaN(num) && num > 0) return Math.min(5, Math.max(1, num));
+    const str = String(val).toLowerCase();
+    if (str.includes('crítica') || str.includes('critica') || str.includes('urgente')) return 5;
+    if (str.includes('alta')) return 4;
+    if (str.includes('media')) return 3;
+    if (str.includes('baja')) return 2;
+    if (str.includes('mínima') || str.includes('minima')) return 1;
+    return null;
+  },
+
+  getNivelPrioridadLabel(val) {
+    const num = parseFloat(val) || 0;
+    if (num >= 4.5) return 'Crítica / Muy Alta';
+    if (num >= 3.5) return 'Alta';
+    if (num >= 2.5) return 'Media';
+    if (num >= 1.5) return 'Baja';
+    return 'Mínima';
+  },
+
   // ================= ASIGNACIÓN DE PARTIDA PRESUPUESTARIA =================
-  asignarPartidaPresupuestaria(itemId, partidaNum, montoPartida) {
+  asignarPartidaPresupuestaria(itemId, partidaNum, montoPartida, prioridadMedica = null) {
     const item = this.getItemById(itemId);
     if (!item) return { success: false, msg: 'Obra no encontrada' };
 
@@ -804,6 +826,31 @@ const DataStore = {
       item.monto_obra_usd = montoVal;
     }
 
+    // ================= REGLA CANÓNICA: PRIORIDAD MÉDICA Y FALLBACK DEFAULT =================
+    // Al cargar partida y costo, es indispensable solicitar prioridad médica.
+    // En caso que no esté cargada, la criticidad médica será idéntica a la técnica previamente
+    // cargada y deberá quedar expresamente indicada que se ponderó por default, por no contar con criticidad de dirección.
+    const pTec = parseFloat(item.prioridad_tecnica) || 3;
+    const parsedMedInput = this.parsePrioridad(prioridadMedica);
+    const existingMed = (!item.prioridad_medica_ponderada_default && item.prioridad_medica) ? this.parsePrioridad(item.prioridad_medica) : null;
+    const pMedFinal = parsedMedInput !== null ? parsedMedInput : existingMed;
+
+    let obsPrioridad = '';
+    if (pMedFinal !== null && pMedFinal > 0) {
+      item.prioridad_medica = pMedFinal;
+      item.prioridad_medica_origen = 'Dirección Médica';
+      item.prioridad_medica_ponderada_default = false;
+      item.prioridad_medica_nota = 'Definida formalmente por Dirección Médica';
+      obsPrioridad = `Prioridad médica asignada: ${pMedFinal}★ por ${this.currentUser.nombre}.`;
+    } else {
+      item.prioridad_medica = pTec;
+      item.prioridad_medica_origen = 'Default (Ponderada por falta de Dirección Médica)';
+      item.prioridad_medica_ponderada_default = true;
+      item.prioridad_medica_nota = 'Ponderada por default por no contar con criticidad de Dirección';
+      obsPrioridad = `Criticidad médica asignada idéntica a técnica (${pTec}★) [Ponderada por default por no contar con criticidad de Dirección Médica].`;
+    }
+    item.prioridad_final = item.prioridad_medica;
+
     // Asegurar estructura de cashflow
     if (!item.cashflow || typeof item.cashflow !== 'object') {
       item.cashflow = {
@@ -831,11 +878,18 @@ const DataStore = {
       usuario: this.currentUser.nombre,
       estado_anterior: item.estado,
       estado_nuevo: item.estado,
-      observaciones: `Partida presupuestaria N° ${item.partida} asignada por ${this.formatUSD(montoVal)} por ${this.currentUser.nombre}. Habilita avance a etapa de Proyecto.`
+      observaciones: `Partida presupuestaria N° ${item.partida} asignada por ${this.formatUSD(montoVal)} por ${this.currentUser.nombre}. ${obsPrioridad} Habilita avance a etapa de Proyecto.`
     });
 
     this.saveItem(item, true);
-    return { success: true, partida: item.partida, monto_partida_usd: item.monto_partida_usd };
+    return { 
+      success: true, 
+      partida: item.partida, 
+      monto_partida_usd: item.monto_partida_usd,
+      prioridad_medica: item.prioridad_medica,
+      prioridad_medica_ponderada_default: item.prioridad_medica_ponderada_default,
+      prioridad_medica_origen: item.prioridad_medica_origen
+    };
   },
 
   // ================= PONDERACIÓN GLOBAL Y ESCALA DE COLORES =================
@@ -850,7 +904,7 @@ const DataStore = {
       if (pTec === 5 && pMed === 5) ponderacion = 5.0;
     } else {
       // Solo prioridad técnica inicial
-      ponderacion = pTec;
+      ponderacion = pTec || pMed;
     }
 
     // Escala y color visual
@@ -875,7 +929,9 @@ const DataStore = {
       valor: ponderacion,
       nivelLabel: nivelLabel,
       colorClass: colorClass,
-      faltaMedica: (pMed === 0 || item.prioridad_medica === null)
+      faltaMedica: (pMed === 0 || item.prioridad_medica === null),
+      isDefaultPonderada: Boolean(item.prioridad_medica_ponderada_default),
+      prioridadMedicaOrigen: item.prioridad_medica_origen || (item.prioridad_medica ? 'Dirección Médica' : 'Pendiente')
     };
   },
 
@@ -1167,19 +1223,44 @@ const DataStore = {
         class: 'badge-semaforo-vencido', 
         days: diffDays 
       };
-    } else if (diffDays <= 30) {
+    }
+
+    // ================= SEMÁFORO 100% AUTOMÁTICO (15% ANTES DEL PLAZO FINAL) =================
+    // En todos los casos el semáforo es automático: no solicita fecha manual.
+    // Calcula la duración de la etapa definida por el autorizado y activa la alerta al 15% restante.
+    let startDateStr = item.fecha_inicio_etapa || item.fecha_inicio || item.created_at;
+    let duracionDias = 0;
+    if (startDateStr) {
+      const startDate = new Date(startDateStr);
+      startDate.setHours(0, 0, 0, 0);
+      if (!isNaN(startDate.getTime()) && targetDate.getTime() > startDate.getTime()) {
+        duracionDias = Math.ceil((targetDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      }
+    }
+    if (duracionDias <= 0) {
+      duracionDias = DEFAULT_STAGE_DAYS[item.estado] || 45;
+    }
+
+    // Umbral de alerta automática: 15% antes del plazo final
+    const diasAlerta15Porc = Math.max(1, Math.round(duracionDias * 0.15));
+
+    if (diffDays <= diasAlerta15Porc) {
       return { 
         status: 'por_vencer', 
         label: `Por vencer (${diffDays}d)`, 
         class: 'badge-semaforo-por-vencer', 
-        days: diffDays 
+        days: diffDays,
+        duracionDias: duracionDias,
+        umbralAlertaDias: diasAlerta15Porc
       };
     } else {
       return { 
         status: 'en_plazo', 
         label: `En plazo (${diffDays}d)`, 
         class: 'badge-semaforo-en-plazo', 
-        days: diffDays 
+        days: diffDays,
+        duracionDias: duracionDias,
+        umbralAlertaDias: diasAlerta15Porc
       };
     }
   },
@@ -2082,6 +2163,9 @@ const DataStore = {
     }
 
     item.prioridad_medica = parseFloat(priorityVal) || 1;
+    item.prioridad_medica_origen = 'Dirección Médica';
+    item.prioridad_medica_ponderada_default = false;
+    item.prioridad_medica_nota = 'Definida formalmente por Dirección Médica';
     const pTec = item.prioridad_tecnica || 1;
     item.prioridad_final = Math.round(((pTec + item.prioridad_medica) / 2) * 10) / 10;
     if (pTec === 5 && item.prioridad_medica === 5) item.prioridad_final = 5.0;

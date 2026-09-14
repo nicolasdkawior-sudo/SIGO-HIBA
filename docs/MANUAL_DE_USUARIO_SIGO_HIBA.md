@@ -72,11 +72,12 @@ Permite acotar los proyectos visualizados en cualquiera de las pantallas:
 - **Buscador Universal:** Búsqueda en tiempo real por código de obra, nombre del proyecto, PM responsable o número de partida presupuestaria.
 - **Botón Restablecer:** Limpia todos los filtros y retorna a la vista por defecto de su perfil.
 
-### 2.3. Panel de Tarjetas Resumen (KPIs y Semáforos)
+### 2.3. Panel de Tarjetas Resumen (KPIs y Semáforos 100% Automáticos)
 - **Cartera Activa USD:** Suma financiera real de todas las obras en `Proyecto`, `En licitación` y `Obras en Curso`. *(Excluye automáticamente Factibilidades y Suspendidas)*.
-- **En Plazo (Verde):** Cantidad de obras con fecha límite superior a 15 días.
-- **Por Vencer (Amarillo):** Obras que vencen en los próximos 15 días.
-- **Vencidas (Rojo):** Obras con fecha de etapa sobrepasada sin certificación.
+- **Cálculo Automático de Semáforo (15% antes del plazo final):** En ningún caso se solicita fecha manual de semáforo. El sistema calcula dinámicamente la duración total de la etapa fijada por el responsable y activa la alerta automáticamente:
+  - **En Plazo (Verde):** Restan más del 15% de los días totales de la etapa.
+  - **Por Vencer (Amarillo):** La obra ingresó en el 15% final del plazo fijado para la etapa (alerta preventiva automática).
+  - **Vencida (Rojo):** La fecha límite fue superada sin que se haya certificado el avance.
 - **Finalizadas y Suspendidas:** Contadores y montos históricos.
 *Nota de usabilidad: Al hacer clic sobre cualquier tarjeta de semáforo o estado, el listado se filtra automáticamente para mostrar solo esas obras.*
 
@@ -136,10 +137,12 @@ Los administradores cuentan con control absoluto sobre la plataforma:
 ### 4.2. Operatoria de Dirección Médica (`direccion.medica`)
 La Dirección Médica interviene en la etapa inicial de viabilidad:
 1. En el Dashboard superior se mostrará una barra de alerta destacada si existen obras en factibilidad pendientes de evaluación: *"Atención Dirección Médica: X obras requieren tu evaluación"*.
-2. Al pulsar **"Asignar Prioridades Pendientes"**:
-   - Podrá calificar cada solicitud con prioridad `Alta`, `Media` o `Baja`.
-   - Podrá ingresar el **Número de Partida Presupuestaria** y el **Monto Oficial de Partida en USD** (admitiendo cualquier cifra y decimales, ej: `12500.50`).
-3. Una vez asignada la partida y monto, la obra queda habilitada para que el equipo técnico pueda iniciar el desarrollo del `Proyecto`.
+2. Al pulsar **"Asignar Partida Presupuestaria"**:
+   - Deberá ingresar el **Número de Partida Presupuestaria** y el **Monto Oficial en USD**.
+   - Se solicitará la **Prioridad / Criticidad Médica** (1★ a 5★).
+   - **Regla Canónica de Fallback por Defecto:** Si Dirección Médica no define una criticidad específica en ese momento, el sistema adoptará automáticamente la criticidad técnica previamente cargada por el solicitante, dejando constancia formal y visible en todo el sistema con la leyenda: *"Ponderada por default por no contar con criticidad de Dirección"*.
+   - **Semáforo sin ingreso manual:** Al momento de guardar la partida y monto, el sistema **no solicita fecha de semáforo**, ya que el semáforo se calcula de forma 100% automática al 15% del plazo de la etapa.
+3. Una vez asignada la partida y monto, la obra queda formalmente habilitada para que el equipo técnico pueda iniciar el desarrollo del `Proyecto`.
 
 ### 4.3. Operatoria de Project Managers (`palmioli`, `gallardo`, `kawior`, etc.)
 1. **Recepción de Obra y Plazo Obligatorio:**

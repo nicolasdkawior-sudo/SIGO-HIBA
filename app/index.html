@@ -769,6 +769,30 @@
           <p class="text-[11px] text-slate-400 mt-1">Monto presupuestario formal asignado en dólares para esta partida.</p>
         </div>
 
+        <!-- Selector de Prioridad / Criticidad Médica (Dirección Médica) -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">
+            Prioridad / Criticidad Médica (Dirección Médica) <span class="text-indigo-600">*</span>
+          </label>
+          <select id="inputPrioridadMedicaPartida" class="w-full border-2 border-indigo-400 rounded-lg p-2.5 bg-indigo-50/40 font-bold text-slate-900 focus:outline-none">
+            <option value="">-- Dejar sin asignar (Adoptar criticidad técnica por default) --</option>
+            <option value="5">5 ★ - CRÍTICA / MUY ALTA (Riesgo Asistencial / Urgente)</option>
+            <option value="4">4 ★ - ALTA</option>
+            <option value="3">3 ★ - MEDIA</option>
+            <option value="2">2 ★ - BAJA</option>
+            <option value="1">1 ★ - MÍNIMA</option>
+          </select>
+          <div class="p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-[11px] text-amber-900 mt-1.5 space-y-0.5">
+            <div class="font-bold flex items-center space-x-1 text-amber-950">
+              <i data-lucide="info" class="w-3.5 h-3.5 text-amber-600"></i>
+              <span>Regla Canónica de Prioridad:</span>
+            </div>
+            <div>
+              Si Dirección Médica no define una criticidad específica, el sistema adoptará automáticamente la criticidad técnica (<strong id="spanPrioridadTecnicaVal">3★</strong>) y quedará expresamente indicada como <em>"Ponderada por default por no contar con criticidad de Dirección"</em>.
+            </div>
+          </div>
+        </div>
+
         <!-- Aviso dinámico si la partida queda corta -->
         <div id="partidaCortaWarningContainer" class="hidden bg-rose-50 border-2 border-rose-300 rounded-xl p-3 text-xs text-rose-950 flex items-start space-x-2">
           <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-600 shrink-0 mt-0.5"></i>
@@ -844,7 +868,18 @@
               <input type="text" inputmode="decimal" id="transQuickMontoPartidaInput" placeholder="Ej: 5684,30" class="w-full pl-12 border-2 border-emerald-500 rounded-lg p-2 font-mono font-bold text-emerald-900 bg-white">
             </div>
           </div>
-          <p class="text-[10px] text-amber-800 font-semibold">Si no dispones de partida y monto presupuestario, el sistema no te permitirá avanzar a Proyecto.</p>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Prioridad / Criticidad Médica (Dirección Médica):</label>
+            <select id="transQuickPrioridadMedicaInput" class="w-full border-2 border-indigo-400 rounded-lg p-2 bg-white font-bold text-slate-900">
+              <option value="">-- Dejar en blanco (Ponderar automáticamente igual a técnica) --</option>
+              <option value="5">5 ★ - CRÍTICA / MUY ALTA</option>
+              <option value="4">4 ★ - ALTA</option>
+              <option value="3">3 ★ - MEDIA</option>
+              <option value="2">2 ★ - BAJA</option>
+              <option value="1">1 ★ - MÍNIMA</option>
+            </select>
+          </div>
+          <p class="text-[10px] text-amber-800 font-semibold">Si no dispones de partida y monto presupuestario, el sistema no te permitirá avanzar a Proyecto. Ante falta de criticidad médica, se adoptará la técnica por default.</p>
         </div>
 
         <!-- Aviso si avanza a En licitación (Pase a Compras) -->
@@ -1664,6 +1699,9 @@
             <div>
               <label class="block text-slate-600 mb-1">Prioridad Médica (Dirección)</label>
               <input type="number" min="1" max="5" step="0.1" id="modalObraPrioridadMed" placeholder="Pendiente" class="w-full border border-slate-300 rounded px-2 py-1 bg-white font-bold text-indigo-700">
+              <span id="modalObraPrioridadMedDefaultBadge" class="hidden text-[10px] text-amber-900 bg-amber-100 border border-amber-300 px-1.5 py-0.5 rounded font-bold block mt-1">
+                ⚠️ Ponderada por default por falta de Dirección
+              </span>
             </div>
             <div>
               <label class="block text-slate-600 mb-1">Ponderación Final</label>

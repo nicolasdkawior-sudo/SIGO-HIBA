@@ -68,11 +68,15 @@ El flujo de avance de cada obra se rige por la siguiente secuencia canónica:
 - **Propósito:** Análisis de viabilidad técnica, operativa y médica de la solicitud.
 - **Condición Presupuestaria:** No cuenta con partida aprobada (figura `S/D` o `Pendiente`).
 - **Impacto Financiero:** No computa dentro de la "Cartera Activa USD" de inversión.
-- **Priorización Médica:** La Dirección Médica califica la urgencia clínica (`Alta`, `Media`, `Baja`).
+- **Solicitud Obligatoria de Prioridad Médica y Fallback Default:**
+  - Al cargar la partida presupuestaria y su monto en USD, es **indispensable solicitar la Prioridad / Criticidad Médica** a ser definida por la Dirección Médica.
+  - **Regla Canónica de Fallback por Defecto:** En caso de que la prioridad médica no esté cargada o se deje sin especificar, la criticidad médica será **idéntica a la técnica previamente cargada**, y quedará formal y visiblemente indicada en todo el sistema con la leyenda *"Ponderada por default por no contar con criticidad de Dirección"*.
+- **Semáforo 100% Automático (Sin Solicitud Manual):** Al momento de cargar la partida y el monto, **no se solicita fecha de semáforo**. En todos los casos, el semáforo es automático: calcula la duración total de la etapa definida por el autorizado y activa la alerta amarilla (*Por vencer*) automáticamente **15% antes del plazo final**.
 - **Requisito para Avanzar a Proyecto:** Es mandatorio que Dirección Médica o Administración asigne formalmente:
   1. Número de Partida Presupuestaria (ej: `P-2026-4412`).
   2. Monto Oficial Asignado en Dólares USD (ej: `5684.30` o cifras mayores).
-  *Sin estos dos datos, el sistema bloquea irreversiblemente el pase a Proyecto.*
+  3. Registro de Prioridad Médica (específica o ponderada por default).
+  *Sin estos datos, el sistema bloquea irreversiblemente el pase a Proyecto.*
 
 #### Etapa 2: Proyecto (Desarrollo Técnico Ejecutivo)
 - **Ingreso a la Etapa:** Apenas la obra es asignada a un Project Manager (PM), al hacer clic sobre la obra se le exige obligatoriamente definir la **Fecha Estimada de Fin de Proyecto**. La obra permanece marcada como `requiere_plazo_etapa: true` hasta que se establezca esta fecha.
