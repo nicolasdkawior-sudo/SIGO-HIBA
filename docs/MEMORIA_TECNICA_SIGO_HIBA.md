@@ -229,9 +229,9 @@ El reporte ejecutivo para comités de Dirección, Finanzas y Auditoría fue redi
 
 1. **Página 1 — Resumen Ejecutivo & Estado General de Cartera:**
    - Membrete oficial del Hospital Italiano de Buenos Aires con sello institucional de auditoría.
-   - 4 KPIs C-Level: Obras en Ejecución, Factibilidades sin Partida, Desvíos Presupuestarios en Partidas y Obras Suspendidas.
+   - 4 KPIs C-Level: Obras en Ejecución, Estudios de Factibilidad en Cartera (**94 obras consolidadas por USD 20,151,232**, con desglose transparente y fidedigno de 91 obras sin partida por USD 19,616,232 y 3 obras con partida asignada por USD 535,000), Desvíos Presupuestarios en Partidas y Obras Suspendidas.
    - Cuadrante de Obras en Curso con montos y avance físico ponderado.
-   - Cuadrante de Factibilidades en Espera con criticidades técnicas y médicas.
+   - Cuadrante de Cartera en Factibilidad identificando estado de partida ("Sin Partida" vs "Part. N° X") y criticidades técnicas y médicas.
    - Auditoría de Partidas Presupuestarias con desglose de sobre-ejecutadas (déficit) y sub-ejecutadas (remanente liberable).
 2. **Página 2 — Cash Flow Oficial de Obras en Curso (01/04 a 31/03):**
    - 4 KPIs Financieros: Cartera en Curso, Presupuesto Ejercicio (Pagado vs Proyectado), Total Anticipos OC (Mes 1) y Arrastre Ejercicios Futuros.

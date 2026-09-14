@@ -2871,14 +2871,24 @@ const DataStore = {
       ? parseFloat((enCurso.reduce((acc, x) => acc + (parseFloat(x.avance_fisico) || 0), 0) / enCurso.length).toFixed(1))
       : 0;
 
-    // 2. Factibilidad sin Partida / Pendientes de Definición de Dirección
-    const factSinPartida = all.filter(x => 
-      (x.estado === 'Estudio de Factibilidad' || x.estado === 'Ante Proyecto') && 
-      (!this.hasValidPartida(x) || !x.monto_partida_usd || x.monto_partida_usd <= 0)
+    // 2. Cartera Completa en Estudio de Factibilidad (Total 94 obras)
+    const factTotal = all.filter(x => 
+      x.estado === 'Estudio de Factibilidad' || x.estado === 'Ante Proyecto'
+    );
+    const totFactTotalUSD = factTotal.reduce((acc, x) => acc + (x.monto_total_usd || x.monto_obra_usd || 0), 0);
+
+    const factSinPartida = factTotal.filter(x => 
+      !this.hasValidPartida(x) || !x.monto_partida_usd || x.monto_partida_usd <= 0
     );
     const totFactSinPartidaUSD = factSinPartida.reduce((acc, x) => acc + (x.monto_total_usd || x.monto_obra_usd || 0), 0);
+
+    const factConPartida = factTotal.filter(x => 
+      this.hasValidPartida(x) && x.monto_partida_usd > 0
+    );
+    const totFactConPartidaUSD = factConPartida.reduce((acc, x) => acc + (x.monto_total_usd || x.monto_obra_usd || 0), 0);
+
     const factPorSede = {};
-    factSinPartida.forEach(x => {
+    factTotal.forEach(x => {
       const s = x.sede || 'Central';
       factPorSede[s] = (factPorSede[s] || 0) + (x.monto_total_usd || x.monto_obra_usd || 0);
     });
@@ -2974,6 +2984,18 @@ const DataStore = {
         avancePromedio: avgAvance,
         items: enCurso
       },
+      factibilidad: {
+        total: factTotal.length,
+        montoTotalUSD: totFactTotalUSD,
+        sinPartidaCount: factSinPartida.length,
+        sinPartidaUSD: totFactSinPartidaUSD,
+        conPartidaCount: factConPartida.length,
+        conPartidaUSD: totFactConPartidaUSD,
+        desgloseSede: factPorSede,
+        items: factTotal,
+        sinPartidaItems: factSinPartida,
+        conPartidaItems: factConPartida
+      },
       factibilidadSinPartida: {
         total: factSinPartida.length,
         montoTotalUSD: totFactSinPartidaUSD,
@@ -3023,7 +3045,7 @@ const DataStore = {
       [""],
       ["INDICADORES CLAVE (KPIS)", "CANTIDAD", "MONTO TOTAL (USD)", "DETALLE ADICIONAL"],
       ["Obras en Curso (Ejecución Activa)", report.obrasEnCurso.total, report.obrasEnCurso.montoTotalUSD, `Avance Físico Promedio: ${report.obrasEnCurso.avancePromedio}%`],
-      ["Factibilidad sin Partida (Pendientes Dirección)", report.factibilidadSinPartida.total, report.factibilidadSinPartida.montoTotalUSD, "En espera de aprobación presupuestaria"],
+      ["Estudios de Factibilidad (Total en Cartera)", (report.factibilidad ? report.factibilidad.total : report.factibilidadSinPartida.total), (report.factibilidad ? report.factibilidad.montoTotalUSD : report.factibilidadSinPartida.montoTotalUSD), (report.factibilidad ? `${report.factibilidad.sinPartidaCount} sin partida (US$ ${report.factibilidad.sinPartidaUSD}) • ${report.factibilidad.conPartidaCount} con partida asignada (US$ ${report.factibilidad.conPartidaUSD})` : "En espera de aprobación presupuestaria")],
       ["Obras Suspendidas (Capital Inmovilizado)", report.obrasSuspendidas.total, report.obrasSuspendidas.montoTotalUSD, "Obras frenadas temporal o definitivamente"],
       ["Partidas Sobre-ejecutadas (Déficit Presupuestario)", report.partidasDesvios.totalSobreEjecutadas, report.partidasDesvios.totalDeficitUSD, "Partidas Cortas que requieren ampliación"],
       ["Partidas Sub-ejecutadas (Superávit Remanente)", report.partidasDesvios.totalSubEjecutadas, report.partidasDesvios.totalSuperavitUSD, "Fondos aprobados sin comprometer"],
@@ -3036,6 +3058,23 @@ const DataStore = {
     ];
     const wsResumen = XLSX.utils.aoa_to_sheet(wsResumenData);
     XLSX.utils.book_append_sheet(wb, wsResumen, "Resumen_Ejecutivo");
+
+    // Hoja 1: Obras en Ejecución Activa
+    const wsEnCursoData = report.obrasEnCurso.items.map(x => ({
+      'Código': x.id,
+      'Nombre Obra': x.nombre,
+      'Sede': x.sede,
+      'Tipo': x.tipo,
+      'Responsable': x.responsable || 'Sin Asignar',
+      'Proveedor Adjudicado': x.proveedor || '',
+      'Inversión Total USD': x.monto_adjudicado_usd || x.monto_total_usd || 0,
+      'Partida': x.partida || '',
+      'Avance Físico (%)': (x.avance_fisico || 0) + '%',
+      'Fecha Inicio': x.fecha_inicio_etapa || '',
+      'Fecha Fin Estimada': x.fecha_fin_obra || x.fecha_fin_etapa || ''
+    }));
+    const wsEnCurso = XLSX.utils.json_to_sheet(wsEnCursoData);
+    XLSX.utils.book_append_sheet(wb, wsEnCurso, "Obras_En_Ejecucion");
 
     // Hoja 2: Cash Flow Obras en Curso
     const wsCFData = (report.cashflowEjecucion.displayList || []).map(entry => {
@@ -3060,20 +3099,27 @@ const DataStore = {
     const wsCF = XLSX.utils.json_to_sheet(wsCFData);
     XLSX.utils.book_append_sheet(wb, wsCF, "Cashflow_Obras_En_Curso");
 
-    // Hoja 3: Factibilidades Sin Partida
-    const wsFactData = report.factibilidadSinPartida.items.map(x => ({
-      'Código': x.id,
-      'Nombre Solicitud': x.nombre,
-      'Sede': x.sede,
-      'Sector Solicitante': x.sector_solicitante || '',
-      'Motivo': x.motivo || '',
-      'Monto Estimado USD': x.monto_total_usd || x.monto_obra_usd || 0,
-      'Prioridad Técnica': x.prioridad_tecnica || 3,
-      'Creado Por': x.creado_por || '',
-      'Fecha Solicitud': x.fecha_inicio_etapa || ''
-    }));
+    // Hoja 3: Factibilidades en Estudio (Total 94 obras consolidadas)
+    const listFact = report.factibilidad?.items || report.factibilidadSinPartida.items;
+    const wsFactData = listFact.map(x => {
+      const hasPart = this.hasValidPartida(x) && x.monto_partida_usd > 0;
+      return {
+        'Código': x.id,
+        'Nombre Solicitud': x.nombre,
+        'Sede': x.sede,
+        'Sector Solicitante': x.sector_solicitante || x.creado_por || '',
+        'Estado de Partida': hasPart ? 'Con Partida Asignada' : 'Sin Partida (Pendiente Dirección)',
+        'N° Partida': hasPart ? x.partida : 'Pendiente',
+        'Monto Partida USD': hasPart ? x.monto_partida_usd : 0,
+        'Monto Estimado Solicitado USD': x.monto_total_usd || x.monto_obra_usd || 0,
+        'Prioridad Técnica': x.prioridad_tecnica || 3,
+        'Prioridad Médica': x.prioridad_medica || '',
+        'Creado Por': x.creado_por || '',
+        'Fecha Solicitud': x.fecha_inicio_etapa || ''
+      };
+    });
     const wsFact = XLSX.utils.json_to_sheet(wsFactData);
-    XLSX.utils.book_append_sheet(wb, wsFact, "Factibilidad_Sin_Partida");
+    XLSX.utils.book_append_sheet(wb, wsFact, "Factibilidad_En_Estudio");
 
     // Hoja 4: Partidas Sobre-ejecutadas (Déficit)
     const wsSobreData = report.partidasDesvios.sobreEjecutadas.map(x => ({

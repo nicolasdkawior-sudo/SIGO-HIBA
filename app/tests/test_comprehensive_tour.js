@@ -427,14 +427,8 @@ assert("La obra en curso SÍ figura en el Cash Flow", idsEnCF.indexOf('OBRA-CF-A
 assert("La obra en factibilidad NO figura en el Cash Flow", idsEnCF.indexOf('OBRA-TEST-FACT-EXCLUIDA') === -1);
 assert("La obra suspendida NO figura en el Cash Flow", idsEnCF.indexOf('OBRA-TEST-SUSP-EXCLUIDA') === -1);
 
-// 10.5 Integridad de datos para Informe de Dirección (3 Páginas A4)
-DataStore.currentUser = authAdmin.user;
-var repDir = DataStore.getExecutiveReportData(refDatePrueba);
-assert("Informe contiene datos de Página 1 (Resumen de Cartera)", Boolean(repDir.obrasEnCurso && repDir.factibilidadSinPartida && repDir.partidasDesvios));
-assert("Informe contiene datos de Página 2 (Cash Flow Oficial 01/04 - 31/03)", Boolean(repDir.cashflowEjecucion && repDir.cashflowEjecucion.mesesTotales));
-assert("Informe contiene datos de Página 3 (Sedes, Módulos y Certificación)", Boolean(repDir.desgloseSedes && repDir.desgloseModulos && repDir.semaforos));
-
-// Limpieza de obra de prueba
+// 10.5 Integridad de datos para Informe de Dirección (3 Páginas A4) y Conciliación Factibilidad (94 vs 91 vs 3)
+// Limpieza previa de obras temporales para auditar cartera institucional real
 DataStore.items = DataStore.items.filter(function(it) {
   return it.id !== idObraTest && it.id !== 'SJ-WALDEMAR-01' && it.id !== 'SJ-LOPEZ-01' &&
          it.id !== 'OBRA-TEST-PMED-EXP' && it.id !== 'OBRA-TEST-PMED-DEF' &&
@@ -442,6 +436,18 @@ DataStore.items = DataStore.items.filter(function(it) {
          it.id !== 'OBRA-CF-ANTICIPO-1M' && it.id !== 'OBRA-TEST-FACT-EXCLUIDA' && it.id !== 'OBRA-TEST-SUSP-EXCLUIDA';
 });
 DataStore.persist();
+
+DataStore.currentUser = authAdmin.user;
+var repDir = DataStore.getExecutiveReportData(refDatePrueba);
+assert("Informe contiene datos de Página 1 (Resumen de Cartera)", Boolean(repDir.obrasEnCurso && repDir.factibilidad && repDir.factibilidadSinPartida && repDir.partidasDesvios));
+assert("Factibilidad consolidada reporta exactamente 94 obras totales en estudio", repDir.factibilidad.total === 94);
+assert("Factibilidad monto total solicitado es exactamente USD 20,151,232", repDir.factibilidad.montoTotalUSD === 20151232);
+assert("Factibilidad desglosa exactamente 91 obras sin partida (USD 19,616,232)", repDir.factibilidad.sinPartidaCount === 91 && repDir.factibilidad.sinPartidaUSD === 19616232);
+assert("Factibilidad desglosa exactamente 3 obras con partida asignada (USD 535,000)", repDir.factibilidad.conPartidaCount === 3 && repDir.factibilidad.conPartidaUSD === 535000);
+assert("Conciliación matemática perfecta: 91 sin partida + 3 con partida = 94 total", repDir.factibilidad.sinPartidaCount + repDir.factibilidad.conPartidaCount === repDir.factibilidad.total);
+assert("Conciliación económica perfecta: USD 19,616,232 + USD 535,000 = USD 20,151,232", repDir.factibilidad.sinPartidaUSD + repDir.factibilidad.conPartidaUSD === repDir.factibilidad.montoTotalUSD);
+assert("Informe contiene datos de Página 2 (Cash Flow Oficial 01/04 - 31/03)", Boolean(repDir.cashflowEjecucion && repDir.cashflowEjecucion.mesesTotales));
+assert("Informe contiene datos de Página 3 (Sedes, Módulos y Certificación)", Boolean(repDir.desgloseSedes && repDir.desgloseModulos && repDir.semaforos));
 
 print("\n================================================================================");
 var failedCount = results.filter(function(r) { return r.status === 'FAIL'; }).length;

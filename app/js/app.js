@@ -719,7 +719,15 @@ const App = {
         `;
       }
       if (subtitleContainer) {
-        subtitleContainer.innerText = `Total comprometido en esta etapa: ${DataStore.formatUSD(totalStageUsd)}`;
+        if (this.pipelineSelectedStage === 'Estudio de Factibilidad') {
+          const sinPartida = itemsToDisplay.filter(x => !DataStore.hasValidPartida(x) || !parseFloat(x.monto_partida_usd));
+          const conPartida = itemsToDisplay.filter(x => DataStore.hasValidPartida(x) && parseFloat(x.monto_partida_usd) > 0);
+          const sinPartidaUsd = sinPartida.reduce((acc, x) => acc + (parseFloat(x.monto_total_usd) || parseFloat(x.monto_obra_usd) || 0), 0);
+          const conPartidaUsd = conPartida.reduce((acc, x) => acc + (parseFloat(x.monto_total_usd) || parseFloat(x.monto_obra_usd) || 0), 0);
+          subtitleContainer.innerHTML = `<span>Total estimado en estudio: <strong>${DataStore.formatUSD(totalStageUsd)}</strong></span> <span class="mx-1.5 text-slate-300">•</span> <span class="text-amber-700 font-semibold">${sinPartida.length} sin partida asignada (${DataStore.formatUSD(sinPartidaUsd)})</span> <span class="mx-1.5 text-slate-300">•</span> <span class="text-emerald-700 font-semibold">${conPartida.length} con partida asignada (${DataStore.formatUSD(conPartidaUsd)})</span>`;
+        } else {
+          subtitleContainer.innerText = `Total comprometido en esta etapa: ${DataStore.formatUSD(totalStageUsd)}`;
+        }
       }
       if (btnClearStage) btnClearStage.classList.remove('hidden');
 
@@ -2797,17 +2805,23 @@ const App = {
             </div>
           </div>
 
-          <!-- KPI 2: Factibilidad en Espera (Sin Partida) -->
+          <!-- KPI 2: Cartera en Estudio de Factibilidad (Total 94) -->
           <div class="bg-gradient-to-br from-amber-50 to-orange-50/70 border border-amber-200 rounded-xl p-3.5 shadow-2xs">
             <div class="flex items-center justify-between text-amber-900 mb-1">
-              <span class="font-bold text-[10px] uppercase tracking-wider">Factibilidad sin Partida</span>
+              <span class="font-bold text-[10px] uppercase tracking-wider">Estudios de Factibilidad</span>
               <i data-lucide="clock" class="w-4 h-4 text-amber-600"></i>
             </div>
-            <div class="text-xl font-black text-slate-900">${report.factibilidadSinPartida.total} <span class="text-xs font-semibold text-slate-500">en espera</span></div>
-            <div class="text-xs font-bold text-amber-800 mt-0.5">US$ ${fmt(report.factibilidadSinPartida.montoTotalUSD)} <span class="text-[9px] font-normal text-slate-500">(solicitado)</span></div>
-            <div class="mt-2 text-[10px] bg-amber-100/80 text-amber-900 font-bold px-2 py-0.5 rounded flex items-center space-x-1">
-              <i data-lucide="alert-triangle" class="w-3 h-3 text-amber-700 shrink-0"></i>
-              <span>Pendiente definición de Dirección</span>
+            <div class="text-xl font-black text-slate-900">${report.factibilidad ? report.factibilidad.total : report.factibilidadSinPartida.total} <span class="text-xs font-semibold text-slate-500">en estudio</span></div>
+            <div class="text-xs font-bold text-amber-800 mt-0.5">US$ ${fmt(report.factibilidad ? report.factibilidad.montoTotalUSD : report.factibilidadSinPartida.montoTotalUSD)} <span class="text-[9px] font-normal text-slate-500">(solicitado total)</span></div>
+            <div class="mt-2 text-[10px] space-y-0.5 border-t border-amber-200/60 pt-1">
+              <div class="flex justify-between text-amber-900">
+                <span>Sin Partida (Pendiente):</span>
+                <strong>${report.factibilidad ? report.factibilidad.sinPartidaCount : report.factibilidadSinPartida.total} (US$ ${fmt(report.factibilidad ? report.factibilidad.sinPartidaUSD : report.factibilidadSinPartida.montoTotalUSD)})</strong>
+              </div>
+              <div class="flex justify-between text-emerald-800">
+                <span>Con Partida Asignada:</span>
+                <strong>${report.factibilidad ? report.factibilidad.conPartidaCount : 0} (US$ ${fmt(report.factibilidad ? report.factibilidad.conPartidaUSD : 0)})</strong>
+              </div>
             </div>
           </div>
 
@@ -2900,15 +2914,15 @@ const App = {
             ` : ''}
           </div>
 
-          <!-- CUADRANTE 2: FACTIBILIDADES SIN PARTIDA -->
+          <!-- CUADRANTE 2: CARTERA EN ESTUDIO DE FACTIBILIDAD -->
           <div class="border border-amber-200 rounded-xl p-3.5 bg-amber-50/30 flex flex-col justify-between">
             <div>
               <div class="flex items-center justify-between pb-2 mb-2 border-b border-amber-200">
                 <h3 class="font-black text-xs text-amber-950 flex items-center space-x-1.5">
                   <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                  <span>Factibilidades sin Partida Asignada (${report.factibilidadSinPartida.total})</span>
+                  <span>Cartera en Factibilidad (${report.factibilidad ? report.factibilidad.total : report.factibilidadSinPartida.total})</span>
                 </h3>
-                <span class="text-[10px] font-bold text-amber-800 font-mono">Solicitado: US$ ${fmt(report.factibilidadSinPartida.montoTotalUSD)}</span>
+                <span class="text-[10px] font-bold text-amber-800 font-mono">Solicitado: US$ ${fmt(report.factibilidad ? report.factibilidad.montoTotalUSD : report.factibilidadSinPartida.montoTotalUSD)}</span>
               </div>
 
               <div class="overflow-x-auto max-h-[200px] overflow-y-auto">
@@ -2918,33 +2932,52 @@ const App = {
                       <th class="py-1 px-1.5">Cód</th>
                       <th class="py-1 px-1.5">Solicitud</th>
                       <th class="py-1 px-1.5">Sede</th>
+                      <th class="py-1 px-1.5">Partida</th>
                       <th class="py-1 px-1.5 text-center">Criticidad</th>
                       <th class="py-1 px-1.5 text-right">Estimado USD</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-amber-100">
-                    ${report.factibilidadSinPartida.items.length === 0 ? `
-                      <tr><td colspan="5" class="py-3 text-center text-slate-400">No hay factibilidades pendientes de partida</td></tr>
-                    ` : report.factibilidadSinPartida.items.slice(0, 6).map(item => `
-                      <tr class="hover:bg-white transition">
-                        <td class="py-1 px-1.5 font-mono font-bold text-amber-700">${item.id}</td>
-                        <td class="py-1 px-1.5 font-bold text-slate-800 max-w-[150px] truncate" title="${item.nombre}">${item.nombre}</td>
-                        <td class="py-1 px-1.5 text-slate-600">${item.sede}</td>
-                        <td class="py-1 px-1.5 text-center">
-                          <span class="font-bold text-[10px] ${item.prioridad_ponderada_default ? 'text-amber-700' : 'text-blue-700'}">
-                            ${item.prioridad_medica || item.prioridad_tecnica || 3}★ ${item.prioridad_ponderada_default ? '(Def)' : ''}
-                          </span>
-                        </td>
-                        <td class="py-1 px-1.5 text-right font-mono font-bold text-amber-900">$${fmt(item.monto_total_usd || item.monto_obra_usd || 0)}</td>
-                      </tr>
-                    `).join('')}
+                    ${(() => {
+                      const list = (report.factibilidad ? report.factibilidad.items : report.factibilidadSinPartida.items);
+                      if (!list || list.length === 0) {
+                        return `<tr><td colspan="6" class="py-3 text-center text-slate-400">No hay factibilidades en cartera</td></tr>`;
+                      }
+                      const sorted = [...list].sort((a, b) => {
+                        const aPart = DataStore.hasValidPartida(a) && a.monto_partida_usd > 0 ? 1 : 0;
+                        const bPart = DataStore.hasValidPartida(b) && b.monto_partida_usd > 0 ? 1 : 0;
+                        if (bPart !== aPart) return bPart - aPart;
+                        return (b.monto_total_usd || b.monto_obra_usd || 0) - (a.monto_total_usd || a.monto_obra_usd || 0);
+                      });
+                      return sorted.slice(0, 6).map(item => {
+                        const hasPart = DataStore.hasValidPartida(item) && item.monto_partida_usd > 0;
+                        return `
+                          <tr class="hover:bg-white transition">
+                            <td class="py-1 px-1.5 font-mono font-bold text-amber-700">${item.id}</td>
+                            <td class="py-1 px-1.5 font-bold text-slate-800 max-w-[130px] truncate" title="${item.nombre}">${item.nombre}</td>
+                            <td class="py-1 px-1.5 text-slate-600">${item.sede}</td>
+                            <td class="py-1 px-1.5">
+                              ${hasPart 
+                                ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">Part. ${item.partida}</span>` 
+                                : `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-amber-100 text-amber-800">Sin Partida</span>`}
+                            </td>
+                            <td class="py-1 px-1.5 text-center">
+                              <span class="font-bold text-[10px] ${item.prioridad_medica_ponderada_default ? 'text-amber-700' : 'text-blue-700'}">
+                                ${item.prioridad_medica || item.prioridad_tecnica || 3}★ ${item.prioridad_medica_ponderada_default ? '(Def)' : ''}
+                              </span>
+                            </td>
+                            <td class="py-1 px-1.5 text-right font-mono font-bold text-amber-900">$${fmt(item.monto_total_usd || item.monto_obra_usd || 0)}</td>
+                          </tr>
+                        `;
+                      }).join('');
+                    })()}
                   </tbody>
                 </table>
               </div>
             </div>
-            <div class="text-[10px] text-amber-800 font-semibold pt-1 mt-1 border-t border-amber-200 flex justify-between items-center">
-              <span>⚠️ Requieren asignación de partida y prioridad médica por Dirección</span>
-              <span class="text-slate-400 font-normal">Sin fondos asignados</span>
+            <div class="text-[10px] text-slate-600 font-medium pt-1 mt-1 border-t border-amber-200 flex justify-between items-center">
+              <span class="text-amber-800 font-semibold">⚠️ ${report.factibilidad ? report.factibilidad.sinPartidaCount : report.factibilidadSinPartida.total} sin partida (pendiente Dirección)</span>
+              <span class="text-emerald-800 font-bold">✓ ${report.factibilidad ? report.factibilidad.conPartidaCount : 0} con partida asignada</span>
             </div>
           </div>
 

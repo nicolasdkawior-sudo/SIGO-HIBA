@@ -202,7 +202,7 @@ Diseñado para que la Dirección pueda delegar decenas de obras rápidamente sin
 
 1. En la barra superior, haga clic en **"Informe Ejecutivo"** (exclusivo para perfil Administrador y Dirección).
 2. Se desplegará el panel oficial estandarizado en **3 Páginas A4 horizontales**:
-   - **Página 1 (Resumen General):** KPIs consolidados de cartera, cuadrante de obras en ejecución, factibilidades en espera de partida con prioridad técnica y médica, y auditoría de desvíos en partidas presupuestarias.
+   - **Página 1 (Resumen General):** KPIs consolidados de cartera, cuadrante de obras en ejecución activa, cartera en estudio de factibilidad (94 obras por USD 20,151,232, desglosadas en 91 sin partida y 3 con partida asignada con prioridad técnica y médica), y auditoría de desvíos en partidas presupuestarias.
    - **Página 2 (Cash Flow Oficial 01/04 - 31/03):** 4 KPIs financieros de desembolso, curva gráfica mensual de 12 barras (Abril a Marzo) distinguiendo en color azul lo ya pagado y en verde azulado lo proyectado a pagar, y tabla analítica por obra con porcentaje de anticipo, saldo y cuota mensual.
    - **Página 3 (Planificación Plurianual y Auditoría):** Desglose territorial por sede (Central, San Justo, Periféricos), por especialidad (Civil vs Infraestructura), auditoría de semáforos de plazo (alertas del 15% final), dictamen oficial de certificación institucional y casilleros para firmas de control.
 3. **Opciones de Descarga:**
