@@ -119,6 +119,7 @@ El flujo de avance de cada obra se rige por la siguiente secuencia canónica:
 4. `Departamento de Mantenimiento y Proyectos San Justo` *(Unificación canónica de Proyectos y Mantenimiento San Justo)*
 5. `Departamento de Instalaciones`
 6. `Departamento de Centros Periféricos` *(Ctros. Periféricos)*
+7. `Departamento de Habilitaciones y Seguridad e Higiene`
 
 ---
 
@@ -138,7 +139,8 @@ El flujo de avance de cada obra se rige por la siguiente secuencia canónica:
 | `usr-gimenez` | Ing. Giménez (PM Infraestructura) | `gimenez` | `gimenez.infra@hospitalitaliano.org.ar` | Departamento de Mantenimiento Central | Central | `pm_obra` | `puede_crear: true`, `puede_avanzar: true` |
 | `usr-waldemar` | Ing. Waldemar (PM San Justo) | `waldemar` | `waldemar.sanjusto@hospitalitaliano.org.ar` | Departamento de Mantenimiento y Proyectos San Justo | San Justo | `pm_obra` | Visibilidad de toda la sede; avance exclusivo de sus obras asignadas |
 | `usr-lopez` | Ing. López (PM Infraestructura) | `lopez` | `lopez.infra@hospitalitaliano.org.ar` | Departamento de Mantenimiento y Proyectos San Justo | San Justo | `pm_obra` | Visibilidad de toda la sede; avance exclusivo de sus obras asignadas |
-| `usr-cossano` | Arq. Cossano (PM Periféricos) | `cossano` | `cossano.perifericos@hospitalitaliano.org.ar` | Departamento de Centros Periféricos | Periféricos | `pm_obra` | `puede_crear: true`, `puede_avanzar: true` |
+| `usr-cossano` | Arq. Ana Cossano (PM San Justo) | `cossano` | `ana.cossano@hospitalitaliano.org.ar` | Departamento de Mantenimiento y Proyectos San Justo | San Justo | `pm_obra` | Visibilidad de toda la sede; avance exclusivo de sus obras asignadas |
+| `usr-pm-perifericos` | Arq. Coordinador Periféricos (PM) | `pm.perifericos` | `perifericos.obras@hospitalitaliano.org.ar` | Departamento de Centros Periféricos | Periféricos | `pm_obra` | `puede_crear: true`, `puede_avanzar: true` |
 | `usr-licitaciones` | Compras & Licitaciones | `licitaciones` | `licitaciones@hospitalitaliano.org.ar` | Dirección General / Administración | Todas | `licitaciones` | Gestión exclusiva de etapa En Licitación y adjudicación |
 | `usr-auditor` | Auditoría y Control | `auditor` | `auditor@hospitalitaliano.org.ar` | Dirección General / Administración | Todas | `visualizador` | `solo_lectura: true`, visualización y descarga de informes sin edición |
 
@@ -335,6 +337,7 @@ El sistema cuenta con un catálogo estructurado de usuarios auditados con permis
 - **Dirección Médica Central**
 - **Dirección Médica San Justo**
 - **Centros Periféricos** (Incorporada formalmente para unificar la supervisión de la red de consultorios y centros ambulatorios externos del hospital)
+- **Departamento de Habilitaciones y Seguridad e Higiene** (Incorporada formalmente para la gestión integral de normativas y seguridad laboral)
 - **Infraestructura & Mantenimiento**
 - **Compras & Contrataciones**
 - **Administración & Finanzas**
@@ -371,4 +374,23 @@ En pantallas estrechas, tablas de gestión complejas con múltiples columnas de 
    - Todos los botones de acción (`Asignar`, `Permisos`, `Quitar/Habilitar Acceso`, `Forzar Clave`, `Eliminar`, `Simular`) cuentan con propiedad `shrink-0`, impidiendo cualquier deformación o salto de línea.
 4. **Resultado Operativo:**
    - El Administrador puede navegar y scrollear horizontalmente para inspeccionar cualquier columna de la tabla mientras **la botonera de control permanece permanentemente fija, visible y accesible en el extremo derecho de la pantalla**, garantizando control total en cualquier computadora de la institución.
+
+---
+
+## 13. GESTIÓN DE IDENTIDAD OPERATIVA, BLINDAJE DE SAN JUSTO Y DEPARTAMENTO DE HABILITACIONES Y SEGURIDAD E HIGIENE
+
+### 13.1. Corrección Canónica de Arq. Ana Cossano y Blindaje de Obras de San Justo
+- **Adscripción Operativa de la Arq. Cossano:** La Arq. Ana Cossano (`usr-cossano`) forma parte canónica del **Departamento de Mantenimiento y Proyectos San Justo** con sede asignada en `San Justo`.
+- **Persistencia Inmutable en Modificación de Usuarios:** Se eliminó cualquier mecanismo de sobreescritura automática que restableciera la dependencia de usuarios existentes a valores por defecto en el arranque. Toda modificación realizada por el Administrador en la gestión de permisos se preserva de manera definitiva e inmutable en el almacenamiento del sistema.
+- **Blindaje de Cartera de San Justo:** Las obras radicadas en la sede San Justo (incluyendo `OBRA-054` "Nuevo Horno Rational + Obra" y `OBRA-059` "Farmacia - Óptica - Recuperación") pertenecen exclusivamente al departamento unificado de San Justo y no pueden derivar a Centros Periféricos, corrigiendo cualquier discrepancia visual en las insignias de las obras.
+- **PM Dedicado para Centros Periféricos:** Se estableció una cuenta dedicada (`usr-pm-perifericos` - Arq. Coordinador Periféricos) para la gestión técnica independiente de la red de centros médicos externos.
+
+### 13.2. Incorporación de la Dependencia Oficial "Habilitaciones y Seguridad e Higiene"
+- **Nueva Dependencia Institucional:** Se incorporó formalmente el **Departamento de Habilitaciones y Seguridad e Higiene** a la matriz canónica del hospital.
+- **Disponibilidad Transversal en la Plataforma:** Se encuentra habilitada de forma transversal en:
+  1. Formulario de Alta de Nuevos Usuarios (`#newUserDependencia`).
+  2. Modal de Edición de Permisos de Usuarios (`#editUserDependencia`).
+  3. Selector de Dependencia en la Ficha de Obra (`#modalObraDependenciaSelect`).
+  4. Filtros de visualización por dependencia en el Tablero Principal y en la Asignación de Obras.
+
 

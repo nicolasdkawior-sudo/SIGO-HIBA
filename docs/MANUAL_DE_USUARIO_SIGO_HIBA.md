@@ -287,3 +287,22 @@ Para administradores que operan el sistema desde laptops (1366x768), computadora
 - **Blindaje de Decisiones de Gestión:** La plataforma SIGO-HIBA opera bajo una directiva permanente que exige actualizar la memoria técnica y el manual de usuario en cada modificación de la plataforma.
 - **Protección de Datos Maestros:** Todas las configuraciones operativas consensuadas por la administración (asignación de carteras, sedes, dependencias, partidas presupuestarias, montos auditados, reglas de factibilidad sin plazos, período contable 01/04-31/03 y distribución con anticipos de compras) se encuentran documentadas como línea de base oficial e inalterable, resguardando al sistema contra modificaciones o retrocesos no autorizados.
 
+---
+
+## 13. ALTA DE USUARIOS EN "HABILITACIONES Y SEGURIDAD E HIGIENE" Y SEDE SAN JUSTO
+
+### 13.1. Asignación de la Dependencia "Habilitaciones y Seguridad e Higiene"
+1. Desde el panel **"Configurar Usuarios"**, en el formulario superior **"Crear Nuevo Usuario"**:
+   - Complete Nombre, Apellido, Usuario (para login) y Correo electrónico.
+   - En el desplegable **Dependencia Oficial**, ahora puede seleccionar **"Departamento de Habilitaciones y Seguridad e Higiene"**.
+   - Asigne la Sede correspondiente (`Central`, `San Justo`, `Periféricos` o `Todas`) y el Rol deseado.
+   - Haga clic en **"Registrar y Crear Usuario"**.
+2. **Edición de Usuarios Existentes:**
+   - En la tabla de usuarios, ubique al usuario deseado y haga clic en el botón azul **"Permisos"**.
+   - En el campo **"Dependencia / Departamento"**, seleccione **"Departamento de Habilitaciones y Seguridad e Higiene"** o la dependencia que corresponda (por ejemplo, `Departamento de Mantenimiento y Proyectos San Justo` para la Arq. Ana Cossano).
+   - Haga clic en **"Guardar Permisos"**. La asignación quedará guardada de forma definitiva y no se reseteará en futuras sesiones.
+
+### 13.2. Asignación de Obras y Sede San Justo
+- Las obras radicadas en la sede San Justo pertenecen invariablemente al equipo unificado de San Justo y reflejan su insignia correspondiente en tableros y listados.
+
+

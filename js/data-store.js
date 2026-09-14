@@ -207,8 +207,26 @@ const DEFAULT_USERS = [
   {
     id: 'usr-cossano',
     username: 'cossano',
-    nombre: 'Arq. Cossano (PM Periféricos)',
-    email: 'cossano.perifericos@hospitalitaliano.org.ar',
+    nombre: 'Arq. Ana Cossano (PM San Justo)',
+    email: 'ana.cossano@hospitalitaliano.org.ar',
+    salt: DEFAULT_SALT,
+    password_hash: DEFAULT_ADMIN_HASH,
+    debe_cambiar_clave: false,
+    sede: 'San Justo',
+    dependencia: 'Departamento de Mantenimiento y Proyectos San Justo',
+    rol: 'pm_obra',
+    activo: true,
+    puede_crear: true,
+    puede_avanzar: true,
+    puede_priorizar_medica: false,
+    puede_asignar_partida: false,
+    solo_lectura: false
+  },
+  {
+    id: 'usr-pm-perifericos',
+    username: 'pm.perifericos',
+    nombre: 'Arq. Coordinador Periféricos (PM)',
+    email: 'perifericos.obras@hospitalitaliano.org.ar',
     salt: DEFAULT_SALT,
     password_hash: DEFAULT_ADMIN_HASH,
     debe_cambiar_clave: false,
@@ -396,7 +414,9 @@ const DataStore = {
     'Departamento de Proyectos Central',
     'Departamento de Mantenimiento y Proyectos San Justo',
     'Departamento de Instalaciones',
-    'Departamento de Centros Periféricos'
+    'Departamento de Centros Periféricos',
+    'Departamento de Habilitaciones y Seguridad e Higiene',
+    'Dirección General / Administración'
   ],
 
   normalizeDependencia(dep) {
@@ -421,6 +441,13 @@ const DataStore = {
         d === 'Periféricos' ||
         d === 'Perifericos') {
       return 'Departamento de Centros Periféricos';
+    }
+    if (d === 'Departamento de Habilitaciones y Seguridad e Higiene' ||
+        d === 'Habilitaciones y Seguridad e Higiene' ||
+        d === 'Habilitaciones y seguridad e higiene' ||
+        d.toLowerCase().includes('habilitacion') ||
+        d.toLowerCase().includes('seguridad e higiene')) {
+      return 'Departamento de Habilitaciones y Seguridad e Higiene';
     }
     return d;
   },
@@ -466,9 +493,21 @@ const DataStore = {
             existing.nombre = existing.nombre || defU.nombre;
             existing.email = existing.email || defU.email;
             existing.sede = existing.sede || defU.sede;
-            existing.dependencia = (defU.id === 'usr-kawior-pm' || defU.id === 'usr-cossano') ? defU.dependencia : (existing.dependencia || defU.dependencia);
+            existing.dependencia = existing.dependencia || defU.dependencia;
             existing.rol = existing.rol || defU.rol;
             if (existing.activo === undefined) existing.activo = true;
+
+            // Migración automática de Cossano si arrastra datos obsoletos de Periféricos en localStorage
+            if (existing.id === 'usr-cossano') {
+              if (existing.dependencia === 'Departamento de Centros Periféricos' || 
+                  existing.sede === 'Periféricos' || 
+                  (existing.nombre && existing.nombre.includes('Periféricos'))) {
+                existing.dependencia = 'Departamento de Mantenimiento y Proyectos San Justo';
+                existing.sede = 'San Justo';
+                existing.nombre = 'Arq. Ana Cossano (PM San Justo)';
+                existing.email = 'ana.cossano@hospitalitaliano.org.ar';
+              }
+            }
 
             // Sincronizar SIEMPRE credenciales maestras si no cambió voluntariamente la clave
             if (!existing.debe_cambiar_clave) {
@@ -563,9 +602,15 @@ const DataStore = {
     // Normalizar datos (unificación de Anteproyecto en Factibilidad y Proyecto para licitar en Proyecto)
     this.items.forEach(item => {
       if (item.sede === 'Almagro') item.sede = 'Central';
-      if (item.sede === 'Periférico') item.sede = 'Periféricos';
+      if (item.sede === 'Periférico' || item.sede === 'Ctros Medicos' || item.sede === 'Centros Médicos') item.sede = 'Periféricos';
       if (item.estado === 'Ante Proyecto') item.estado = 'Estudio de Factibilidad';
       if (item.estado === 'Proyecto para licitar') item.estado = 'Proyecto';
+
+      // Saneamiento de obras de San Justo que pudieran haber quedado erróneamente con Centros Periféricos
+      if ((item.sede || '').toLowerCase().includes('justo') && 
+          (item.dependencia === 'Departamento de Centros Periféricos' || item.dependencia === 'Centros Periféricos')) {
+        item.dependencia = 'Departamento de Mantenimiento y Proyectos San Justo';
+      }
 
       // Sincronizar dependencia canónica primero (repara automáticamente discrepancias en localStorage)
       item.dependencia = this.normalizeDependencia(this.getObraDependencia(item));
@@ -1591,20 +1636,20 @@ const DataStore = {
     const sede = (item.sede || '').toLowerCase();
 
     // 1. San Justo unificado: todas las obras radicadas en la sede San Justo pertenecen al departamento unificado de San Justo,
-    // salvo que hayan sido formalmente asignadas o derivadas por Admin a otra dependencia externa válida mediante responsable_id.
+    // salvo que hayan sido formalmente asignadas o derivadas por Admin a una dependencia transversal válida mediante responsable_id.
     if (sede.includes('justo')) {
       if (item.responsable_id) {
         const respUser = this.users.find(u => u.id === item.responsable_id);
         if (respUser && respUser.dependencia && respUser.dependencia !== 'Dirección General / Administración') {
           const uNorm = this.normalizeDependencia(respUser.dependencia);
-          if (!uNorm.toLowerCase().includes('san justo')) {
+          if (uNorm === 'Departamento de Instalaciones' || uNorm === 'Departamento de Habilitaciones y Seguridad e Higiene') {
             return uNorm;
           }
         }
       }
       if (item.dependencia && item.dependencia.trim() !== '' && item.dependencia !== 'Dirección General / Administración') {
         const norm = this.normalizeDependencia(item.dependencia);
-        if (!norm.toLowerCase().includes('san justo') && item.responsable_id) {
+        if (norm === 'Departamento de Instalaciones' || norm === 'Departamento de Habilitaciones y Seguridad e Higiene') {
           return norm;
         }
       }
@@ -1633,17 +1678,19 @@ const DataStore = {
       return this.normalizeDependencia(item.dependencia);
     }
 
-    // 4. Centros Periféricos: obras radicadas en la sede Periféricos
-    if (sede.includes('perif')) {
+    // 4. Centros Periféricos: obras radicadas en la sede Periféricos o Centros Médicos
+    if (sede.includes('perif') || sede.includes('ctros') || sede.includes('centro')) {
       return 'Departamento de Centros Periféricos';
     }
 
     // 5. Heurística según categoría, tipo y sede para obras sin asignar
-
     const cat = (item.categoria || '').toLowerCase();
     const nom = (item.nombre || '').toLowerCase();
     const tipo = (item.tipo || '').toLowerCase();
 
+    if (nom.includes('habilitacion') || nom.includes('seguridad e higiene') || cat.includes('habilitacion') || cat.includes('seguridad')) {
+      return 'Departamento de Habilitaciones y Seguridad e Higiene';
+    }
     if (cat.includes('instalaci') || nom.includes('instalaci') || nom.includes('clima') || nom.includes('termo') || nom.includes('electr')) {
       return 'Departamento de Instalaciones';
     }
@@ -2590,7 +2637,7 @@ const DataStore = {
       nombre: fullNombre,
       nombre_pila: nombre,
       apellido: apellido,
-      dependencia: userData.dependencia || 'Departamento de Proyectos Central',
+      dependencia: this.normalizeDependencia(userData.dependencia || 'Departamento de Proyectos Central'),
       email: (userData.email || `${username}@hospitalitaliano.org.ar`).trim().toLowerCase(),
       salt: salt,
       password_hash: hashPassword(tempPassword, salt),
@@ -2683,7 +2730,7 @@ const DataStore = {
     if (data.apellido !== undefined) user.apellido = (data.apellido || '').trim();
     if (data.email) user.email = data.email.trim().toLowerCase();
     if (data.sede) user.sede = data.sede;
-    if (data.dependencia) user.dependencia = data.dependencia;
+    if (data.dependencia) user.dependencia = this.normalizeDependencia(data.dependencia);
     if (data.rol) user.rol = data.rol;
     if (data.puede_crear !== undefined) user.puede_crear = Boolean(data.puede_crear);
     if (data.puede_avanzar !== undefined) user.puede_avanzar = Boolean(data.puede_avanzar);

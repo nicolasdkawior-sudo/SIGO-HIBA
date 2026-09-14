@@ -207,17 +207,21 @@ assert("Autenticación exitosa de Ing. Kawior", authKawior.success && authKawior
 assert("Ing. Kawior pertenece a Mantenimiento Central", authKawior.user.dependencia === 'Departamento de Mantenimiento Central');
 
 // ------------------------------------------------------------------------------
-// FASE 6: ROL EQUIPO UNIFICADO SAN JUSTO (usr-waldemar y usr-lopez)
+// FASE 6: REGLA ESPECIAL UNIFICADA SAN JUSTO (usr-waldemar / usr-lopez / usr-cossano)
 // ------------------------------------------------------------------------------
-print("\n--- FASE 6: REGLA ESPECIAL UNIFICADA SAN JUSTO (usr-waldemar / usr-lopez) ---");
+print("\n--- FASE 6: REGLA ESPECIAL UNIFICADA SAN JUSTO (usr-waldemar / usr-lopez / usr-cossano) ---");
 var authWaldemar = DataStore.authenticate('waldemar', 'Admin2025!');
-assert("Autenticación exitosa de Ing. Waldemar (San Justo)", authWaldemar.success);
+assert("Autenticación exitosa de Ing. Waldemar (San Justo)", authWaldemar.success && authWaldemar.user.rol === 'pm_obra');
 assert("Dependencia canónica unificada de San Justo", authWaldemar.user.dependencia === 'Departamento de Mantenimiento y Proyectos San Justo');
 
-// Crear dos obras de San Justo: una para Waldemar y otra para López
+var authCossano = DataStore.authenticate('cossano', 'Admin2025!');
+assert("Autenticación exitosa de Arq. Ana Cossano", authCossano.success);
+assert("Dependencia canónica de San Justo para Arq. Cossano", authCossano.user.dependencia === 'Departamento de Mantenimiento y Proyectos San Justo');
+assert("Sede canónica San Justo para Arq. Cossano", authCossano.user.sede === 'San Justo');
+
 var obraWaldemar = {
-  id: 'SJ-WALDEMAR-01',
-  nombre: 'Ampliación Shockroom San Justo',
+  id: 'SJ-OBRA-TEST-01',
+  nombre: 'Remodelación Guardia San Justo',
   tipo: 'Obra Civil',
   sede: 'San Justo',
   dependencia: 'Departamento de Mantenimiento y Proyectos San Justo',
@@ -226,7 +230,7 @@ var obraWaldemar = {
   responsable: 'Ing. Waldemar (PM San Justo)'
 };
 var obraLopez = {
-  id: 'SJ-LOPEZ-01',
+  id: 'SJ-OBRA-TEST-02',
   nombre: 'Repotenciación Grupos Electrógenos San Justo',
   tipo: 'Infraestructura',
   sede: 'San Justo',
@@ -246,13 +250,20 @@ assert("Waldemar puede visualizar la obra de López gracias a la unificación de
 assert("Waldemar PUEDE avanzar su propia obra", DataStore.canUserAdvanceItem(obraWaldemar));
 assert("Waldemar NO PUEDE avanzar la obra asignada a López (Seguridad Operativa)", !DataStore.canUserAdvanceItem(obraLopez));
 
+// Comprobar blindaje de obras de San Justo asignadas a Cossano (OBRA-054 y OBRA-059)
+var obra054 = DataStore.items.find(function(x) { return x.id === 'OBRA-054'; });
+if (obra054) {
+  assert("OBRA-054 pertenece a Mantenimiento y Proyectos San Justo", DataStore.getObraDependencia(obra054) === 'Departamento de Mantenimiento y Proyectos San Justo');
+  assert("OBRA-054 NO pertenece a Centros Periféricos", DataStore.getObraDependencia(obra054) !== 'Departamento de Centros Periféricos');
+}
+
 // ------------------------------------------------------------------------------
-// FASE 6.1: DEPENDENCIA CENTROS PERIFÉRICOS (usr-cossano)
+// FASE 6.1: DEPENDENCIA CENTROS PERIFÉRICOS (usr-pm-perifericos)
 // ------------------------------------------------------------------------------
-print("\n--- FASE 6.1: ROL PM CENTROS PERIFÉRICOS (usr-cossano) ---");
-var authCossano = DataStore.authenticate('cossano', 'Admin2025!');
-assert("Autenticación exitosa de Arq. Cossano", authCossano.success);
-assert("Dependencia canónica de Centros Periféricos", authCossano.user.dependencia === 'Departamento de Centros Periféricos');
+print("\n--- FASE 6.1: ROL PM CENTROS PERIFÉRICOS (usr-pm-perifericos) ---");
+var authPerif = DataStore.authenticate('pm.perifericos', 'Admin2025!');
+assert("Autenticación exitosa de PM Centros Periféricos", authPerif.success);
+assert("Dependencia canónica de Centros Periféricos", authPerif.user.dependencia === 'Departamento de Centros Periféricos');
 assert("Normalización de alias 'Ctros. Periféricos' a 'Departamento de Centros Periféricos'", DataStore.normalizeDependencia('Ctros. Periféricos') === 'Departamento de Centros Periféricos');
 assert("Normalización de alias 'Ctros. Perifericos' a 'Departamento de Centros Periféricos'", DataStore.normalizeDependencia('Ctros. Perifericos') === 'Departamento de Centros Periféricos');
 
@@ -262,13 +273,39 @@ var obraPeriferico = {
   sede: 'Periféricos',
   estado: 'Proyecto',
   monto_total_usd: 120000,
-  responsable_id: 'usr-cossano',
-  responsable: 'Arq. Cossano (PM Periféricos)',
+  responsable_id: 'usr-pm-perifericos',
+  responsable: 'Arq. Coordinador Periféricos (PM)',
   dependencia: 'Departamento de Centros Periféricos'
 };
-DataStore.currentUser = authCossano.user;
-assert("Cossano puede visualizar su obra de Centros Periféricos", DataStore.canUserViewObra(obraPeriferico));
+DataStore.currentUser = authPerif.user;
+assert("PM Periféricos puede visualizar su obra de Centros Periféricos", DataStore.canUserViewObra(obraPeriferico));
 assert("getObraDependencia asigna Departamento de Centros Periféricos a obras en sede Periféricos", DataStore.getObraDependencia({ sede: 'Periféricos' }) === 'Departamento de Centros Periféricos');
+
+// ------------------------------------------------------------------------------
+// FASE 6.2: HABILITACIONES Y SEGURIDAD E HIGIENE + PERSISTENCIA DE PERMISOS
+// ------------------------------------------------------------------------------
+print("\n--- FASE 6.2: HABILITACIONES Y SEGURIDAD E HIGIENE + PERSISTENCIA ---");
+assert("Normalización de 'Habilitaciones y Seguridad e Higiene'", DataStore.normalizeDependencia('Habilitaciones y Seguridad e Higiene') === 'Departamento de Habilitaciones y Seguridad e Higiene');
+assert("Normalización de 'Habilitaciones y seguridad e higiene'", DataStore.normalizeDependencia('Habilitaciones y seguridad e higiene') === 'Departamento de Habilitaciones y Seguridad e Higiene');
+assert("Normalización de 'Departamento de Habilitaciones y Seguridad e Higiene'", DataStore.normalizeDependencia('Departamento de Habilitaciones y Seguridad e Higiene') === 'Departamento de Habilitaciones y Seguridad e Higiene');
+
+var resNewUser = DataStore.addUser({
+  nombre: 'Lic. Seguridad Higiene',
+  username: 'seguridad.test',
+  email: 'seguridad@hospitalitaliano.org.ar',
+  dependencia: 'Habilitaciones y seguridad e higiene',
+  sede: 'Todas',
+  rol: 'pm_obra'
+});
+assert("Alta de usuario con dependencia Habilitaciones y Seguridad e Higiene", resNewUser.success && resNewUser.user.dependencia === 'Departamento de Habilitaciones y Seguridad e Higiene');
+
+// Persistencia inmutable de modificación de permisos
+var updateRes = DataStore.updateUserPermissions('usr-cossano', {
+  dependencia: 'Departamento de Mantenimiento y Proyectos San Justo',
+  sede: 'San Justo'
+});
+assert("Actualización exitosa de permisos para Cossano", updateRes.success);
+assert("Permisos actualizados conservan dependencia San Justo", updateRes.user.dependencia === 'Departamento de Mantenimiento y Proyectos San Justo');
 
 // ------------------------------------------------------------------------------
 // FASE 7: ROL AUDITORÍA / VISUALIZADOR (usr-auditor)
