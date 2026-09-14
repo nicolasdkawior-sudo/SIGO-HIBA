@@ -136,13 +136,15 @@ Los administradores cuentan con control absoluto sobre la plataforma:
 
 ### 4.2. Operatoria de Dirección Médica (`direccion.medica`)
 La Dirección Médica interviene en la etapa inicial de viabilidad:
-1. En el Dashboard superior se mostrará una barra de alerta destacada si existen obras en factibilidad pendientes de evaluación: *"Atención Dirección Médica: X obras requieren tu evaluación"*.
-2. Al pulsar **"Asignar Partida Presupuestaria"**:
+1. **Obras en Factibilidad (Sin Plazos):** Dado que las obras en Estudio de Factibilidad están en análisis técnico preliminar y aún no disponen de partida ni proyecto aprobado, **no computan plazos de entrega ni semáforos de vencimiento**, visualizándose con un badge neutro `"En Análisis"`.
+2. En el Dashboard superior se mostrará una barra de alerta destacada si existen obras en factibilidad pendientes de evaluación: *"Atención Dirección Médica: X obras requieren tu evaluación"*.
+3. Al pulsar **"Asignar Partida Presupuestaria"**:
    - Deberá ingresar el **Número de Partida Presupuestaria** y el **Monto Oficial en USD**.
    - Se solicitará la **Prioridad / Criticidad Médica** (1★ a 5★).
    - **Regla Canónica de Fallback por Defecto:** Si Dirección Médica no define una criticidad específica en ese momento, el sistema adoptará automáticamente la criticidad técnica previamente cargada por el solicitante, dejando constancia formal y visible en todo el sistema con la leyenda: *"Ponderada por default por no contar con criticidad de Dirección"*.
    - **Semáforo sin ingreso manual:** Al momento de guardar la partida y monto, el sistema **no solicita fecha de semáforo**, ya que el semáforo se calcula de forma 100% automática al 15% del plazo de la etapa.
-3. Una vez asignada la partida y monto, la obra queda formalmente habilitada para que el equipo técnico pueda iniciar el desarrollo del `Proyecto`.
+   - **Salida Automática del Listado de Pendientes:** Una vez asignada la partida y monto (o al avanzar a Proyecto), la obra **desaparece automáticamente de forma inmediata del listado y modal de pendientes de Dirección Médica**.
+4. Una vez asignada la partida y monto, la obra queda formalmente habilitada para que el equipo técnico pueda iniciar el desarrollo del `Proyecto`.
 
 ### 4.3. Operatoria de Project Managers (`palmioli`, `gallardo`, `kawior`, etc.)
 1. **Recepción de Obra y Plazo Obligatorio:**

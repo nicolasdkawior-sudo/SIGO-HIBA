@@ -473,6 +473,67 @@ assert("Conciliación económica perfecta: USD 19,616,232 + USD 535,000 = USD 20
 assert("Informe contiene datos de Página 2 (Cash Flow Oficial 01/04 - 31/03)", Boolean(repDir.cashflowEjecucion && repDir.cashflowEjecucion.mesesTotales));
 assert("Informe contiene datos de Página 3 (Sedes, Módulos y Certificación)", Boolean(repDir.desgloseSedes && repDir.desgloseModulos && repDir.semaforos));
 
+// --- FASE 11: SUPRESIÓN DE PLAZOS EN FACTIBILIDAD Y SALIDA AUTOMÁTICA DE PENDIENTES DE DIRECCIÓN MÉDICA ---
+print("\n--- FASE 11: SUPRESIÓN DE PLAZOS EN FACTIBILIDAD Y SALIDA AUTOMÁTICA DE PENDIENTES DE DIRECCIÓN MÉDICA ---");
+
+// 11.1 Semáforo neutro sin plazos en Factibilidad
+var obraTestFact = {
+  id: 'OBRA-TEST-FACT-NOPLAZO',
+  nombre: 'Obra de Factibilidad en Análisis',
+  estado: 'Estudio de Factibilidad',
+  prioridad_tecnica: 4,
+  prioridad_medica: null,
+  fecha_inicio_etapa: '2026-01-01',
+  fecha_fin_etapa: '2026-02-01', // Aunque tuviera fecha residual, calculateSemaforo debe anularla
+  monto_obra_usd: 150000
+};
+var semFact = DataStore.calculateSemaforo(obraTestFact);
+assert("En Factibilidad calculateSemaforo retorna status 'en_analisis'", semFact.status === 'en_analisis');
+assert("En Factibilidad calculateSemaforo retorna label 'En Análisis'", semFact.label === 'En Análisis');
+assert("En Factibilidad calculateSemaforo retorna noPlazo true", semFact.noPlazo === true);
+assert("En Factibilidad calculateSemaforo retorna days null (sin días restantes)", semFact.days === null);
+
+// 11.2 Creación de nueva Factibilidad nace sin fecha fin ni requerimiento de plazo
+DataStore.currentUser = authAdmin.user;
+var nuevaFact = DataStore.createFactibilidad({
+  nombre: 'Nueva Solicitud Sanitaria en Factibilidad',
+  sede: 'Central',
+  sector_solicitante: 'Cardiología',
+  motivo: 'Renovación de equipamiento',
+  requerimiento_minimo: 'Espacio plomado',
+  monto_estimado: 80000,
+  responsable: 'Admin',
+  prioridad_tecnica: 4
+});
+assert("Nueva obra en Factibilidad nace con fecha_fin_etapa null", nuevaFact.fecha_fin_etapa === null);
+assert("Nueva obra en Factibilidad nace con requiere_plazo_etapa false", nuevaFact.requiere_plazo_etapa === false);
+assert("Nueva obra en Factibilidad nace con semáforo 'en_analisis'", DataStore.calculateSemaforo(nuevaFact).status === 'en_analisis');
+
+// 11.3 Listado de pendientes de Dirección Médica: inclusión inicial
+var pendingListInicial = DataStore.getPendingMedicalPriorityItems();
+var estaEnPendingInicial = pendingListInicial.some(function(it) { return it.id === nuevaFact.id; });
+assert("Obra nueva en Factibilidad sin ponderación médica figura en getPendingMedicalPriorityItems()", estaEnPendingInicial);
+
+// 11.4 Administrador asigna partida y monto sin ponderación médica -> Criticidad médica se iguala a técnica por default
+var resPartidaDef = DataStore.asignarPartidaPresupuestaria(nuevaFact.id, '6440026', 80000, null);
+assert("Asignación de partida exitosa por el Administrador", resPartidaDef.success === true);
+assert("Criticidad médica se iguala automáticamente a la técnica (4★)", nuevaFact.prioridad_medica === 4);
+assert("Obra queda marcada con prioridad_medica_ponderada_default true", nuevaFact.prioridad_medica_ponderada_default === true);
+
+// 11.5 Salida automática e inmediata del listado de pendientes de Dirección Médica
+var pendingListPostPartida = DataStore.getPendingMedicalPriorityItems();
+var estaEnPendingPostPartida = pendingListPostPartida.some(function(it) { return it.id === nuevaFact.id; });
+assert("Obra con partida asignada y ponderación default DESAPARECE AUTOMÁTICAMENTE de getPendingMedicalPriorityItems()", !estaEnPendingPostPartida);
+
+// 11.6 Al avanzar de Factibilidad a Proyecto: desaparece de Factibilidad y sigue excluida de pendientes
+var resPaseProy = DataStore.confirmAndAdvanceStage(nuevaFact.id, '2026-09-14', null, 'Avanza con partida presupuestaria');
+assert("Pase exitoso a Proyecto", resPaseProy.success === true && resPaseProy.nextStage === 'Proyecto');
+assert("Obra en etapa Proyecto NO figura en getPendingMedicalPriorityItems()", !DataStore.getPendingMedicalPriorityItems().some(function(it) { return it.id === nuevaFact.id; }));
+
+// Limpieza de obra temporal de prueba
+DataStore.items = DataStore.items.filter(function(it) { return it.id !== nuevaFact.id; });
+DataStore.persist();
+
 print("\n================================================================================");
 var failedCount = results.filter(function(r) { return r.status === 'FAIL'; }).length;
 var passedCount = results.filter(function(r) { return r.status === 'PASS'; }).length;

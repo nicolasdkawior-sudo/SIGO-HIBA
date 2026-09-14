@@ -824,7 +824,7 @@ const App = {
           <div class="flex items-center space-x-2">
             <div class="text-right mr-2">
               <div class="text-sm font-bold text-slate-800">${monto}</div>
-              <div class="text-xs text-slate-400">${item.fecha_fin_etapa ? 'Límite: ' + item.fecha_fin_etapa : (sem.status === 'sin_plazo' ? '<span class="text-amber-700 font-bold">⚠️ Plazo pendiente</span>' : 'Sin fecha')}</div>
+              <div class="text-xs text-slate-400">${(item.estado === 'Estudio de Factibilidad' || item.estado === 'Ante Proyecto') ? '<span class="text-slate-400 italic">Sin plazo (En análisis)</span>' : (item.fecha_fin_etapa ? 'Límite: ' + item.fecha_fin_etapa : (sem.status === 'sin_plazo' ? '<span class="text-amber-700 font-bold">⚠️ Plazo pendiente</span>' : 'Sin fecha'))}</div>
             </div>
             ${(isAdmin || canAdvanceThis) ? `
               <button onclick="event.stopPropagation(); App.openObraModal('${item.id}', true)" 
@@ -939,12 +939,19 @@ const App = {
                 <span class="font-bold text-slate-800">${monto}</span>
               </div>
 
-              <div class="bg-slate-50 p-2 rounded-lg text-[11px] text-slate-500 mb-2.5 flex items-center justify-between">
-                <span>Límite etapa:</span>
-                <span class="font-semibold ${sem.status === 'vencido' ? 'text-red-600 font-bold' : (sem.status === 'sin_plazo' ? 'text-amber-700 font-bold' : 'text-slate-700')}">
-                  ${item.fecha_fin_etapa || (sem.status === 'sin_plazo' ? '⚠️ Por definir' : 'Sin fecha')}
-                </span>
-              </div>
+              ${(item.estado === 'Estudio de Factibilidad' || item.estado === 'Ante Proyecto') ? `
+                <div class="bg-slate-50 p-2 rounded-lg text-[11px] text-slate-500 mb-2.5 flex items-center justify-between">
+                  <span>Plazo:</span>
+                  <span class="text-slate-500 font-medium italic">Sin plazo (En análisis)</span>
+                </div>
+              ` : `
+                <div class="bg-slate-50 p-2 rounded-lg text-[11px] text-slate-500 mb-2.5 flex items-center justify-between">
+                  <span>Límite etapa:</span>
+                  <span class="font-semibold ${sem.status === 'vencido' ? 'text-red-600 font-bold' : (sem.status === 'sin_plazo' ? 'text-amber-700 font-bold' : 'text-slate-700')}">
+                    ${item.fecha_fin_etapa || (sem.status === 'sin_plazo' ? '⚠️ Por definir' : 'Sin fecha')}
+                  </span>
+                </div>
+              `}
 
               <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
                 <div class="truncate max-w-[130px]">
@@ -1092,7 +1099,7 @@ const App = {
               <span class="text-slate-400 text-[10px] ml-1 font-medium" title="Consulta departamental">👁️</span>
             ` : ''}
           </td>
-          <td class="py-3 px-4 text-xs ${sem.status === 'sin_plazo' ? 'text-amber-700 font-bold' : 'text-slate-500'}">${item.fecha_fin_etapa || (sem.status === 'sin_plazo' ? '⚠️ Por definir' : '-')}</td>
+          <td class="py-3 px-4 text-xs ${(item.estado === 'Estudio de Factibilidad' || item.estado === 'Ante Proyecto') ? 'text-slate-400 italic' : (sem.status === 'sin_plazo' ? 'text-amber-700 font-bold' : 'text-slate-500')}">${(item.estado === 'Estudio de Factibilidad' || item.estado === 'Ante Proyecto') ? 'Sin plazo (En análisis)' : (item.fecha_fin_etapa || (sem.status === 'sin_plazo' ? '⚠️ Por definir' : '-'))}</td>
           <td class="py-3 px-4 text-center" onclick="event.stopPropagation()">
             <div class="flex items-center justify-center space-x-1.5">
               ${(isAdmin || canAdvanceThis) ? `
@@ -1125,7 +1132,7 @@ const App = {
     if (!ganttContainer) return;
 
     const items = DataStore.getFilteredItems(this.filters)
-      .filter(x => x.fecha_inicio_etapa || x.fecha_fin_etapa || x.fecha_fin_obra)
+      .filter(x => (x.fecha_inicio_etapa || x.fecha_fin_etapa || x.fecha_fin_obra) && x.estado !== 'Estudio de Factibilidad' && x.estado !== 'Ante Proyecto')
       .slice(0, 40);
 
     const months = [
@@ -4265,8 +4272,39 @@ const App = {
 
     setVal('modalObraProveedor', item.proveedor || '');
     setVal('modalObraFechaInicio', item.fecha_inicio_etapa || '');
-    setVal('modalObraFechaFin', item.fecha_fin_etapa || '');
-    setVal('modalObraFechaFinGlobal', item.fecha_fin_obra || '');
+
+    const isFactibilidad = (item.estado === 'Estudio de Factibilidad' || item.estado === 'Ante Proyecto');
+    const noticeFactPlazo = document.getElementById('modalObraFactibilidadPlazoNotice');
+    const inputFechaFin = document.getElementById('modalObraFechaFin');
+    const inputFechaFinGlobal = document.getElementById('modalObraFechaFinGlobal');
+
+    if (noticeFactPlazo) {
+      noticeFactPlazo.classList.toggle('hidden', !isFactibilidad);
+    }
+    if (isFactibilidad) {
+      setVal('modalObraFechaFin', '');
+      setVal('modalObraFechaFinGlobal', '');
+      if (inputFechaFin) {
+        inputFechaFin.disabled = true;
+        inputFechaFin.title = 'Sin plazo en etapa de Estudio de Factibilidad';
+      }
+      if (inputFechaFinGlobal) {
+        inputFechaFinGlobal.disabled = true;
+        inputFechaFinGlobal.title = 'Sin plazo en etapa de Estudio de Factibilidad';
+      }
+    } else {
+      setVal('modalObraFechaFin', item.fecha_fin_etapa || '');
+      setVal('modalObraFechaFinGlobal', item.fecha_fin_obra || '');
+      if (inputFechaFin) {
+        inputFechaFin.disabled = false;
+        inputFechaFin.title = '';
+      }
+      if (inputFechaFinGlobal) {
+        inputFechaFinGlobal.disabled = false;
+        inputFechaFinGlobal.title = '';
+      }
+    }
+
     setVal('modalObraPrioridadTec', item.prioridad_tecnica || 1);
     setVal('modalObraPrioridadMed', item.prioridad_medica || '');
     const badgeDefaultMed = document.getElementById('modalObraPrioridadMedDefaultBadge');
@@ -4882,10 +4920,32 @@ const App = {
     item.responsable_id = newResponsableId || null;
     item.proveedor = newProveedor;
     item.fecha_inicio_etapa = newFechaInicio;
-    item.fecha_fin_etapa = newFechaFin;
-    item.fecha_fin_obra = newFechaFinGlobal;
+    const isFact = (item.estado === 'Estudio de Factibilidad' || item.estado === 'Ante Proyecto');
+    if (isFact) {
+      item.fecha_fin_etapa = null;
+      item.fecha_fin_obra = null;
+      item.requiere_plazo_etapa = false;
+    } else {
+      item.fecha_fin_etapa = newFechaFin;
+      item.fecha_fin_obra = newFechaFinGlobal;
+    }
+
     item.prioridad_tecnica = parseFloat(getVal('modalObraPrioridadTec')) || 1;
-    item.prioridad_medica = parseFloat(getVal('modalObraPrioridadMed')) || null;
+    const pMedInput = parseFloat(getVal('modalObraPrioridadMed')) || null;
+    if (pMedInput !== null && pMedInput > 0) {
+      item.prioridad_medica = pMedInput;
+      item.prioridad_medica_origen = 'Dirección Médica';
+      item.prioridad_medica_ponderada_default = false;
+      item.prioridad_medica_nota = 'Definida formalmente por Dirección Médica';
+    } else if (DataStore.hasValidPartida(item) || item.estado === 'Proyecto') {
+      item.prioridad_medica = item.prioridad_tecnica;
+      item.prioridad_medica_origen = 'Default (Ponderada por falta de Dirección Médica)';
+      item.prioridad_medica_ponderada_default = true;
+      item.prioridad_medica_nota = 'Ponderada por default por no contar con criticidad de Dirección';
+    } else {
+      item.prioridad_medica = null;
+      item.prioridad_medica_ponderada_default = false;
+    }
 
     // Anticipo en Orden de Compra y Plazo de Ejecución
     const inputAnticipoPct = document.getElementById('modalObraAnticipoPct');

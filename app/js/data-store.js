@@ -570,8 +570,15 @@ const DataStore = {
       // Sincronizar dependencia canónica primero (repara automáticamente discrepancias en localStorage)
       item.dependencia = this.normalizeDependencia(this.getObraDependencia(item));
 
-      // Si la obra está en Estudio de Factibilidad y no tiene partida válida:
-      // No puede estar asignada a nadie. Debe figurar como Sin Asignar y preservar creado_por.
+      // Si la obra está en Estudio de Factibilidad:
+      // 1. En Factibilidad NO se computan plazos ni fechas límites (obra en análisis preliminar)
+      if (item.estado === 'Estudio de Factibilidad' || item.estado === 'Ante Proyecto') {
+        item.requiere_plazo_etapa = false;
+        item.fecha_fin_etapa = null;
+        item.fecha_fin_obra = null;
+      }
+
+      // 2. Si no tiene partida válida: No puede estar asignada a nadie. Debe figurar como Sin Asignar y preservar creado_por.
       if ((item.estado === 'Estudio de Factibilidad' || item.estado === 'Ante Proyecto') && !this.hasValidPartida(item)) {
         if (!item.creado_por && item.responsable && item.responsable !== 'Sin Asignar' && item.responsable !== 'S/D' && item.responsable !== 'Pendiente') {
           item.creado_por = item.responsable;
@@ -757,7 +764,9 @@ const DataStore = {
       clasificacion: 'Nueva Solicitud',
       observaciones: `Sector: ${data.sector_solicitante || 'S/D'} | Motivo: ${data.motivo || 'S/D'}`,
       fecha_inicio_etapa: new Date().toISOString().split('T')[0],
-      fecha_fin_etapa: this.getDefaultDeadlineForStage('Estudio de Factibilidad'),
+      fecha_fin_etapa: null, // Factibilidad no computa plazos ni fechas límite
+      fecha_fin_obra: null,
+      requiere_plazo_etapa: false,
       cashflow: {
         monto_total: monto,
         fecha_inicio: '',
@@ -1065,8 +1074,17 @@ const DataStore = {
     }
 
     // Al pasar de Estudio de Factibilidad a Proyecto:
-    // Si no tiene responsable asignado formalmente pero tiene un creador identificado en el departamento o extraData, asignar al responsable
+    // REGLA CANÓNICA: Si la obra no contaba con ponderación médica formal, la criticidad médica
+    // se iguala a la técnica por default y sale inmediatamente del listado de pendientes de Dirección.
     if ((currentStage === 'Estudio de Factibilidad' || currentStage === 'Ante Proyecto') && nextStage === 'Proyecto') {
+      const pTec = parseFloat(item.prioridad_tecnica) || 3;
+      if (!item.prioridad_medica || item.prioridad_medica === 0) {
+        item.prioridad_medica = pTec;
+        item.prioridad_medica_origen = 'Default (Ponderada por falta de Dirección Médica)';
+        item.prioridad_medica_ponderada_default = true;
+        item.prioridad_medica_nota = 'Ponderada por default por no contar con criticidad de Dirección';
+        item.prioridad_final = pTec;
+      }
       if (extraData?.responsable_id) {
         const uExp = this.users.find(u => u.id === extraData.responsable_id);
         if (uExp) {
@@ -1216,6 +1234,18 @@ const DataStore = {
     }
     if (estado.includes('suspendid')) {
       return { status: 'suspendido', label: 'Suspendida', class: 'badge-semaforo-suspendido', days: null };
+    }
+
+    // REGLA CANÓNICA: En Factibilidad NO debe indicar plazos (está en análisis sin dinero ni proyecto)
+    if (estado.includes('factibilidad') || estado.includes('ante proyecto')) {
+      return { 
+        status: 'en_analisis', 
+        label: 'En Análisis', 
+        shortLabel: 'En Análisis',
+        class: 'bg-slate-100 text-slate-600 border border-slate-300 font-medium', 
+        days: null, 
+        noPlazo: true 
+      };
     }
 
     // Si la obra requiere definición de plazo o carece de fecha fin en etapas activas
@@ -2457,8 +2487,17 @@ const DataStore = {
   // ================= DIRECCIÓN MÉDICA =================
   getPendingMedicalPriorityItems() {
     return this.items.filter(item => {
+      // Excluir obras finalizadas o suspendidas
       if (item.estado === 'Obras Finalizadas' || item.estado === 'Suspendida') return false;
-      return (!item.prioridad_medica || item.prioridad_medica === 0 || item.prioridad_medica === null);
+      // Solo obras en Factibilidad están pendientes de evaluación de Dirección Médica
+      if (item.estado !== 'Estudio de Factibilidad' && item.estado !== 'Ante Proyecto') return false;
+      // Si ya fue ponderada por default por el Administrador al asignar partida, ya no está pendiente
+      if (item.prioridad_medica_ponderada_default) return false;
+      // Si ya tiene prioridad médica explícita mayor a 0, ya fue evaluada
+      if (item.prioridad_medica && item.prioridad_medica > 0) return false;
+      // Si ya tiene partida presupuestaria asignada formalmente, ya fue tramitada por administración
+      if (this.hasValidPartida(item)) return false;
+      return true;
     });
   },
 
@@ -2814,8 +2853,8 @@ const DataStore = {
         'Sector Solicitante': item.sector_solicitante || '',
         'Partida': item.partida || 'PENDIENTE',
         'Estado': item.estado,
-        'Semáforo': sem.status.toUpperCase(),
-        'Días Restantes': sem.days !== null ? sem.days : '',
+        'Semáforo': sem.status === 'en_analisis' ? 'EN ANÁLISIS (SIN PLAZO)' : sem.status.toUpperCase(),
+        'Días Restantes': sem.days !== null ? sem.days : '-',
         'Monto Obra USD': item.monto_obra_usd || 0,
         'Monto Equipamiento USD': item.monto_equipamiento_usd || 0,
         'Total USD': (item.monto_obra_usd || 0) + (item.monto_equipamiento_usd || 0),
@@ -2827,7 +2866,7 @@ const DataStore = {
         'Proveedor': item.proveedor || '',
         'Categoría': item.categoria || '',
         'Fecha Inicio Etapa': item.fecha_inicio_etapa || '',
-        'Fecha Límite Etapa': item.fecha_fin_etapa || '',
+        'Fecha Límite Etapa': (item.estado === 'Estudio de Factibilidad' || item.estado === 'Ante Proyecto') ? 'Sin plazo (En análisis)' : (item.fecha_fin_etapa || '-'),
         'Fecha Real Finalizada': item.fecha_real_finalizada || '',
         'Observaciones': item.observaciones || ''
       };
