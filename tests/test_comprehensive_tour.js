@@ -245,6 +245,30 @@ assert("Waldemar PUEDE avanzar su propia obra", DataStore.canUserAdvanceItem(obr
 assert("Waldemar NO PUEDE avanzar la obra asignada a López (Seguridad Operativa)", !DataStore.canUserAdvanceItem(obraLopez));
 
 // ------------------------------------------------------------------------------
+// FASE 6.1: DEPENDENCIA CENTROS PERIFÉRICOS (usr-cossano)
+// ------------------------------------------------------------------------------
+print("\n--- FASE 6.1: ROL PM CENTROS PERIFÉRICOS (usr-cossano) ---");
+var authCossano = DataStore.authenticate('cossano', 'Admin2025!');
+assert("Autenticación exitosa de Arq. Cossano", authCossano.success);
+assert("Dependencia canónica de Centros Periféricos", authCossano.user.dependencia === 'Departamento de Centros Periféricos');
+assert("Normalización de alias 'Ctros. Periféricos' a 'Departamento de Centros Periféricos'", DataStore.normalizeDependencia('Ctros. Periféricos') === 'Departamento de Centros Periféricos');
+assert("Normalización de alias 'Ctros. Perifericos' a 'Departamento de Centros Periféricos'", DataStore.normalizeDependencia('Ctros. Perifericos') === 'Departamento de Centros Periféricos');
+
+var obraPeriferico = {
+  id: 'PERIF-TEST-01',
+  nombre: 'Reforma Consultorios Larrea',
+  sede: 'Periféricos',
+  estado: 'Proyecto',
+  monto_total_usd: 120000,
+  responsable_id: 'usr-cossano',
+  responsable: 'Arq. Cossano (PM Periféricos)',
+  dependencia: 'Departamento de Centros Periféricos'
+};
+DataStore.currentUser = authCossano.user;
+assert("Cossano puede visualizar su obra de Centros Periféricos", DataStore.canUserViewObra(obraPeriferico));
+assert("getObraDependencia asigna Departamento de Centros Periféricos a obras en sede Periféricos", DataStore.getObraDependencia({ sede: 'Periféricos' }) === 'Departamento de Centros Periféricos');
+
+// ------------------------------------------------------------------------------
 // FASE 7: ROL AUDITORÍA / VISUALIZADOR (usr-auditor)
 // ------------------------------------------------------------------------------
 print("\n--- FASE 7: ROL AUDITORÍA Y CONTROL (usr-auditor) ---");

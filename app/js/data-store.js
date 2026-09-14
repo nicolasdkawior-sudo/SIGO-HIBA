@@ -213,7 +213,7 @@ const DEFAULT_USERS = [
     password_hash: DEFAULT_ADMIN_HASH,
     debe_cambiar_clave: false,
     sede: 'Periféricos',
-    dependencia: 'Departamento de Instalaciones',
+    dependencia: 'Departamento de Centros Periféricos',
     rol: 'pm_obra',
     activo: true,
     puede_crear: true,
@@ -395,7 +395,8 @@ const DataStore = {
     'Departamento de Mantenimiento Central',
     'Departamento de Proyectos Central',
     'Departamento de Mantenimiento y Proyectos San Justo',
-    'Departamento de Instalaciones'
+    'Departamento de Instalaciones',
+    'Departamento de Centros Periféricos'
   ],
 
   normalizeDependencia(dep) {
@@ -408,6 +409,18 @@ const DataStore = {
         d === 'Departamento de Mantenimiento y Proyectos San Justo' ||
         d === 'Mantenimiento y Proyectos San Justo') {
       return 'Departamento de Mantenimiento y Proyectos San Justo';
+    }
+    if (d === 'Departamento de Centros Periféricos' ||
+        d === 'Departamento de Centros Perifericos' ||
+        d === 'Departamento de Ctros. Periféricos' ||
+        d === 'Departamento de Ctros. Perifericos' ||
+        d === 'Centros Periféricos' ||
+        d === 'Centros Perifericos' ||
+        d === 'Ctros. Periféricos' ||
+        d === 'Ctros. Perifericos' ||
+        d === 'Periféricos' ||
+        d === 'Perifericos') {
+      return 'Departamento de Centros Periféricos';
     }
     return d;
   },
@@ -453,7 +466,7 @@ const DataStore = {
             existing.nombre = existing.nombre || defU.nombre;
             existing.email = existing.email || defU.email;
             existing.sede = existing.sede || defU.sede;
-            existing.dependencia = (defU.id === 'usr-kawior-pm') ? defU.dependencia : (existing.dependencia || defU.dependencia);
+            existing.dependencia = (defU.id === 'usr-kawior-pm' || defU.id === 'usr-cossano') ? defU.dependencia : (existing.dependencia || defU.dependencia);
             existing.rol = existing.rol || defU.rol;
             if (existing.activo === undefined) existing.activo = true;
 
@@ -1578,7 +1591,12 @@ const DataStore = {
       return this.normalizeDependencia(item.dependencia);
     }
 
-    // 4. Heurística según categoría, tipo y sede para obras sin asignar
+    // 4. Centros Periféricos: obras radicadas en la sede Periféricos
+    if (sede.includes('perif')) {
+      return 'Departamento de Centros Periféricos';
+    }
+
+    // 5. Heurística según categoría, tipo y sede para obras sin asignar
 
     const cat = (item.categoria || '').toLowerCase();
     const nom = (item.nombre || '').toLowerCase();
@@ -1722,6 +1740,15 @@ const DataStore = {
       const itemDep = this.normalizeDependencia(this.getObraDependencia(item) || item.dependencia || '').trim().toLowerCase();
       const itemSede = (item.sede || '').trim().toLowerCase();
       if (itemDep.includes('san justo') || itemSede === 'san justo') {
+        return true;
+      }
+    }
+
+    // Centros Periféricos: los usuarios de Centros Periféricos ven todas las obras de Centros Periféricos
+    if (uDep.includes('perif') || (u.sede && u.sede.toLowerCase().includes('perif'))) {
+      const itemDep = this.normalizeDependencia(this.getObraDependencia(item) || item.dependencia || '').trim().toLowerCase();
+      const itemSede = (item.sede || '').trim().toLowerCase();
+      if (itemDep.includes('perif') || itemSede.includes('perif')) {
         return true;
       }
     }

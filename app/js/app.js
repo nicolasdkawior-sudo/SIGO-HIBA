@@ -4105,7 +4105,7 @@ const App = {
     if (nameEl) nameEl.innerText = u.nombre;
     if (roleEl) roleEl.innerText = `${u.rol.toUpperCase()}`;
     if (emailEl) emailEl.innerText = u.email || '';
-    const depShort = (u.dependencia || '').replace('Departamento de ', 'Dpto. ');
+    const depShort = (u.dependencia || '').replace('Departamento de ', 'Dpto. ').replace('Centros Periféricos', 'Ctros. Periféricos');
     if (sedeEl) sedeEl.innerText = `${u.sede !== 'Todas' ? '📍 ' + u.sede : '🌐 Todas'} • ${depShort || 'General'}`;
 
     const depSelect = document.getElementById('filterDependencia');
@@ -4210,11 +4210,11 @@ const App = {
     setVal('modalObraSede', item.sede || 'Central');
     setVal('modalObraTipo', item.tipo || 'Obra Civil');
     setVal('modalObraEstado', item.estado || 'Estudio de Factibilidad');
-    const depVal = item.dependencia || DataStore.getObraDependencia(item);
+    const depVal = DataStore.normalizeDependencia ? DataStore.normalizeDependencia(item.dependencia || DataStore.getObraDependencia(item)) : (item.dependencia || DataStore.getObraDependencia(item));
     setVal('modalObraDependenciaSelect', depVal);
     const depBadge = document.getElementById('modalObraDepBadge');
     if (depBadge) {
-      depBadge.innerText = (depVal || '').replace('Departamento de ', 'Dpto. ');
+      depBadge.innerText = (depVal || '').replace('Departamento de ', 'Dpto. ').replace('Centros Periféricos', 'Ctros. Periféricos');
     }
     setVal('modalObraPartida', item.partida || '');
     setVal('modalObraMontoPartida', item.monto_partida_usd || (item.partida ? item.monto_total_usd : '') || '');
@@ -4327,7 +4327,7 @@ const App = {
           const depSelect = document.getElementById('modalObraDependenciaSelect');
           if (depSelect) depSelect.value = user.dependencia;
           const depBadge = document.getElementById('modalObraDepBadge');
-          if (depBadge) depBadge.innerText = user.dependencia.replace('Departamento de ', 'Dpto. ');
+          if (depBadge) depBadge.innerText = user.dependencia.replace('Departamento de ', 'Dpto. ').replace('Centros Periféricos', 'Ctros. Periféricos');
         }
       }
     }
@@ -4337,7 +4337,7 @@ const App = {
   handleModalDependenciaSelectChange(val) {
     const depBadge = document.getElementById('modalObraDepBadge');
     if (depBadge && val) {
-      depBadge.innerText = val.replace('Departamento de ', 'Dpto. ');
+      depBadge.innerText = val.replace('Departamento de ', 'Dpto. ').replace('Centros Periféricos', 'Ctros. Periféricos');
     }
   },
 

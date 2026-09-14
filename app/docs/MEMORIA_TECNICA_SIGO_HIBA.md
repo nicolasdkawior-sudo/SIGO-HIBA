@@ -114,6 +114,7 @@ El flujo de avance de cada obra se rige por la siguiente secuencia canónica:
 3. `Departamento de Mantenimiento Central`
 4. `Departamento de Mantenimiento y Proyectos San Justo` *(Unificación canónica de Proyectos y Mantenimiento San Justo)*
 5. `Departamento de Instalaciones`
+6. `Departamento de Centros Periféricos` *(Ctros. Periféricos)*
 
 ---
 
@@ -133,7 +134,7 @@ El flujo de avance de cada obra se rige por la siguiente secuencia canónica:
 | `usr-gimenez` | Ing. Giménez (PM Infraestructura) | `gimenez` | `gimenez.infra@hospitalitaliano.org.ar` | Departamento de Mantenimiento Central | Central | `pm_obra` | `puede_crear: true`, `puede_avanzar: true` |
 | `usr-waldemar` | Ing. Waldemar (PM San Justo) | `waldemar` | `waldemar.sanjusto@hospitalitaliano.org.ar` | Departamento de Mantenimiento y Proyectos San Justo | San Justo | `pm_obra` | Visibilidad de toda la sede; avance exclusivo de sus obras asignadas |
 | `usr-lopez` | Ing. López (PM Infraestructura) | `lopez` | `lopez.infra@hospitalitaliano.org.ar` | Departamento de Mantenimiento y Proyectos San Justo | San Justo | `pm_obra` | Visibilidad de toda la sede; avance exclusivo de sus obras asignadas |
-| `usr-cossano` | Arq. Cossano (PM Periféricos) | `cossano` | `cossano.perifericos@hospitalitaliano.org.ar` | Departamento de Instalaciones | Periféricos | `pm_obra` | `puede_crear: true`, `puede_avanzar: true` |
+| `usr-cossano` | Arq. Cossano (PM Periféricos) | `cossano` | `cossano.perifericos@hospitalitaliano.org.ar` | Departamento de Centros Periféricos | Periféricos | `pm_obra` | `puede_crear: true`, `puede_avanzar: true` |
 | `usr-licitaciones` | Compras & Licitaciones | `licitaciones` | `licitaciones@hospitalitaliano.org.ar` | Dirección General / Administración | Todas | `licitaciones` | Gestión exclusiva de etapa En Licitación y adjudicación |
 | `usr-auditor` | Auditoría y Control | `auditor` | `auditor@hospitalitaliano.org.ar` | Dirección General / Administración | Todas | `visualizador` | `solo_lectura: true`, visualización y descarga de informes sin edición |
 
