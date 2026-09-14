@@ -1727,12 +1727,15 @@ const DataStore = {
     let sumInfraActiva = 0;
     let sumSuspendidas = 0;
     let sumFinalizadas = 0;
+    let sumFactibilidad = 0;
 
     let vencidos = 0;
     let porVencer = 0;
     let enPlazo = 0;
     let finalizadasCount = 0;
     let suspendidasCount = 0;
+    let factibilidadCount = 0;
+    let carteraActivaCount = 0;
 
     const estadosCount = {
       'Estudio de Factibilidad': 0,
@@ -1763,8 +1766,21 @@ const DataStore = {
       const mEquip = item.monto_equipamiento_usd || 0;
       const mTotal = item.monto_total_usd || (mObra + mEquip);
 
-      const isFinalizada = item.estado === 'Obras Finalizadas';
-      const isSuspendida = item.estado === 'Suspendida';
+      const isFinalizada = (item.estado === 'Obras Finalizadas' || (item.estado || '').toLowerCase().includes('finalizad'));
+      const isSuspendida = (item.estado === 'Suspendida' || (item.estado || '').toLowerCase().includes('suspendid'));
+      const isFactibilidad = (
+        item.estado === 'Estudio de Factibilidad' ||
+        item.estado === 'Ante Proyecto' ||
+        item.estado === 'En Asignación de Partida' ||
+        (item.estado || '').toLowerCase().includes('factibilidad')
+      );
+
+      const esCarteraActiva = (
+        item.estado === 'Proyecto' ||
+        item.estado === 'Proyecto para licitar' ||
+        item.estado === 'En licitación' ||
+        item.estado === 'Obras en Curso'
+      );
 
       if (isFinalizada) {
         sumFinalizadas += mTotal;
@@ -1772,14 +1788,19 @@ const DataStore = {
       } else if (isSuspendida) {
         sumSuspendidas += mTotal;
         suspendidasCount++;
-      } else {
-        // Obra activa
+      } else if (isFactibilidad) {
+        // Factibilidad no cuenta como Cartera Activa de inversión ni como partida comprometida
+        sumFactibilidad += mTotal;
+        factibilidadCount++;
+      } else if (esCarteraActiva) {
+        // Cartera activa: Proyecto + En licitación + Obras en Curso
         if (item.tipo === 'Infraestructura') {
           sumInfraActiva += mObra;
         } else {
           sumObraActiva += mObra;
           sumEquipActivo += mEquip;
         }
+        carteraActivaCount++;
       }
 
       const sem = this.calculateSemaforo(item);
@@ -1821,15 +1842,18 @@ const DataStore = {
     const activeTotal = vencidos + porVencer + enPlazo;
     const porcentajeEnPlazo = activeTotal > 0 ? Math.round((enPlazo / activeTotal) * 100) : 100;
 
-    // Total en cartera activa (lo que realmente está en juego sin duplicar)
+    // Total en cartera activa (estrictamente Proyecto + Licitación + En Curso; excluye Factibilidad y Suspendidas)
     const totalCarteraActiva = sumObraActiva + sumEquipActivo + sumInfraActiva;
 
     return {
       totalItems: list.length,
+      carteraActivaCount,
       totalCarteraActiva,
       sumObraActiva,
       sumEquipActivo,
       sumInfraActiva,
+      sumFactibilidad,
+      factibilidadCount,
       sumSuspendidas,
       sumFinalizadas,
       vencidos,

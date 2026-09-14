@@ -264,7 +264,7 @@ const App = {
 
   renderKPIs(kpis) {
     document.getElementById('kpiTotalUsd').innerText = DataStore.formatUSD(kpis.totalCarteraActiva);
-    document.getElementById('kpiTotalProyectos').innerText = `${kpis.totalItems} proyectos en lista`;
+    document.getElementById('kpiTotalProyectos').innerText = `${kpis.carteraActivaCount || 0} proyectos activos`;
 
     const pillCivil = document.getElementById('kpiPillCivil');
     const pillEquip = document.getElementById('kpiPillEquip');
