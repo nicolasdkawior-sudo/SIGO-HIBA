@@ -104,6 +104,48 @@ body {
   border: 1px solid #d1d5db;
 }
 
+/* Tarjetas de obras con recuadro grueso y separación nítida */
+.card-obra-prioritaria {
+  border: 2px solid #cbd5e1; /* Recuadro grueso visible */
+  border-radius: 0.75rem;
+  background-color: #ffffff;
+  padding: 0.875rem 1rem;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-obra-prioritaria:hover {
+  border-color: #3b82f6;
+  background-color: #f8fafc;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+.card-obra-prioritaria.card-partida-corta {
+  border-color: #f87171;
+  border-left: 6px solid #ef4444;
+  background-color: #fff1f2;
+}
+
+.card-obra-prioritaria.card-sin-asignar {
+  border-color: #fbbf24;
+  border-left: 6px solid #f59e0b;
+  background-color: #fffbeb;
+}
+
+.card-obra-prioritaria.card-vencida {
+  border-color: #fca5a5;
+  border-left: 6px solid #dc2626;
+  background-color: #fef2f2;
+}
+
+.card-obra-prioritaria.card-por-vencer {
+  border-color: #fde68a;
+  border-left: 6px solid #d97706;
+  background-color: #fffbeb;
+}
+
 /* Gantt styling */
 .gantt-row {
   border-bottom: 1px solid #e2e8f0;

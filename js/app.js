@@ -759,7 +759,7 @@ const App = {
       return;
     }
 
-    let html = '<div class="divide-y divide-slate-100">';
+    let html = '<div class="space-y-3 mt-2.5">';
     itemsToDisplay.forEach(item => {
       const sem = DataStore.calculateSemaforo(item);
       const pond = DataStore.getPonderacionGlobal(item);
@@ -774,18 +774,28 @@ const App = {
       const deficit = isCorta ? DataStore.getPartidaDeficit(item) : 0;
       const isAssigned = DataStore.isObraAssigned(item);
 
+      // Determinar clase de tarjeta para recuadro grueso bien diferenciado
+      let cardStateClass = '';
+      if (isCorta) {
+        cardStateClass = 'card-partida-corta';
+      } else if (!isAssigned && isAdmin) {
+        cardStateClass = 'card-sin-asignar';
+      } else if (sem.status === 'vencido') {
+        cardStateClass = 'card-vencida';
+      } else if (sem.status === 'por_vencer') {
+        cardStateClass = 'card-por-vencer';
+      }
+
       html += `
-        <div class="py-3 flex items-center justify-between hover:bg-slate-50 px-2 rounded-lg cursor-pointer transition ${
-          isCorta ? 'bg-rose-50/50 border-l-4 border-rose-500 my-1' :
-          (!isAssigned && isAdmin ? 'bg-amber-50/40 border-l-4 border-amber-400 my-1' : '')
-        }" onclick="App.openObraModal('${item.id}')">
-          <div class="flex items-center space-x-3">
-            <span class="px-2.5 py-1 text-xs font-semibold rounded-md ${sem.class}">
+        <div class="card-obra-prioritaria ${cardStateClass} flex flex-col md:flex-row md:items-center justify-between gap-3 cursor-pointer" 
+             onclick="App.openObraModal('${item.id}')">
+          <div class="flex items-start sm:items-center space-x-3.5 min-w-0 flex-1">
+            <span class="px-2.5 py-1 text-xs font-semibold rounded-md shrink-0 ${sem.class}">
               ${sem.label}
             </span>
-            <div>
-              <div class="flex items-center space-x-2">
-                <span class="font-bold text-slate-800 text-sm">${item.nombre}</span>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center flex-wrap gap-1.5">
+                <span class="font-bold text-slate-900 text-sm hover:text-blue-600 transition">${item.nombre}</span>
                 <span class="text-xs text-slate-400 font-mono">(${item.id})</span>
                 <span class="px-1.5 py-0.2 text-[10px] rounded border ${pond.colorClass}">
                   ${pond.nivelLabel} (${pond.valor}★)
@@ -794,7 +804,7 @@ const App = {
                 ${!item.partida || item.partida === 'S/D' ? `<span class="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.2 rounded font-bold">Sin Partida</span>` : ''}
                 ${isCorta ? `<span class="bg-rose-100 text-rose-800 text-[10px] px-1.5 py-0.2 rounded font-bold border border-rose-300 inline-flex items-center space-x-1" title="Partida menor al costo requerido (-USD ${DataStore.formatUSD(deficit)})"><i data-lucide="alert-triangle" class="w-2.5 h-2.5 text-rose-600"></i><span>Partida Corta</span></span>` : ''}
               </div>
-              <div class="text-xs text-slate-500 flex items-center space-x-2 mt-0.5">
+              <div class="text-xs text-slate-500 flex items-center flex-wrap gap-x-2 gap-y-1 mt-1">
                 <span>Sede: <strong>${item.sede}</strong></span>
                 <span>• Fase: <strong class="text-slate-700">${item.estado}</strong></span>
                 <span>• Responsable: </span>
@@ -822,27 +832,29 @@ const App = {
               </div>
             </div>
           </div>
-          <div class="flex items-center space-x-2">
-            <div class="text-right mr-2">
-              <div class="text-sm font-bold text-slate-800">${monto}</div>
+          <div class="flex items-center justify-between md:justify-end space-x-3 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
+            <div class="text-left md:text-right mr-1">
+              <div class="text-sm font-extrabold text-slate-900 font-mono">${monto}</div>
               <div class="text-xs text-slate-400">${(item.estado === 'Estudio de Factibilidad' || item.estado === 'Ante Proyecto') ? '<span class="text-slate-400 italic">Sin plazo (En análisis)</span>' : (item.fecha_fin_etapa ? 'Límite: ' + item.fecha_fin_etapa : (sem.status === 'sin_plazo' ? '<span class="text-amber-700 font-bold">⚠️ Plazo pendiente</span>' : 'Sin fecha'))}</div>
             </div>
-            ${(isAdmin || canAdvanceThis) ? `
-              <button onclick="event.stopPropagation(); App.openObraModal('${item.id}', true)" 
-                      class="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer shadow-2xs" 
-                      title="${isAdmin ? 'Editar Proyecto (Solo Administrador)' : 'Editar Fechas y Observaciones'}">
-                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
-                <span>Editar</span>
-              </button>
-            ` : ''}
-            ${nextStage && canAvanzar ? `
-              <button onclick="event.stopPropagation(); App.openTransitionModal('${item.id}')" 
-                      class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-xs" 
-                      title="Finalizar esta etapa y certificar avance a ${nextStage}">
-                <span>Avanzar</span>
-                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-              </button>
-            ` : (nextStage && !isAdmin ? (isComprador && item.estado === 'Proyecto' ? `<span class="px-2 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded text-xs font-bold" title="Vista preliminar de compras - Solo lectura">👁️ Solo Consulta</span>` : `<span class="px-1.5 py-0.5 bg-slate-100 text-slate-400 rounded text-[10px]" title="Solo el responsable asignado puede certificar esta obra">🔒 ${item.responsable || 'Sin Asignar'}</span>`) : '')}
+            <div class="flex items-center space-x-2">
+              ${(isAdmin || canAdvanceThis) ? `
+                <button onclick="event.stopPropagation(); App.openObraModal('${item.id}', true)" 
+                        class="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer shadow-2xs" 
+                        title="${isAdmin ? 'Editar Proyecto (Solo Administrador)' : 'Editar Fechas y Observaciones'}">
+                  <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                  <span>Editar</span>
+                </button>
+              ` : ''}
+              ${nextStage && canAvanzar ? `
+                <button onclick="event.stopPropagation(); App.openTransitionModal('${item.id}')" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-xs" 
+                        title="Finalizar esta etapa y certificar avance a ${nextStage}">
+                  <span>Avanzar</span>
+                  <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                </button>
+              ` : (nextStage && !isAdmin ? (isComprador && item.estado === 'Proyecto' ? `<span class="px-2 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded text-xs font-bold" title="Vista preliminar de compras - Solo lectura">👁️ Solo Consulta</span>` : `<span class="px-1.5 py-0.5 bg-slate-100 text-slate-400 rounded text-[10px]" title="Solo el responsable asignado puede certificar esta obra">🔒 ${item.responsable || 'Sin Asignar'}</span>`) : '')}
+            </div>
           </div>
         </div>
       `;

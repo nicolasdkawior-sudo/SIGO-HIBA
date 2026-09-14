@@ -375,6 +375,17 @@ En pantallas estrechas, tablas de gestión complejas con múltiples columnas de 
 4. **Resultado Operativo:**
    - El Administrador puede navegar y scrollear horizontalmente para inspeccionar cualquier columna de la tabla mientras **la botonera de control permanece permanentemente fija, visible y accesible en el extremo derecho de la pantalla**, garantizando control total en cualquier computadora de la institución.
 
+### 12.3. Tarjetas Grandes de Obras con Recuadro Grueso y Delimitación Visual Nítida
+- **Problema Abordado:** En la sección "Obras con Desvío de Plazo o Atención Prioritaria" (y al explorar etapas individuales del embudo), las obras se mostraban con divisores tenues de 1px (`divide-slate-100`) sin margen intermedio, lo que creaba una apariencia plana de lista continua que dificultaba distinguir dónde terminaba una obra y comenzaba la siguiente.
+- **Solución Implementada:**
+  1. Se transformó cada elemento en una tarjeta independiente (`.card-obra-prioritaria`) provista de un **recuadro grueso de 2px (`border: 2px solid #cbd5e1`)**, esquinas redondeadas (`rounded-xl`), sombra de relieve (`shadow-xs` a `shadow-md` en hover) y separación física vertical (`space-y-3` y `margin-bottom: 0.75rem`).
+  2. Cada tarjeta cuenta con realce interactivo (`hover:border-blue-500`) y bandas cromáticas laterales gruesas de 6px según su estado crítico:
+     - **Partida Corta:** Recuadro grueso con acento rojo lateral de 6px (`border-left: 6px solid #ef4444`) y fondo suave (`.card-partida-corta`).
+     - **Sin Asignar (Admin):** Recuadro grueso con acento ámbar lateral de 6px (`border-left: 6px solid #f59e0b`) y fondo dorado (`.card-sin-asignar`).
+     - **Plazo Vencido:** Recuadro grueso con acento carmesí de 6px (`border-left: 6px solid #dc2626`) (`.card-vencida`).
+     - **Plazo Por Vencer:** Recuadro grueso con acento ámbar de 6px (`border-left: 6px solid #d97706`) (`.card-por-vencer`).
+  3. **Resultado Operativo:** Cada proyecto se percibe de inmediato como un bloque de gestión autónomo y claramente diferenciado de los demás.
+
 ---
 
 ## 13. GESTIÓN DE IDENTIDAD OPERATIVA, BLINDAJE DE SAN JUSTO Y DEPARTAMENTO DE HABILITACIONES Y SEGURIDAD E HIGIENE
