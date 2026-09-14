@@ -2530,9 +2530,7 @@ const App = {
       <!-- MEMBRETE OFICIAL HOSPITAL ITALIANO DE BUENOS AIRES -->
       <div class="border-b-2 border-slate-900 pb-3 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div class="flex items-center space-x-3.5">
-          <div class="w-12 h-12 bg-blue-900 text-white rounded-xl flex items-center justify-center font-black text-xl shadow-sm border-2 border-blue-700 tracking-wider">
-            HIBA
-          </div>
+          <img src="img/logo-hospital-italiano-icon.png" alt="Hospital Italiano" class="w-12 h-12 object-contain shrink-0">
           <div>
             <h1 class="text-base font-black text-slate-900 tracking-tight leading-none uppercase">Hospital Italiano de Buenos Aires</h1>
             <h2 class="text-xs font-bold text-blue-900 mt-1">Dirección de Infraestructura y Obras • Dirección General</h2>
