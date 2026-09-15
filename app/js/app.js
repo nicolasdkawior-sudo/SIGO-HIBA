@@ -2196,15 +2196,7 @@ const App = {
 
   // ================= GESTIÓN Y RESPALDO DE BASE DE DATOS =================
   openDatabaseBackupModal() {
-    const u = DataStore.currentUser;
-    if (!u || u.rol !== 'admin') {
-      alert("⛔ Acceso Denegado: Solo administradores pueden gestionar la base de datos.");
-      return;
-    }
-    this.updateDatabaseBackupModalStats();
-    const modal = document.getElementById('modalDatabaseBackup');
-    if (modal) modal.classList.remove('hidden');
-    if (window.lucide) lucide.createIcons();
+    console.info("Los respaldos de base de datos se ejecutan automáticamente a las 15 hs en GitHub.");
   },
 
   closeDatabaseBackupModal() {

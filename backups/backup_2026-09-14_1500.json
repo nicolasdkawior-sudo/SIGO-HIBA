@@ -1,13 +1,23 @@
-window.INITIAL_DATA = {
+{
+  "version": "v3.0_canonical_backup",
+  "backup_date_art": "2026-09-14",
+  "created_at_utc": "2026-09-15T02:11:38.065215+00:00",
+  "institution": "Hospital Italiano de Buenos Aires (HIBA)",
+  "system": "SIGO HIBA - Sistema de Gestión de Obras",
+  "retention_policy": "30_days_rolling",
   "metadata": {
-    "institucion": "Hospital Italiano de Buenos Aires (HIBA)",
-    "generado_el": "2026-09-15T02:11:56.125534+00:00",
-    "restaurado_desde": "backup_2026-09-14_1500.json",
-    "total_obras": 87,
-    "total_infraestructura": 134,
-    "version": "v3_canonical_restored_1789438316"
+    "total_catalog_items": 221,
+    "cartera_activa_count": 97,
+    "total_cartera_usd": 30569529.29,
+    "sum_civil_usd": 22518691.29,
+    "sum_equip_usd": 1515000.0,
+    "sum_infra_usd": 6535838.0,
+    "factibilidad_count": 91,
+    "finalizadas_count": 25,
+    "suspendidas_count": 7,
+    "users_count": 0
   },
-  "obras": [
+  "items": [
     {
       "id": "OBRA-001",
       "tipo": "Obra Civil",
@@ -2802,9 +2812,7 @@ window.INITIAL_DATA = {
       "criterios_tecnicos": {},
       "cashflow": {},
       "prioridad_medica_ponderada_default": true
-    }
-  ],
-  "infraestructura": [
+    },
     {
       "id": "INFRA-001",
       "tipo": "Infraestructura",
@@ -7294,5 +7302,6 @@ window.INITIAL_DATA = {
       "criterios_tecnicos": {},
       "cashflow": {}
     }
-  ]
-};
+  ],
+  "users": []
+}

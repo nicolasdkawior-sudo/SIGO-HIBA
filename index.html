@@ -209,12 +209,6 @@
         <span class="hidden md:inline">Usuarios</span>
       </button>
 
-      <!-- Botón Gestión de Base de Datos (Backup / Restaurar) -->
-      <button id="btnBackupDbTop" onclick="App.openDatabaseBackupModal()" class="bg-slate-800 hover:bg-purple-900/50 hover:border-purple-500/50 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-semibold flex items-center space-x-1.5 transition" title="Copia de Seguridad y Restauración de Base de Datos">
-        <i data-lucide="database" class="w-4 h-4 text-purple-400"></i>
-        <span class="hidden md:inline">Base de Datos</span>
-      </button>
-
       <!-- Botón Asignación Rápida de Obras (Admin) -->
       <button id="btnAsignarObrasTop" onclick="App.openAsignacionInteractivaModal()" class="bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded-lg font-bold text-xs flex items-center space-x-1.5 shadow-sm transition" title="Centro de Asignación y Reasignación Ágil de Obras">
         <i data-lucide="zap" class="w-4 h-4 text-amber-200"></i>
@@ -1227,127 +1221,12 @@
         </div>
       </div>
 
-      <div class="bg-slate-100 px-6 py-3 border-t border-slate-200 flex items-center justify-between">
-        <button onclick="App.openDatabaseBackupModal()" class="px-3.5 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-lg font-bold flex items-center space-x-1.5 cursor-pointer transition">
-          <i data-lucide="database" class="w-4 h-4"></i>
-          <span>Respaldo y Base de Datos</span>
-        </button>
+      <div class="bg-slate-100 px-6 py-3 border-t border-slate-200 flex items-center justify-end">
         <button onclick="App.closeUsersAdminModal()" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-bold cursor-pointer">Cerrar</button>
       </div>
     </div>
   </div>
 
-  <!-- ================= MODAL: GESTIÓN DE BASE DE DATOS Y RESPALDO (ADMIN) ================= -->
-  <div id="modalDatabaseBackup" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[92vh] flex flex-col overflow-hidden border border-slate-100 text-xs">
-      <!-- Encabezado -->
-      <div class="bg-gradient-to-r from-slate-900 via-purple-950 to-indigo-950 text-white px-6 py-4 flex items-center justify-between">
-        <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 rounded-xl bg-purple-600/30 flex items-center justify-center border border-purple-400/30 text-purple-300">
-            <i data-lucide="database" class="w-5 h-5"></i>
-          </div>
-          <div>
-            <h3 class="font-bold text-sm">Respaldo y Restauración de Base de Datos</h3>
-            <p class="text-xs text-slate-300">Portabilidad completa, sincronización inmediata y recuperación canónica de SIGO HIBA</p>
-          </div>
-        </div>
-        <button type="button" onclick="App.closeDatabaseBackupModal()" class="text-slate-400 hover:text-white cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
-      </div>
-
-      <!-- Cuerpo del Modal -->
-      <div class="p-6 overflow-y-auto flex-1 space-y-5">
-        <!-- Tarjeta de Estado Actual -->
-        <div class="bg-gradient-to-r from-slate-50 to-purple-50/40 p-4 rounded-xl border border-purple-200/60 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <span class="text-[10px] font-bold text-purple-700 uppercase tracking-wider block">Estado de la Base Local</span>
-            <span class="text-sm font-black text-slate-900">Base Maestra Canónica Oficial (v3.0)</span>
-          </div>
-          <div class="flex items-center space-x-3 text-right">
-            <div>
-              <div id="dbBackupStatTotal" class="text-xs font-bold text-slate-800">221 obras</div>
-              <div class="text-[10px] text-slate-500">Catálogo Total</div>
-            </div>
-            <div class="h-6 w-px bg-purple-200"></div>
-            <div>
-              <div id="dbBackupStatActive" class="text-xs font-bold text-blue-700">97 activas</div>
-              <div class="text-[10px] text-slate-500">Cartera Inversión</div>
-            </div>
-            <div class="h-6 w-px bg-purple-200"></div>
-            <div>
-              <div id="dbBackupStatUSD" class="text-xs font-extrabold text-emerald-700">USD 30,569,529.29</div>
-              <div class="text-[10px] text-slate-500">Monto Cartera</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Opción 1: Exportar Respaldo Completo -->
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs hover:border-purple-300 transition space-y-2">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-2 text-slate-800 font-bold">
-              <i data-lucide="download" class="w-4 h-4 text-purple-600"></i>
-              <span>1. Descargar Copia de Seguridad Completa (JSON)</span>
-            </div>
-            <span class="bg-purple-100 text-purple-800 text-[10px] px-2 py-0.5 rounded font-bold">Backup Inmediato</span>
-          </div>
-          <p class="text-slate-500 text-[11px] leading-relaxed">
-            Descarga un archivo JSON estructurado que contiene todas las 221 obras, estados, plazos, fechas límites, montos de inversión, criticidades técnicas y médicas, usuarios y permisos. Permite migrar o respaldar todo el sistema en otra computadora en 1 segundo.
-          </p>
-          <div class="pt-1">
-            <button type="button" onclick="App.exportDatabase()" class="bg-purple-700 hover:bg-purple-800 text-white font-bold px-4 py-2 rounded-lg flex items-center space-x-2 transition cursor-pointer shadow-2xs">
-              <i data-lucide="download" class="w-4 h-4"></i>
-              <span>Descargar Archivo JSON de Respaldo</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Opción 2: Importar y Restaurar Base de Datos -->
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs hover:border-indigo-300 transition space-y-2.5">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-2 text-slate-800 font-bold">
-              <i data-lucide="upload" class="w-4 h-4 text-indigo-600"></i>
-              <span>2. Restaurar Base de Datos desde Archivo JSON</span>
-            </div>
-            <span class="bg-indigo-100 text-indigo-800 text-[10px] px-2 py-0.5 rounded font-bold">Restauración</span>
-          </div>
-          <p class="text-slate-500 text-[11px] leading-relaxed">
-            Carga un archivo de respaldo generado previamente para restaurar instantáneamente el estado completo de obras y configuraciones. Sincroniza al momento todas las pestañas abiertas.
-          </p>
-          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
-            <input type="file" id="importDatabaseFileInput" accept=".json,application/json" class="flex-1 text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 border border-slate-200 rounded-lg p-1 cursor-pointer">
-            <button type="button" onclick="App.handleImportDatabase()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-lg flex items-center justify-center space-x-1.5 transition cursor-pointer shrink-0">
-              <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-              <span>Restaurar Archivo</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Opción 3: Restablecer a Base Maestra Oficial -->
-        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-2 text-slate-700 font-bold">
-              <i data-lucide="rotate-ccw" class="w-4 h-4 text-amber-600"></i>
-              <span>3. Restablecer a Valores Oficiales de Fábrica</span>
-            </div>
-            <span class="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded font-bold">Canónico Oficial</span>
-          </div>
-          <p class="text-slate-500 text-[11px] leading-relaxed">
-            Restaura la base canónica oficial inviolable de SIGO HIBA: <strong>97 proyectos activos por USD 30,569,529.29</strong> (Civil: USD 22.52M, Equip: USD 1.52M, Infra: USD 6.54M), 91 obras en factibilidad y 0 pendientes médicos. Garantiza que cualquier computadora muestre exactamente las mismas cifras oficiales.
-          </p>
-          <div class="pt-1">
-            <button type="button" onclick="App.handleResetToCanonical()" class="bg-white hover:bg-amber-50 text-amber-800 border border-amber-300 font-bold px-4 py-2 rounded-lg flex items-center space-x-2 transition cursor-pointer">
-              <i data-lucide="rotate-ccw" class="w-4 h-4 text-amber-600"></i>
-              <span>Restablecer Estado Oficial Canónico</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Footer -->
-      <div class="bg-slate-100 px-6 py-3 border-t border-slate-200 flex justify-end">
-        <button type="button" onclick="App.closeDatabaseBackupModal()" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-bold cursor-pointer">Cerrar</button>
-      </div>
-    </div>
-  </div>
 
   <!-- ================= MODAL: ASIGNACIÓN DE OBRAS A USUARIO (ADMIN) ================= -->
   <div id="modalAssignUserObras" class="hidden fixed inset-0 z-[55] flex items-center justify-center p-4 modal-backdrop">

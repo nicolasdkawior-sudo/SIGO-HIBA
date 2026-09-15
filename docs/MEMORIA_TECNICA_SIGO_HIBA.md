@@ -507,6 +507,38 @@ Para garantizar máxima transparencia y certeza entre todas las vistas de SIGO H
   5. Pie de modal con botonera anclada y sombra de separación: `shrink-0 sticky bottom-0 z-10 bg-slate-50 border-t border-slate-200`.
 - **Garantía Operativa:** Los botones de acción permanecen permanentemente visibles e interactivos en cualquier dispositivo o resolución, permitiendo un desplazamiento fluido por el formulario.
 
+---
+
+## 17. POLÍTICA DE RESPALDOS AUTOMÁTICOS DIARIOS A LAS 15:00 HS (GITHUB ACTIONS), RETENCIÓN HISTÓRICA DE 30 DÍAS Y ELIMINACIÓN DE ACCESO EN LA INTERFAZ DE USUARIO
+
+### 17.1. Eliminación Total de Opciones de Base de Datos en la Aplicación Web
+- **Fundamentación:**
+  Para evitar riesgos de manipulación indebida, confusiones operativas o ejecuciones accidentales de restablecimientos por parte de los usuarios finales, directivos o profesionales médicos, se retiraron por completo los botones y modales relacionados con respaldos y base de datos de la interfaz visual (`#btnBackupDbTop` en la barra superior, botón en la gestión de usuarios y `#modalDatabaseBackup`).
+- **Seguridad e Integridad:**
+  La gestión de copias de seguridad se desacopló por completo de la aplicación cliente y se centralizó en la infraestructura de CI/CD de GitHub, garantizando que ningún perfil operativo tenga acceso a disparar o alterar manualmente los respaldos desde la web.
+
+### 17.2. Automatización Diaria Programada a las 15:00 hs (Hora Argentina)
+- **Motor de Ejecución (GitHub Actions):**
+  Se implementó el flujo `.github/workflows/daily_backup.yml` con un cron nativo programado para las 18:00 UTC, correspondiente exactamente a las **15:00 hs (ART / UTC-3)** de cada día.
+- **Generación de Snapshot Canónico (`scripts/daily_backup.py`):**
+  El proceso extrae la totalidad del catálogo oficial (221 proyectos, 97 activos por USD 30,569,529.29, prioridades técnicas y médicas, usuarios y metadatos) y genera un archivo con timestamp inmutable en la carpeta `backups/` con el formato:
+  `backup_AAAA-MM-DD_1500.json`.
+
+### 17.3. Política Estricta de Retención Móvil de 30 Días
+- **Purga Automática:**
+  En cada ejecución diaria, el script audita la antigüedad de todos los archivos en `backups/`. Aquellas copias cuya fecha sea superior a **30 días de antigüedad** son eliminadas automáticamente, manteniendo de forma permanente y ordenada exactamente la ventana de los últimos 30 días calendarios.
+- **Inmutabilidad de Git:**
+  Cada respaldo y rotación queda registrado como un commit en el historial de Git por parte del bot del sistema (`github-actions[bot]`), permitiendo una trazabilidad indestructible e independiente de la aplicación web.
+
+### 17.4. Procedimiento de Restauración Externa y Rollback en 1 Clic
+- **Procedimiento sin Código:**
+  En caso de contingencia o requerimiento de volver a una fecha anterior, un administrador no necesita tocar código ni usar terminales:
+  1. Ingresa a la sección **Actions** del repositorio oficial de GitHub (`https://github.com/nicolasdkawior-sudo/SIGO-HIBA/actions`).
+  2. Selecciona el flujo **`Restaurar Base de Datos (Rollback)`**.
+  3. Presiona el botón **Run workflow** e indica el archivo deseado (ej. `backup_2026-09-14_1500.json`).
+  4. GitHub Actions ejecuta `scripts/restore_backup.py`, sincroniza `js/initial-data.js` y `app/js/initial-data.js` con paridad simétrica 100%, e incrementa la versión canónica.
+  5. Vercel detecta automáticamente el commit y en 45 segundos el sitio `https://www.sigohiba.com` queda 100% restaurado y operativo.
+
 
 
 

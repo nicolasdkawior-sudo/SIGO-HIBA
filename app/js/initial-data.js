@@ -1,10 +1,11 @@
 window.INITIAL_DATA = {
   "metadata": {
     "institucion": "Hospital Italiano de Buenos Aires (HIBA)",
-    "generado_el": "2026-09-10T13:52:30.669253",
+    "generado_el": "2026-09-15T02:11:56.125534+00:00",
+    "restaurado_desde": "backup_2026-09-14_1500.json",
     "total_obras": 87,
     "total_infraestructura": 134,
-    "version": "v3_canonical_97"
+    "version": "v3_canonical_restored_1789438316"
   },
   "obras": [
     {
