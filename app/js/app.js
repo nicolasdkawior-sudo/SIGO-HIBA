@@ -1762,7 +1762,7 @@ const App = {
     const requierePartida = (currentStage === 'Estudio de Factibilidad' && nextStage === 'Proyecto');
     const tienePartida = DataStore.hasValidPartida(item) && (item.monto_partida_usd > 0 || item.monto_total_usd > 0);
 
-    if (requierePartida && !tienePartida) {
+    if (requierePartida) {
       if (quickPartidaInput) quickPartidaInput.value = item.partida || '';
       const defMonto = item.monto_partida_usd || item.monto_total_usd || item.monto_obra_usd || (item.cashflow ? item.cashflow.monto_total : '') || '';
       if (quickMontoInput) quickMontoInput.value = (defMonto > 0) ? DataStore.formatNumberAR(defMonto) : '';
@@ -1770,6 +1770,24 @@ const App = {
       if (quickPmedInput) {
         quickPmedInput.value = (!item.prioridad_medica_ponderada_default && item.prioridad_medica) ? String(item.prioridad_medica) : '';
       }
+
+      const respWrapper = document.getElementById('transQuickResponsableWrapper');
+      const respSelect = document.getElementById('transQuickResponsableSelect');
+      if (respSelect) {
+        const users = DataStore.users || [];
+        respSelect.innerHTML = '<option value="">-- Seleccionar Profesional Responsable --</option>' +
+          users.map(usr => `<option value="${usr.id}">${usr.nombre} (${usr.rol})</option>`).join('');
+        if (item.responsable_id) {
+          respSelect.value = item.responsable_id;
+        } else if (item.responsable && item.responsable !== 'Sin Asignar') {
+          const matched = users.find(usr => usr.nombre === item.responsable);
+          if (matched) respSelect.value = matched.id;
+        } else {
+          respSelect.value = '';
+        }
+      }
+      if (respWrapper) respWrapper.classList.remove('hidden');
+
       if (warnSinPartida) warnSinPartida.classList.remove('hidden');
       if (inputQuickPartida) {
         if (u.puede_asignar_partida || isAdmin) {
@@ -1785,6 +1803,8 @@ const App = {
       if (quickMontoInput) quickMontoInput.value = '';
       const quickPmedInput = document.getElementById('transQuickPrioridadMedicaInput');
       if (quickPmedInput) quickPmedInput.value = '';
+      const respWrapper = document.getElementById('transQuickResponsableWrapper');
+      if (respWrapper) respWrapper.classList.add('hidden');
     }
 
     const alertFinal = document.getElementById('transFinalNotice');
@@ -1892,14 +1912,32 @@ const App = {
       return;
     }
 
-    // VALIDACIÓN ESTRICTA Y ASIGNACIÓN: Para avanzar de Estudio de Factibilidad a Proyecto es OBLIGATORIO tener partida presupuestaria y monto
+    // VALIDACIÓN ESTRICTA Y ASIGNACIÓN: Para avanzar de Estudio de Factibilidad a Proyecto es OBLIGATORIO tener partida presupuestaria, monto y profesional responsable
     if (currentStage === 'Estudio de Factibilidad' && nextStage === 'Proyecto') {
       if (!hasPartida && !enteredPartida && !u.puede_asignar_partida && !isAdmin) {
         alert("⛔ No es posible avanzar a la etapa de Proyecto:\n\nEsta obra requiere que Dirección Médica o Administración asigne una Partida Presupuestaria previamente.");
         return;
       }
 
-      if (enteredPartida && enteredPartida !== (item.partida || '')) {
+      const respSelect = document.getElementById('transQuickResponsableSelect');
+      let chosenRespId = respSelect ? respSelect.value : '';
+      let chosenRespName = '';
+      if (chosenRespId) {
+        const uObj = (DataStore.users || []).find(usr => usr.id === chosenRespId);
+        if (uObj) chosenRespName = uObj.nombre;
+      }
+      const finalRespName = chosenRespName || item.responsable;
+
+      if (!finalRespName || finalRespName === 'Sin Asignar') {
+        alert("⛔ No es posible avanzar a la etapa de Proyecto:\n\nDebes seleccionar obligatoriamente un Profesional Responsable para la obra.");
+        if (respSelect) {
+          document.getElementById('transQuickPartidaContainer')?.classList.remove('hidden');
+          respSelect.focus();
+        }
+        return;
+      }
+
+      if (enteredPartida && (enteredPartida !== (item.partida || '') || enteredMonto)) {
         if (!u.puede_asignar_partida && !isAdmin) {
           alert("⛔ Acceso Denegado: No tienes el permiso específico para asignar partida presupuestaria.");
           return;
@@ -1932,6 +1970,11 @@ const App = {
           quickMontoInput.focus();
         }
         return;
+      }
+
+      if (chosenRespName) {
+        item.responsable = chosenRespName;
+        item.responsable_id = chosenRespId || null;
       }
     }
 
@@ -5104,11 +5147,50 @@ const App = {
     item.tipo = newTipo;
     item.estado = newEstado;
     item.partida = newPartida;
-    if (newPartida) {
+
+    // Regla de Promoción y Permanencia en Estudio de Factibilidad:
+    // Las obras en Factibilidad permanecen allí HASTA que el Administrador cargue editando el Número de Partida y Monto (>0).
+    // Al cargar ambos datos, pasa automáticamente a "Proyecto", asignada al profesional.
+    // Si NO tiene profesional asignado, se le exige al Administrador seleccionar uno antes de permitir guardar.
+    const isFact = (oldEstado === 'Estudio de Factibilidad' || oldEstado === 'Ante Proyecto');
+    const hasValidPartidaNum = newPartida && newPartida !== 'S/D' && newPartida.toUpperCase() !== 'PENDIENTE';
+    const hasValidPartidaMonto = (newMontoPartida > 0 || (hasValidPartidaNum && (newMontoTotal > 0 || newMontoObra > 0)));
+
+    if (isFact) {
+      if (newEstado === 'Proyecto' || (hasValidPartidaNum && hasValidPartidaMonto)) {
+        if (!hasValidPartidaNum) {
+          alert("⛔ Para pasar la obra a la etapa de Proyecto es obligatorio ingresar el Número de Partida Presupuestaria.");
+          document.getElementById('modalObraPartida')?.focus();
+          return;
+        }
+        if (!hasValidPartidaMonto) {
+          alert("⛔ Para pasar la obra a la etapa de Proyecto es obligatorio ingresar el Monto Asignado a la Partida (USD mayor a 0).");
+          document.getElementById('modalObraMontoPartida')?.focus();
+          return;
+        }
+        if (!newResponsable || newResponsable === 'Sin Asignar') {
+          alert("⛔ Para promover la obra de Estudio de Factibilidad a Proyecto es OBLIGATORIO seleccionar un Profesional Responsable.");
+          if (selResp) selResp.focus();
+          return;
+        }
+        item.estado = 'Proyecto';
+        if (oldEstado !== 'Proyecto') {
+          changes.push(`Estado: Promovida automáticamente a "Proyecto" por asignación de Partida N° ${newPartida}, Monto USD ${DataStore.formatUSD(newMontoPartida || newMontoTotal)} y Responsable ${newResponsable}`);
+        }
+      } else {
+        item.estado = oldEstado;
+      }
+    }
+
+    if (newPartida && newPartida !== 'S/D' && newPartida.toUpperCase() !== 'PENDIENTE') {
       if (newMontoPartida > 0) {
         item.monto_partida_usd = newMontoPartida;
+        if (!newMontoTotal || newMontoTotal === 0 || !item.monto_total_usd) {
+          item.monto_obra_usd = newMontoPartida;
+          item.monto_total_usd = newMontoPartida;
+        }
       } else if (!item.monto_partida_usd) {
-        item.monto_partida_usd = newMontoTotal;
+        item.monto_partida_usd = newMontoTotal > 0 ? newMontoTotal : (item.monto_total_usd || 0);
       }
     } else {
       item.monto_partida_usd = newMontoPartida > 0 ? newMontoPartida : 0;

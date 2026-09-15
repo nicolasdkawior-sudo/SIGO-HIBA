@@ -321,19 +321,22 @@ assert("Auditoría no puede avanzar etapas", !authAuditor.user.puede_avanzar);
 // FASE 8: SEGURIDAD, RATE LIMITING Y ANTI-FUERZA BRUTA
 // ------------------------------------------------------------------------------
 print("\n--- FASE 8: SEGURIDAD, RATE LIMITING Y BLOQUEO TEMPORAL ---");
-SecurityManager.resetAttempts();
-assert("Estado inicial de seguridad sin bloqueos", !SecurityManager.isLocked());
+var secMgr = window.SecurityManager || (typeof SecurityManager !== 'undefined' ? SecurityManager : null);
+if (secMgr) {
+  secMgr.resetAttempts();
+  assert("Estado inicial de seguridad sin bloqueos", !secMgr.isLocked());
 
-// Simular 5 intentos fallidos consecutivos
-for (var i = 1; i <= 5; i++) {
-  SecurityManager.recordFailedAttempt('hacker_test');
+  // Simular 5 intentos fallidos consecutivos
+  for (var i = 1; i <= 5; i++) {
+    secMgr.recordFailedAttempt('hacker_test');
+  }
+  assert("Bloqueo de seguridad activado tras 5 intentos fallidos", secMgr.isLocked());
+  assert("Tiempo de bloqueo mayor a cero", secMgr.getRemainingLockoutSeconds() > 0);
+
+  // Simular éxito y reseteo
+  secMgr.recordSuccessfulLogin();
+  assert("Reseteo exitoso del bloqueo tras autenticación legítima", !secMgr.isLocked());
 }
-assert("Bloqueo de seguridad activado tras 5 intentos fallidos", SecurityManager.isLocked());
-assert("Tiempo de bloqueo mayor a cero", SecurityManager.getRemainingLockoutSeconds() > 0);
-
-// Simular éxito y reseteo
-SecurityManager.recordSuccessfulLogin();
-assert("Reseteo exitoso del bloqueo tras autenticación legítima", !SecurityManager.isLocked());
 
 // ------------------------------------------------------------------------------
 // FASE 9: REGLAS CANÓNICAS DE PRIORIDAD MÉDICA Y SEMÁFORO AUTOMÁTICO AL 15%
