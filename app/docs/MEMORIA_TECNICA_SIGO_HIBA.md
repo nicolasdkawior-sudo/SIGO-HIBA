@@ -574,3 +574,46 @@ Para garantizar máxima transparencia y certeza entre todas las vistas de SIGO H
      - Inputs monetarios convertidos a `type="text" inputmode="decimal"` con placeholders estándar (`Ej: 1.688.000,00`, `Ej: 50.000,00`).
      - Pre-cargas de campos con formato argentino completo.
      - Verificación instantánea de fórmula de cálculo de USD/M2 con visualización de signos (`USD 0,00`, `0,00 m²`, `USD 0,00 / m²`).
+
+---
+
+## 19. BORRADO DEFINITIVO DE OBRAS EN CUALQUIER ESTADIO CON CONFIRMACIÓN OBLIGATORIA "BORRAR" Y MÓDULO DE AUDITORÍA DE REGISTROS (EXCLUSIVO ADMINISTRADOR)
+
+### 19.1. Borrado Definitivo de Obras en la Ficha de Proyecto e Inversión
+- **Atribución Exclusiva:** Función reservada únicamente al perfil de Administrador (`usr-admin` / `usr-nicolas`). Los demás roles carecen de visibilidad y autorización para eliminar registros.
+- **Alcance Operativo:** Permite la supresión total de cualquier obra en cualquier estadio del ciclo de vida institucional:
+  - *Estudio de Factibilidad*
+  - *Ante Proyecto*
+  - *Proyecto*
+  - *En licitación*
+  - *Obras en Curso*
+  - *Obras Finalizadas*
+  - *Suspendida*
+- **Protocolo de Doble Confirmación con Cuadro de Diálogo Crítico:**
+  - En la ficha de obra (`#modalObraDetail`), el Administrador visualiza el botón `#btnModalDeleteObra` (`[🗑️ Borrar Obra]`).
+  - Al presionarlo, no se ejecuta un borrado directo: se despliega el modal de confirmación `#modalConfirmDeleteObra`.
+  - Muestra un resumen del proyecto: Código, Nombre, Estadio, Sede y Monto Involucrado (USD).
+  - Contiene una advertencia formal de que la acción es irreversible.
+  - Para habilitar la confirmación, el sistema obliga al usuario a escribir exactamente en mayúsculas la palabra **`BORRAR`** en el campo `#inputConfirmDeleteText`.
+  - El botón `#btnExecuteDeleteConfirmed` permanece bloqueado y atenuado (`opacity-40 cursor-not-allowed`) hasta que se valida la palabra exacta mediante el evento `oninput`.
+  - Al confirmar:
+    1. Se elimina físicamente el registro de la base de datos local y de la nube.
+    2. Se recalculan en tiempo real los indicadores de cartera activa, KPIs y tableros.
+    3. Se asienta de inmediato el evento en el Libro de Auditoría Institucional.
+
+### 19.2. Módulo y Botón de Auditoría de Registros Institucionales
+- **Acceso en Panel Superior:**
+  Botón `#btnAuditoriaTop` con ícono de escudo institucional (`shield-check`) en el encabezado principal, visible exclusivamente para el Administrador.
+- **Modal de Trazabilidad Histórica (`#modalAuditLogs`):**
+  - Registra todos los movimientos críticos del sistema:
+    - **Bajas y Borrados de Obras (`BORRADO_OBRA`):** Asienta código de obra, nombre, estadio, monto en USD, detalle, usuario ejecutor, fecha y hora exacta.
+    - **Avances y Cambios de Etapa (`AVANCE_ETAPA`):** Certificaciones y transiciones de estado.
+    - **Adjudicaciones de Compras (`ADJUDICACION`):** Proveedor, OC, monto adjudicado y anticipo.
+    - **Asignaciones de Partida (`ASIGNACION_PARTIDA`):** Número de partida presupuestaria e importe.
+    - **Evaluaciones Médicas (`PRIORIZACION_MEDICA`):** Asignación de criticidad asistencial por Dirección Médica.
+    - **Creaciones de Obra (`CREACION_OBRA`):** Nuevas solicitudes en Estudio de Factibilidad.
+- **Herramientas de Control:**
+  - **Buscador Reactivo en Vivo:** Búsqueda simultánea por código de obra, nombre, usuario o detalle.
+  - **Filtro por Categoría:** Filtro por tipo de evento (Todos, Solo Borrados, Avances, Adjudicaciones, Partidas, Prioridades).
+  - **Exportación Oficial a Excel:** Descarga instantánea en formato `.xlsx` mediante SheetJS para auditorías externas o copias de seguridad.
+  - **Scrollbar Personalizado:** Contenedor adaptativo para operar con fluidez en cualquier resolución de pantalla (laptops y pantallas de alta densidad).

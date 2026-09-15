@@ -426,6 +426,7 @@ const DEFAULT_USERS = [
 const DataStore = {
   items: [],
   users: [],
+  auditLogs: [],
   currentUser: null,
 
   DEPENDENCIAS: [
@@ -746,6 +747,20 @@ const DataStore = {
       }
     }
 
+    // 3. Cargar Registros de Auditoría Institucional
+    const localAudit = localStorage.getItem('sigo_audit_logs');
+    if (localAudit) {
+      try {
+        this.auditLogs = JSON.parse(localAudit);
+      } catch (e) {
+        this.auditLogs = [];
+      }
+    }
+    if (!Array.isArray(this.auditLogs) || this.auditLogs.length === 0) {
+      this.auditLogs = this.getInitialAuditLogs();
+      this.persistAuditLogs();
+    }
+
     console.log(`DataStore v2.2 inicializado: ${this.items.length} proyectos. Usuario activo: ${this.currentUser ? this.currentUser.nombre : 'Ninguno (Requiere Login)'}`);
   },
 
@@ -772,6 +787,119 @@ const DataStore = {
     }
   },
 
+  persistAuditLogs() {
+    try {
+      localStorage.setItem('sigo_audit_logs', JSON.stringify(this.auditLogs));
+      if (typeof broadcastDataChange === 'function') {
+        broadcastDataChange('AUDIT_LOGS_PERSISTED');
+      }
+    } catch (e) {
+      console.error("Error persistiendo auditoría:", e);
+    }
+  },
+
+  getInitialAuditLogs() {
+    return [
+      {
+        id: 'AUD-INIT-001',
+        timestamp: '2026-09-15T01:30:00.000Z',
+        fecha: '2026-09-15 01:30',
+        tipo: 'SISTEMA',
+        tipo_label: 'Base Canónica Oficial',
+        nivel: 'info',
+        usuario: 'Dirección General (Admin)',
+        usuario_id: 'usr-admin',
+        obra_id: 'GLOBAL',
+        obra_nombre: 'Sistema Integral SIGO-HIBA',
+        monto_usd: 30569529.29,
+        estado_obra: 'Vigente',
+        detalle: 'Sincronización inicial de la base de datos canónica oficial: 97 proyectos activos por USD 30.569.529,29 y 221 obras en catálogo.'
+      },
+      {
+        id: 'AUD-INIT-002',
+        timestamp: '2026-09-15T01:31:00.000Z',
+        fecha: '2026-09-15 01:31',
+        tipo: 'PRIORIZACION_MEDICA',
+        tipo_label: 'Ponderación Médica',
+        nivel: 'info',
+        usuario: 'Dirección Médica HIBA',
+        usuario_id: 'usr-dir-medica',
+        obra_id: 'FACTIBILIDAD',
+        obra_nombre: 'Módulo Factibilidad Sanitaria',
+        monto_usd: 0,
+        estado_obra: 'Estudio de Factibilidad',
+        detalle: 'Configuración del panel de 57 obras en Estudio de Factibilidad pendientes de asignación de criticidad asistencial.'
+      },
+      {
+        id: 'AUD-INIT-003',
+        timestamp: '2026-09-15T01:32:00.000Z',
+        fecha: '2026-09-15 01:32',
+        tipo: 'SEGURIDAD',
+        tipo_label: 'Respaldo Automático',
+        nivel: 'exito',
+        usuario: 'Sistema Autónomo',
+        usuario_id: 'usr-system',
+        obra_id: 'BACKUP',
+        obra_nombre: 'Catálogo General',
+        monto_usd: 30569529.29,
+        estado_obra: 'Vigente',
+        detalle: 'Activación del esquema de respaldo diario automático a las 15:00 hs con política de retención histórica de 30 días.'
+      }
+    ];
+  },
+
+  addAuditLog(entry) {
+    if (!Array.isArray(this.auditLogs)) this.auditLogs = [];
+    const now = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    const fechaStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    
+    const newEntry = {
+      id: 'AUD-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+      timestamp: now.toISOString(),
+      fecha: fechaStr,
+      tipo: entry.tipo || 'MOVIMIENTO',
+      tipo_label: entry.tipo_label || entry.tipo || 'Movimiento',
+      nivel: entry.nivel || 'info',
+      usuario: (this.currentUser && this.currentUser.nombre) ? this.currentUser.nombre : 'Dirección General (Admin)',
+      usuario_id: (this.currentUser && this.currentUser.id) ? this.currentUser.id : 'usr-admin',
+      obra_id: entry.obra_id || '-',
+      obra_nombre: entry.obra_nombre || '-',
+      monto_usd: typeof entry.monto_usd === 'number' ? entry.monto_usd : 0,
+      estado_obra: entry.estado_obra || '-',
+      detalle: entry.detalle || ''
+    };
+    this.auditLogs.unshift(newEntry);
+    if (this.auditLogs.length > 500) {
+      this.auditLogs = this.auditLogs.slice(0, 500);
+    }
+    this.persistAuditLogs();
+    return newEntry;
+  },
+
+  exportAuditLogsToExcel() {
+    if (!window.XLSX) {
+      alert("Librería XLSX no disponible.");
+      return;
+    }
+    const data = (this.auditLogs || []).map(entry => ({
+      'ID Auditoría': entry.id,
+      'Fecha y Hora': entry.fecha,
+      'Acción / Evento': entry.tipo_label || entry.tipo,
+      'Nivel': (entry.nivel || 'info').toUpperCase(),
+      'Usuario Ejecutor': entry.usuario,
+      'Código de Obra': entry.obra_id,
+      'Nombre de Obra / Objeto': entry.obra_nombre,
+      'Estadio': entry.estado_obra,
+      'Monto Involucrado (USD)': entry.monto_usd || 0,
+      'Detalle del Movimiento': entry.detalle
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Auditoria_SIGO_HIBA");
+    XLSX.writeFile(wb, `Auditoria_Movimientos_HIBA_${new Date().toISOString().split('T')[0]}.xlsx`);
+  },
+
   reloadFromStorage() {
     try {
       const localObras = localStorage.getItem('sigo_obras_data');
@@ -781,6 +909,10 @@ const DataStore = {
       const localUsers = localStorage.getItem('sigo_users_list');
       if (localUsers) {
         this.users = JSON.parse(localUsers);
+      }
+      const localAudit = localStorage.getItem('sigo_audit_logs');
+      if (localAudit) {
+        this.auditLogs = JSON.parse(localAudit);
       }
       return true;
     } catch (e) {
@@ -807,7 +939,8 @@ const DataStore = {
         exported_by: this.currentUser ? `${this.currentUser.nombre} (${this.currentUser.username})` : 'Administrador'
       },
       items: this.items || [],
-      users: this.users || []
+      users: this.users || [],
+      audit_logs: this.auditLogs || []
     };
     return JSON.stringify(exportPayload, null, 2);
   },
@@ -833,6 +966,11 @@ const DataStore = {
       if (data.users && Array.isArray(data.users) && data.users.length > 0) {
         this.users = data.users;
         this.persistUsers();
+      }
+
+      if (data.audit_logs && Array.isArray(data.audit_logs) && data.audit_logs.length > 0) {
+        this.auditLogs = data.audit_logs;
+        this.persistAuditLogs();
       }
 
       this.persist();
@@ -987,6 +1125,17 @@ const DataStore = {
     this.items.unshift(newItem);
     this.persist();
 
+    this.addAuditLog({
+      tipo: 'CREACION_OBRA',
+      tipo_label: 'Alta de Obra (Factibilidad)',
+      nivel: 'info',
+      obra_id: newItem.id,
+      obra_nombre: newItem.nombre,
+      monto_usd: (newItem.monto_obra_usd || 0) + (newItem.monto_equipamiento_usd || 0),
+      estado_obra: 'Estudio de Factibilidad',
+      detalle: `Alta de nueva solicitud en Factibilidad: '${newItem.nombre}' (${newItem.id}), sede ${newItem.sede}, sector '${newItem.sector_solicitante || 'N/A'}'. Monto estimado: ${this.formatUSD((newItem.monto_obra_usd || 0) + (newItem.monto_equipamiento_usd || 0))}.`
+    });
+
     if (SupabaseManager.isConfigured) {
       SupabaseManager.upsertObraInCloud(newItem);
     }
@@ -1103,6 +1252,17 @@ const DataStore = {
     });
 
     this.saveItem(item, true);
+
+    this.addAuditLog({
+      tipo: 'ASIGNACION_PARTIDA',
+      tipo_label: 'Asignación Partida',
+      nivel: 'exito',
+      obra_id: item.id,
+      obra_nombre: item.nombre,
+      monto_usd: montoVal,
+      estado_obra: item.estado,
+      detalle: `Asignación de Partida Presupuestaria N° '${item.partida}' por un monto de ${this.formatUSD(montoVal)}. ${obsPrioridad} Habilita avance a etapa de Proyecto.`
+    });
     return { 
       success: true, 
       partida: item.partida, 
@@ -1380,6 +1540,20 @@ const DataStore = {
     }
 
     this.saveItem(item, true);
+
+    const logTipo = nextStage === 'Obras en Curso' ? 'ADJUDICACION' : 'AVANCE_ETAPA';
+    const logLabel = nextStage === 'Obras en Curso' ? 'Adjudicación Compras' : 'Avance de Etapa';
+    this.addAuditLog({
+      tipo: logTipo,
+      tipo_label: logLabel,
+      nivel: nextStage === 'Obras en Curso' ? 'exito' : 'info',
+      obra_id: item.id,
+      obra_nombre: item.nombre,
+      monto_usd: (item.monto_obra_usd || 0) + (item.monto_equipamiento_usd || 0),
+      estado_obra: nextStage,
+      detalle: defaultObs
+    });
+
     return { success: true, nextStage: nextStage, item: item };
   },
 
@@ -2762,6 +2936,17 @@ const DataStore = {
     });
 
     this.saveItem(item, true);
+
+    this.addAuditLog({
+      tipo: 'PRIORIZACION_MEDICA',
+      tipo_label: 'Evaluación Médica',
+      nivel: 'info',
+      obra_id: item.id,
+      obra_nombre: item.nombre,
+      monto_usd: (item.monto_obra_usd || 0) + (item.monto_equipamiento_usd || 0),
+      estado_obra: item.estado,
+      detalle: `Prioridad Médica asignada: ${priorityVal}★ por Dirección Médica. Ponderación resultante: ${item.prioridad_final}.`
+    });
     return true;
   },
 
@@ -3070,6 +3255,39 @@ const DataStore = {
       SupabaseManager.upsertObraInCloud(item);
     }
     return true;
+  },
+
+  deleteItem(itemId) {
+    if (!this.isAdmin()) {
+      return { success: false, msg: '⛔ Acceso Denegado: Solo el Administrador General puede borrar obras del sistema.' };
+    }
+    const idx = this.items.findIndex(x => x.id === itemId);
+    if (idx === -1) {
+      return { success: false, msg: 'Obra no encontrada.' };
+    }
+    const item = this.items[idx];
+    const totalUSD = (item.monto_obra_usd || 0) + (item.monto_equipamiento_usd || 0);
+
+    // Registrar en el libro de auditoría institucional
+    this.addAuditLog({
+      tipo: 'BORRADO_OBRA',
+      tipo_label: 'Baja Definitiva de Obra',
+      nivel: 'critico',
+      obra_id: item.id,
+      obra_nombre: item.nombre,
+      monto_usd: totalUSD,
+      estado_obra: item.estado,
+      detalle: `ELIMINACIÓN DEFINITIVA de la obra '${item.nombre}' (${item.id}) en estadio '${item.estado}', sede ${item.sede}, por monto de ${this.formatUSD(totalUSD)}. Confirmación obligatoria BORRAR ejecutada.`
+    });
+
+    const deletedItem = this.items.splice(idx, 1)[0];
+    this.persist();
+
+    if (typeof SupabaseManager !== 'undefined' && SupabaseManager.isConfigured && typeof SupabaseManager.deleteObraInCloud === 'function') {
+      SupabaseManager.deleteObraInCloud(itemId);
+    }
+
+    return { success: true, item: deletedItem };
   },
 
   exportToExcel(filters = {}) {

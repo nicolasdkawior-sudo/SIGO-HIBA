@@ -772,6 +772,60 @@ assert("parseCurrency parsea string con coma decimal 5684,30", Math.abs(DataStor
 assert("parseCurrency parsea string con prefijo USD 30.569.529,29", Math.abs(DataStore.parseCurrency('USD 30.569.529,29') - 30569529.29) < 0.01);
 assert("parseCurrency parsea número plano 50000", Math.abs(DataStore.parseCurrency('50000') - 50000) < 0.01);
 
+// ================================================================================
+// FASE 14: BORRADO DEFINITIVO DE OBRAS POR EL ADMINISTRADOR Y AUDITORÍA DE REGISTROS
+// ================================================================================
+print("\n--- FASE 14: BORRADO DEFINITIVO DE OBRAS POR EL ADMINISTRADOR Y AUDITORÍA DE REGISTROS ---");
+
+// 14.1 Crear una obra temporal para borrado en cualquier estadio
+var obraParaBorrar = {
+  id: 'OBRA-TEST-BORRADO-99',
+  nombre: 'Obra Experimental para Prueba de Borrado y Auditoría',
+  tipo: 'Obra Civil',
+  sede: 'Central',
+  dependencia: 'Departamento de Proyectos Central',
+  estado: 'Proyecto',
+  monto_obra_usd: 150000,
+  monto_equipamiento_usd: 50000,
+  monto_total_usd: 200000,
+  responsable: 'Admin',
+  responsable_id: 'usr-admin'
+};
+DataStore.items.unshift(obraParaBorrar);
+DataStore.persist();
+
+assert("Obra de prueba creada e incorporada al catálogo", Boolean(DataStore.getItemById('OBRA-TEST-BORRADO-99')));
+
+// 14.2 Intento de borrado por usuario no administrador (e.g. Proyectista) -> BLOQUEADO
+DataStore.currentUser = authProyectista.user; // usr-palmioli
+var resBorradoNoAdmin = DataStore.deleteItem('OBRA-TEST-BORRADO-99');
+assert("Usuario no administrador tiene denegado el borrado de obras", resBorradoNoAdmin.success === false);
+assert("La obra sigue intacta en el catálogo tras intento denegado", Boolean(DataStore.getItemById('OBRA-TEST-BORRADO-99')));
+
+// 14.3 Borrado exitoso ejecutado por el Administrador General
+DataStore.currentUser = authAdmin.user; // usr-admin
+var totalLogsAntes = DataStore.auditLogs ? DataStore.auditLogs.length : 0;
+var resBorradoAdmin = DataStore.deleteItem('OBRA-TEST-BORRADO-99');
+assert("El Administrador General puede borrar obras exitosamente", resBorradoAdmin.success === true);
+assert("La obra eliminada ya NO figura en el catálogo de DataStore", !DataStore.getItemById('OBRA-TEST-BORRADO-99'));
+
+// 14.4 Verificación de asentamiento en el libro de auditoría
+assert("El número de registros de auditoría se incrementó", DataStore.auditLogs.length === totalLogsAntes + 1);
+var ultimoLog = DataStore.auditLogs[0];
+assert("El último registro de auditoría corresponde a BORRADO_OBRA", ultimoLog.tipo === 'BORRADO_OBRA');
+assert("El registro de auditoría contiene el código de la obra borrada", ultimoLog.obra_id === 'OBRA-TEST-BORRADO-99');
+assert("El registro de auditoría contiene el monto total involucrado (USD 200.000)", ultimoLog.monto_usd === 200000);
+assert("El registro de auditoría contiene el usuario ejecutor", ultimoLog.usuario === authAdmin.user.nombre);
+assert("El registro de auditoría tiene nivel 'critico'", ultimoLog.nivel === 'critico');
+
+// 14.5 Restablecer y constatar base canónica oficial limpia
+localStorage.setItem('sigo_active_user_id', authAdmin.user.id);
+DataStore.resetToCanonical();
+DataStore.currentUser = authAdmin.user;
+var kpisFinales = DataStore.getKPIs();
+assert("Base canónica mantiene exactamente 97 proyectos activos", kpisFinales.carteraActivaCount === 97);
+assert("Base canónica mantiene exactamente USD 30,569,529.29", Math.abs(kpisFinales.totalCarteraActiva - 30569529.29) < 0.01);
+
 print("\n================================================================================");
 var failedCount = results.filter(function(r) { return r.status === 'FAIL'; }).length;
 var passedCount = results.filter(function(r) { return r.status === 'PASS'; }).length;

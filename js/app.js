@@ -4325,6 +4325,11 @@ const App = {
     if (btnExecutive) {
       btnExecutive.classList.toggle('hidden', u.rol !== 'admin');
     }
+
+    const btnAuditoria = document.getElementById('btnAuditoriaTop');
+    if (btnAuditoria) {
+      btnAuditoria.classList.toggle('hidden', u.rol !== 'admin');
+    }
   },
 
   // ================= CÁLCULO INSTANTÁNEO Y AUDITORÍA DE M2 =================
@@ -4936,6 +4941,12 @@ const App = {
       noticeEnCurso.classList.toggle('hidden', !(isEnCurso && canEdit && needsDate));
     }
 
+    // Botón de Borrado de Obra exclusivo para Administrador
+    const btnDelete = document.getElementById('btnModalDeleteObra');
+    if (btnDelete) {
+      btnDelete.classList.toggle('hidden', !isAdmin);
+    }
+
     document.getElementById('modalObraDetail').classList.remove('hidden');
     if (window.lucide) lucide.createIcons();
   },
@@ -5247,6 +5258,220 @@ const App = {
 
   exportExcel() {
     DataStore.exportToExcel(this.filters);
+  },
+
+  // ================= BORRADO DEFINITIVO DE OBRAS (ADMIN) =================
+  openConfirmDeleteModal() {
+    if (!DataStore.isAdmin()) {
+      alert("⛔ Acceso Denegado: Solo el Administrador General puede eliminar obras.");
+      return;
+    }
+    const id = document.getElementById('modalObraId')?.innerText;
+    const item = DataStore.getItemById(id);
+    if (!item) {
+      alert("Obra no encontrada.");
+      return;
+    }
+
+    const totalUSD = (item.monto_obra_usd || 0) + (item.monto_equipamiento_usd || 0);
+    const elId = document.getElementById('confirmDeleteObraId');
+    const elTitle = document.getElementById('confirmDeleteObraTitle');
+    const elEstado = document.getElementById('confirmDeleteObraEstado');
+    const elSede = document.getElementById('confirmDeleteObraSede');
+    const elMonto = document.getElementById('confirmDeleteObraMonto');
+    const inputTxt = document.getElementById('inputConfirmDeleteText');
+    const btnExec = document.getElementById('btnExecuteDeleteConfirmed');
+    const hint = document.getElementById('confirmDeleteHint');
+
+    if (elId) elId.innerText = item.id;
+    if (elTitle) elTitle.innerText = item.nombre;
+    if (elEstado) elEstado.innerText = item.estado;
+    if (elSede) elSede.innerText = `${item.sede} • ${item.tipo || 'Obra'}`;
+    if (elMonto) elMonto.innerText = DataStore.formatUSD(totalUSD);
+    if (inputTxt) inputTxt.value = '';
+    if (btnExec) {
+      btnExec.disabled = true;
+      btnExec.classList.add('opacity-40', 'cursor-not-allowed');
+      btnExec.classList.remove('cursor-pointer');
+    }
+    if (hint) {
+      hint.innerText = 'El botón de confirmación se habilitará al completar la palabra exacta.';
+      hint.className = 'text-[10px] text-slate-400 text-center font-medium';
+    }
+
+    const modal = document.getElementById('modalConfirmDeleteObra');
+    if (modal) modal.classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+    if (inputTxt) {
+      setTimeout(() => inputTxt.focus(), 150);
+    }
+  },
+
+  handleDeleteInputTyping(val) {
+    const btn = document.getElementById('btnExecuteDeleteConfirmed');
+    const hint = document.getElementById('confirmDeleteHint');
+    const isExact = (val.trim() === 'BORRAR');
+    if (btn) {
+      btn.disabled = !isExact;
+      if (isExact) {
+        btn.classList.remove('opacity-40', 'cursor-not-allowed');
+        btn.classList.add('cursor-pointer');
+      } else {
+        btn.classList.add('opacity-40', 'cursor-not-allowed');
+        btn.classList.remove('cursor-pointer');
+      }
+    }
+    if (hint) {
+      if (isExact) {
+        hint.innerText = '✅ Palabra "BORRAR" validada. Puedes confirmar la eliminación definitiva.';
+        hint.className = 'text-[10px] text-rose-700 text-center font-bold';
+      } else {
+        hint.innerText = 'El botón de confirmación se habilitará al completar la palabra exacta.';
+        hint.className = 'text-[10px] text-slate-400 text-center font-medium';
+      }
+    }
+  },
+
+  closeConfirmDeleteModal() {
+    const modal = document.getElementById('modalConfirmDeleteObra');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  executeDeleteObraConfirmed() {
+    if (!DataStore.isAdmin()) {
+      alert("⛔ Acceso Denegado: Solo el Administrador General puede borrar obras.");
+      return;
+    }
+    const inputTxt = document.getElementById('inputConfirmDeleteText');
+    if (!inputTxt || inputTxt.value.trim() !== 'BORRAR') {
+      alert("⛔ Debes escribir la palabra BORRAR en mayúsculas exactamente.");
+      return;
+    }
+    const id = document.getElementById('confirmDeleteObraId')?.innerText;
+    if (!id) return;
+
+    const res = DataStore.deleteItem(id);
+    if (!res.success) {
+      alert(res.msg || "Error al eliminar la obra.");
+      return;
+    }
+
+    this.closeConfirmDeleteModal();
+    this.closeObraModal();
+
+    // Actualizar vista activa y dashboards
+    this.renderActiveView();
+    this.updateStats();
+
+    alert(`🗑️ Obra ${id} eliminada definitivamente de la base de datos institucional. La baja ha sido asentada formalmente en el Libro de Auditoría.`);
+  },
+
+  // ================= AUDITORÍA DE REGISTROS (ADMIN) =================
+  openAuditLogsModal() {
+    if (!DataStore.isAdmin()) {
+      alert("⛔ Acceso Denegado: El módulo de Auditoría de Registros es exclusivo para el Administrador General.");
+      return;
+    }
+    const modal = document.getElementById('modalAuditLogs');
+    if (modal) modal.classList.remove('hidden');
+    this.filterAuditLogs();
+    if (window.lucide) lucide.createIcons();
+  },
+
+  closeAuditLogsModal() {
+    const modal = document.getElementById('modalAuditLogs');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  filterAuditLogs() {
+    const q = (document.getElementById('inputAuditSearch')?.value || '').toLowerCase().trim();
+    const typeFilter = document.getElementById('selectAuditTypeFilter')?.value || 'todos';
+
+    let logs = DataStore.auditLogs || [];
+    if (typeFilter !== 'todos') {
+      logs = logs.filter(entry => entry.tipo === typeFilter);
+    }
+    if (q) {
+      logs = logs.filter(entry => 
+        (entry.id && entry.id.toLowerCase().includes(q)) ||
+        (entry.obra_id && entry.obra_id.toLowerCase().includes(q)) ||
+        (entry.obra_nombre && entry.obra_nombre.toLowerCase().includes(q)) ||
+        (entry.usuario && entry.usuario.toLowerCase().includes(q)) ||
+        (entry.detalle && entry.detalle.toLowerCase().includes(q)) ||
+        (entry.tipo_label && entry.tipo_label.toLowerCase().includes(q))
+      );
+    }
+
+    const badge = document.getElementById('auditLogCountBadge');
+    if (badge) badge.innerText = `${logs.length} ${logs.length === 1 ? 'registro' : 'registros'}`;
+
+    const tbody = document.getElementById('auditLogsTableBody');
+    if (!tbody) return;
+
+    if (logs.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="py-8 text-center text-slate-400">
+            <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+            <div>No se encontraron movimientos registrados para este filtro.</div>
+          </td>
+        </tr>
+      `;
+      if (window.lucide) lucide.createIcons();
+      return;
+    }
+
+    const badgeClasses = {
+      'BORRADO_OBRA': 'bg-rose-100 text-rose-800 border-rose-300 font-black',
+      'AVANCE_ETAPA': 'bg-blue-100 text-blue-800 border-blue-200',
+      'ADJUDICACION': 'bg-amber-100 text-amber-900 border-amber-300',
+      'ASIGNACION_PARTIDA': 'bg-emerald-100 text-emerald-800 border-emerald-300',
+      'PRIORIZACION_MEDICA': 'bg-purple-100 text-purple-800 border-purple-200',
+      'CREACION_OBRA': 'bg-slate-100 text-slate-800 border-slate-300',
+      'SEGURIDAD': 'bg-teal-100 text-teal-800 border-teal-300',
+      'SISTEMA': 'bg-indigo-100 text-indigo-800 border-indigo-200'
+    };
+
+    let html = '';
+    logs.forEach(l => {
+      const badgeCls = badgeClasses[l.tipo] || 'bg-slate-100 text-slate-700 border-slate-200';
+      const isBorrado = (l.tipo === 'BORRADO_OBRA');
+      const rowBg = isBorrado ? 'bg-rose-50/40 hover:bg-rose-50/80 font-medium' : 'hover:bg-slate-50';
+
+      html += `
+        <tr class="border-b border-slate-100 ${rowBg} text-xs">
+          <td class="py-2.5 px-3 font-mono text-slate-500 whitespace-nowrap">${l.fecha || l.timestamp?.split('T')[0] || '-'}</td>
+          <td class="py-2.5 px-3 whitespace-nowrap">
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${badgeCls}">
+              ${isBorrado ? '🗑️ ' : ''}${l.tipo_label || l.tipo}
+            </span>
+          </td>
+          <td class="py-2.5 px-3 whitespace-nowrap">
+            <div class="font-bold text-slate-800 font-mono ${isBorrado ? 'line-through text-rose-700' : 'text-blue-700'}">${l.obra_id || '-'}</div>
+            <div class="text-[11px] text-slate-500 truncate max-w-[200px]" title="${l.obra_nombre || ''}">${l.obra_nombre || '-'}</div>
+          </td>
+          <td class="py-2.5 px-3 whitespace-nowrap text-slate-600 font-semibold">${l.estado_obra || '-'}</td>
+          <td class="py-2.5 px-3 whitespace-nowrap font-mono font-bold ${l.monto_usd > 0 ? 'text-emerald-700' : 'text-slate-400'}">
+            ${l.monto_usd > 0 ? DataStore.formatUSD(l.monto_usd) : '-'}
+          </td>
+          <td class="py-2.5 px-3 text-slate-700 max-w-[340px] leading-relaxed">
+            ${l.detalle || ''}
+          </td>
+          <td class="py-2.5 px-3 whitespace-nowrap">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+              <i data-lucide="user" class="w-3 h-3 mr-1 text-slate-500"></i>${l.usuario || 'Admin'}
+            </span>
+          </td>
+        </tr>
+      `;
+    });
+
+    tbody.innerHTML = html;
+    if (window.lucide) lucide.createIcons();
+  },
+
+  exportAuditToExcel() {
+    DataStore.exportAuditLogsToExcel();
   },
 
   showToast(msg) {

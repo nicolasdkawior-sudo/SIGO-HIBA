@@ -221,6 +221,12 @@
         <span class="hidden md:inline">Tablero Dirección</span>
       </button>
 
+      <!-- Botón Auditoría de Registros (Solo Admin) -->
+      <button id="btnAuditoriaTop" onclick="App.openAuditLogsModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-semibold flex items-center space-x-1.5 transition shadow-2xs" title="Registro y Auditoría de Movimientos del Sistema">
+        <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
+        <span class="hidden md:inline">Auditoría</span>
+      </button>
+
       <!-- Botón Login con Google -->
       <button onclick="App.openGoogleLoginModal()" class="bg-white hover:bg-slate-100 text-slate-800 px-3 py-1.5 rounded-lg font-semibold text-xs flex items-center space-x-1.5 shadow-2xs transition">
         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24">
@@ -1810,6 +1816,12 @@
           <!-- Información dinámica según rol de usuario -->
         </div>
         <div class="flex items-center space-x-2">
+          <!-- Botón Borrar Obra (Exclusivo Administrador) -->
+          <button type="button" id="btnModalDeleteObra" onclick="App.openConfirmDeleteModal()" 
+                  class="hidden px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 border border-rose-300 rounded-lg font-bold text-xs flex items-center space-x-1.5 transition cursor-pointer shadow-2xs" title="Borrar definitivamente este proyecto de la base de datos">
+            <i data-lucide="trash-2" class="w-4 h-4 text-rose-600"></i>
+            <span>Borrar Obra</span>
+          </button>
           <!-- Botón de Editar exclusivo para Administrador -->
           <button type="button" id="btnModalAdminEnableEdit" onclick="App.toggleAdminEditMode(true)" 
                   class="hidden px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold rounded-lg shadow-sm transition flex items-center space-x-1.5 cursor-pointer">
@@ -1832,6 +1844,165 @@
             <span>Guardar Modificaciones</span>
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: CONFIRMACIÓN CRÍTICA DE BORRADO DE OBRA (ADMIN) ================= -->
+  <div id="modalConfirmDeleteObra" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[92vh] flex flex-col overflow-hidden border-2 border-rose-400 text-xs">
+      <!-- Encabezado Crítico -->
+      <div class="bg-gradient-to-r from-rose-900 via-rose-950 to-slate-950 text-white px-6 py-4 flex items-center justify-between shrink-0">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-rose-600/30 flex items-center justify-center border border-rose-400/40 text-rose-300 shrink-0">
+            <i data-lucide="alert-octagon" class="w-6 h-6 text-rose-400"></i>
+          </div>
+          <div>
+            <h3 class="font-black text-sm text-white flex items-center gap-1.5">
+              <span>Confirmación de Borrado Definitivo</span>
+              <span class="bg-rose-500/30 text-rose-200 text-[10px] px-2 py-0.2 rounded font-mono border border-rose-400/40">ADMIN</span>
+            </h3>
+            <p class="text-[11px] text-rose-200/80">Esta acción es irreversible y quedará asentada en el libro de auditoría</p>
+          </div>
+        </div>
+        <button type="button" onclick="App.closeConfirmDeleteModal()" class="text-rose-300 hover:text-white transition cursor-pointer p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Cuerpo del Modal -->
+      <div class="p-6 overflow-y-auto space-y-4 flex-1">
+        <!-- Tarjeta de Información de la Obra a Eliminar -->
+        <div class="bg-rose-50/60 border border-rose-200 rounded-xl p-3.5 space-y-2">
+          <div class="flex items-center justify-between">
+            <span id="confirmDeleteObraId" class="font-mono font-bold text-xs bg-rose-200 text-rose-900 px-2 py-0.5 rounded">OBRA-000</span>
+            <span id="confirmDeleteObraEstado" class="font-bold text-[11px] text-rose-800 bg-white px-2 py-0.5 rounded border border-rose-200">Estado</span>
+          </div>
+          <div>
+            <h4 id="confirmDeleteObraTitle" class="font-bold text-slate-900 text-sm leading-snug">Nombre de la Obra</h4>
+            <div class="flex items-center space-x-2 text-slate-500 text-[11px] mt-1">
+              <span id="confirmDeleteObraSede">Sede</span>
+              <span>•</span>
+              <span id="confirmDeleteObraMonto" class="font-bold text-emerald-800">USD 0,00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alerta Institucional -->
+        <div class="bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-slate-700 text-xs space-y-2">
+          <div class="flex items-start space-x-2 text-amber-800 font-bold">
+            <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
+            <span>Advertencia de Seguridad para el Administrador</span>
+          </div>
+          <p class="text-[11px] text-slate-600 leading-relaxed">
+            La obra será eliminada permanentemente del catálogo en cualquier estadio en que se encuentre. Los indicadores financieros, la cartera y las etapas se recalcularán automáticamente.
+          </p>
+        </div>
+
+        <!-- Instrucción de Escritura BORRAR -->
+        <div class="space-y-2 pt-1">
+          <label class="block text-xs font-bold text-slate-800">
+            Para confirmar la eliminación, escribe la palabra <span class="text-rose-600 font-black tracking-wider underline">BORRAR</span> en mayúsculas:
+          </label>
+          <input type="text" id="inputConfirmDeleteText" oninput="App.handleDeleteInputTyping(this.value)" placeholder="Escribe BORRAR aquí" autocomplete="off" 
+                 class="w-full text-center tracking-widest font-black text-rose-700 bg-rose-50 border-2 border-rose-300 rounded-xl py-2.5 text-base uppercase focus:border-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-400">
+          <p id="confirmDeleteHint" class="text-[10px] text-slate-400 text-center font-medium">El botón de confirmación se habilitará al completar la palabra exacta.</p>
+        </div>
+      </div>
+
+      <!-- Pie con Botones -->
+      <div class="bg-slate-100 px-6 py-3 border-t border-slate-200 flex items-center justify-between shrink-0">
+        <button type="button" onclick="App.closeConfirmDeleteModal()" class="px-4 py-2 border border-slate-300 rounded-lg font-semibold text-slate-700 hover:bg-slate-200 transition cursor-pointer">
+          Cancelar
+        </button>
+        <button type="button" id="btnExecuteDeleteConfirmed" disabled onclick="App.executeDeleteObraConfirmed()" 
+                class="opacity-40 cursor-not-allowed bg-rose-600 hover:bg-rose-700 text-white font-bold px-4 py-2 rounded-lg transition flex items-center space-x-1.5 shadow-sm">
+          <i data-lucide="trash-2" class="w-4 h-4"></i>
+          <span>Confirmar Eliminación Definitiva</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: AUDITORÍA DE REGISTROS Y MOVIMIENTOS (ADMIN) ================= -->
+  <div id="modalAuditLogs" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 modal-backdrop">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden border border-slate-200 text-xs">
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white px-6 py-4 flex items-center justify-between shrink-0">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-600/30 flex items-center justify-center border border-emerald-400/30 text-emerald-300 shrink-0">
+            <i data-lucide="shield-check" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h3 class="font-bold text-sm text-white">Registro y Auditoría de Movimientos</h3>
+              <span id="auditLogCountBadge" class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] px-2 py-0.2 rounded font-bold">0 registros</span>
+            </div>
+            <p class="text-[11px] text-slate-300">Trazabilidad oficial de borrados, avances, adjudicaciones, partidas y accesos en SIGO HIBA</p>
+          </div>
+        </div>
+        <button type="button" onclick="App.closeAuditLogsModal()" class="text-slate-400 hover:text-white transition cursor-pointer p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Toolbar de Filtros y Búsqueda -->
+      <div class="bg-slate-50 p-4 border-b border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0">
+        <div class="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+          <!-- Buscador -->
+          <div class="relative flex-1">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+            <input type="text" id="inputAuditSearch" oninput="App.filterAuditLogs()" placeholder="Buscar por código, obra, usuario o detalle..." 
+                   class="w-full pl-9 pr-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500">
+          </div>
+          <!-- Selector de Categoría -->
+          <select id="selectAuditTypeFilter" onchange="App.filterAuditLogs()" class="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500">
+            <option value="todos">Todos los Movimientos</option>
+            <option value="BORRADO_OBRA">🔴 Solo Borrados de Obra</option>
+            <option value="AVANCE_ETAPA">🔵 Avances de Etapa</option>
+            <option value="ADJUDICACION">🟠 Adjudicaciones / Compras</option>
+            <option value="ASIGNACION_PARTIDA">🟢 Asignaciones de Partida</option>
+            <option value="PRIORIZACION_MEDICA">🟣 Evaluaciones Médicas</option>
+            <option value="CREACION_OBRA">⚪ Creaciones de Obra</option>
+          </select>
+        </div>
+
+        <!-- Botón Exportar a Excel -->
+        <button type="button" onclick="App.exportAuditToExcel()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3.5 py-1.5 rounded-lg flex items-center justify-center space-x-1.5 transition cursor-pointer shadow-2xs shrink-0">
+          <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-200"></i>
+          <span>Exportar Excel</span>
+        </button>
+      </div>
+
+      <!-- Tabla de Auditoría con Scrollbar Personalizado -->
+      <div class="overflow-y-auto overflow-x-auto flex-1 custom-scrollbar relative bg-white">
+        <table class="w-full text-left min-w-[850px] border-collapse">
+          <thead class="bg-slate-100 font-semibold text-slate-600 border-b border-slate-200 text-[11px] sticky top-0 z-10 shadow-2xs">
+            <tr>
+              <th class="py-2.5 px-3 whitespace-nowrap">Fecha / Hora</th>
+              <th class="py-2.5 px-3 whitespace-nowrap">Acción / Evento</th>
+              <th class="py-2.5 px-3 whitespace-nowrap">Obra / Código</th>
+              <th class="py-2.5 px-3 whitespace-nowrap">Estadio</th>
+              <th class="py-2.5 px-3 whitespace-nowrap">Monto (USD)</th>
+              <th class="py-2.5 px-3">Detalle del Movimiento</th>
+              <th class="py-2.5 px-3 whitespace-nowrap">Usuario Ejecutor</th>
+            </tr>
+          </thead>
+          <tbody id="auditLogsTableBody" class="divide-y divide-slate-100 text-xs">
+            <!-- Renderizado dinámico -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer -->
+      <div class="bg-slate-50 px-6 py-3 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 shrink-0">
+        <span class="text-[11px] text-slate-500 flex items-center gap-1.5">
+          <i data-lucide="shield" class="w-3.5 h-3.5 text-emerald-600"></i>
+          <span>Trazabilidad auditable inmutable conforme a directivas de la Dirección General.</span>
+        </span>
+        <button type="button" onclick="App.closeAuditLogsModal()" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-bold cursor-pointer transition">
+          Cerrar
+        </button>
       </div>
     </div>
   </div>
