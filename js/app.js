@@ -1560,7 +1560,7 @@ const App = {
     const sector = document.getElementById('factSector').value.trim();
     const motivo = document.getElementById('factMotivo').value.trim();
     const req = document.getElementById('factRequerimiento').value.trim();
-    const monto = parseFloat(document.getElementById('factMonto').value) || 0;
+    const monto = DataStore.parseCurrency(document.getElementById('factMonto').value) || 0;
     const responsable = document.getElementById('factResponsable').value.trim();
     const prioridad = document.getElementById('factPrioridad').value;
 
@@ -1568,10 +1568,19 @@ const App = {
       alert("Por favor ingresa el título o nombre de la obra");
       return;
     }
+    if (!sector) {
+      alert("Por favor ingresa el sector o servicio solicitante");
+      return;
+    }
+    if (!motivo) {
+      alert("Por favor describe el motivo o necesidad de la intervención");
+      return;
+    }
 
     try {
-      const newObra = DataStore.createFactibilidad({
+      const res = DataStore.createFactibilidad({
         nombre,
+        tipo,
         sede,
         sector_solicitante: sector,
         motivo,
@@ -1581,33 +1590,34 @@ const App = {
         prioridad_tecnica: prioridad
       });
 
-      this.closeNewObraModal();
+      this.closeFactibilidadModal();
       this.render();
-      this.showToast(`¡Estudio de Factibilidad ${newObra.id} registrado con éxito! Enviado a Dirección.`);
+      this.showToast(`Solicitud de Factibilidad creada exitosamente: ${res.id} - ${res.nombre}`);
     } catch (err) {
-      alert(err.message);
+      alert("Error al registrar la solicitud: " + err.message);
     }
   },
 
-  // ================= MODAL ASIGNAR PARTIDA =================
-  openAsignarPartidaModal(id) {
-    const item = DataStore.getItemById(id);
+  // ================= ASIGNACIÓN DE PARTIDA PRESUPUESTARIA (DIRECCIÓN / ADMIN) =================
+  openAsignarPartidaModal(itemId) {
+    const item = DataStore.getItemById(itemId);
     if (!item) return;
 
     const u = DataStore.currentUser;
-    if (!u || u.solo_lectura || u.rol === 'visualizador' || !u.puede_asignar_partida) {
-      alert("⛔ Acceso Denegado: Tu perfil no cuenta con el permiso específico para asignar Partidas Presupuestarias.");
+    const isAdmin = DataStore.isAdmin();
+    if (!u || (!u.puede_asignar_partida && !isAdmin)) {
+      alert("⛔ Acceso Denegado: Tu perfil no tiene atribución para asignar partidas presupuestarias.");
       return;
     }
 
     document.getElementById('partidaItemId').value = item.id;
-    document.getElementById('partidaItemName').innerText = `${item.id}: ${item.nombre}`;
+    document.getElementById('partidaItemName').innerText = `${item.id} - ${item.nombre}`;
     const partidaSedeEl = document.getElementById('partidaItemSede');
     if (partidaSedeEl) partidaSedeEl.innerText = `Sede: ${item.sede} • Módulo: ${item.tipo}`;
     
     document.getElementById('inputNumeroPartida').value = item.partida || '';
     const defMonto = item.monto_partida_usd || item.monto_total_usd || item.monto_obra_usd || (item.cashflow ? item.cashflow.monto_total : '') || '';
-    document.getElementById('inputMontoPartida').value = (defMonto > 0) ? defMonto : '';
+    document.getElementById('inputMontoPartida').value = (defMonto > 0) ? DataStore.formatNumberAR(defMonto) : '';
 
     // Mostrar prioridad técnica de referencia y pre-cargar prioridad médica
     const spanTec = document.getElementById('spanPrioridadTecnicaVal');
@@ -1755,7 +1765,7 @@ const App = {
     if (requierePartida && !tienePartida) {
       if (quickPartidaInput) quickPartidaInput.value = item.partida || '';
       const defMonto = item.monto_partida_usd || item.monto_total_usd || item.monto_obra_usd || (item.cashflow ? item.cashflow.monto_total : '') || '';
-      if (quickMontoInput) quickMontoInput.value = (defMonto > 0) ? defMonto : '';
+      if (quickMontoInput) quickMontoInput.value = (defMonto > 0) ? DataStore.formatNumberAR(defMonto) : '';
       const quickPmedInput = document.getElementById('transQuickPrioridadMedicaInput');
       if (quickPmedInput) {
         quickPmedInput.value = (!item.prioridad_medica_ponderada_default && item.prioridad_medica) ? String(item.prioridad_medica) : '';
@@ -1801,7 +1811,7 @@ const App = {
         if (inputProveedor) inputProveedor.value = item.proveedor || '';
         if (inputOrdenCompra) inputOrdenCompra.value = item.orden_compra || item.numero_oc || '';
         const defMontoAdj = item.monto_adjudicado_usd || item.monto_total_usd || item.monto_obra_usd || '';
-        if (inputMontoAdj) inputMontoAdj.value = defMontoAdj > 0 ? defMontoAdj : '';
+        if (inputMontoAdj) inputMontoAdj.value = defMontoAdj > 0 ? DataStore.formatNumberAR(defMontoAdj) : '';
         if (inputAnticipo) inputAnticipo.value = (item.anticipo_porcentaje !== undefined && item.anticipo_porcentaje !== null) ? item.anticipo_porcentaje : '';
         this.handleAdjudicacionInputChange();
       } else {
@@ -1825,7 +1835,7 @@ const App = {
     const anticipoUSD = Math.round((monto * (pct / 100)) * 100) / 100;
 
     if (badge) {
-      badge.innerText = `${pct}% = USD ${DataStore.formatUSD(anticipoUSD)}`;
+      badge.innerText = `${pct}% = ${DataStore.formatUSD(anticipoUSD)}`;
     }
   },
 
@@ -2788,7 +2798,7 @@ const App = {
     items.forEach(item => {
       const isSinAsignar = (!item.responsable_id || item.responsable === 'Sin Asignar' || item.responsable_id === 'sin-asignar');
       const montoUSD = item.monto_adjudicado_usd || item.monto_partida_usd || item.monto_total_usd || item.monto_obra_usd || 0;
-      const montoFormateado = montoUSD > 0 ? `US$ ${montoUSD.toLocaleString('en-US')}` : 'Sin Monto';
+      const montoFormateado = montoUSD > 0 ? DataStore.formatUSD(montoUSD) : 'Sin Monto';
 
       html += `
         <div id="quick-assign-card-${item.id}" class="quick-assign-card bg-white rounded-xl p-3.5 border border-slate-200 hover:border-amber-300 shadow-2xs transition-all duration-200">
@@ -2921,8 +2931,7 @@ const App = {
 
     const report = DataStore.getExecutiveReportData();
     const fmt = (n) => {
-      const val = parseFloat(n) || 0;
-      return val.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+      return DataStore.formatNumberAR(n);
     };
 
     const maxMesVal = Math.max(...Object.values(report.cashflowEjecucion.mesesTotales), 1);
@@ -4320,10 +4329,10 @@ const App = {
 
   // ================= CÁLCULO INSTANTÁNEO Y AUDITORÍA DE M2 =================
   calculateModalUsdM2() {
-    const mObra = parseFloat(document.getElementById('modalObraMontoObra')?.value) || 0;
-    const mEquip = parseFloat(document.getElementById('modalObraMontoEquip')?.value) || 0;
+    const mObra = DataStore.parseCurrency(document.getElementById('modalObraMontoObra')?.value) || 0;
+    const mEquip = DataStore.parseCurrency(document.getElementById('modalObraMontoEquip')?.value) || 0;
     const mTotal = mObra + mEquip;
-    const m2 = parseFloat(document.getElementById('modalObraM2')?.value) || 0;
+    const m2 = DataStore.parseCurrency(document.getElementById('modalObraM2')?.value) || 0;
     const tipo = document.getElementById('modalObraTipo')?.value || 'Obra Civil';
     const isObraCivil = (tipo === 'Obra Civil');
 
@@ -4332,7 +4341,7 @@ const App = {
 
     const usdM2 = m2 > 0 ? (Math.round((mTotal / m2) * 100) / 100) : 0;
     const elUsdM2 = document.getElementById('modalObraUsdM2');
-    if (elUsdM2) elUsdM2.value = usdM2 > 0 ? usdM2.toFixed(2) : 0;
+    if (elUsdM2) elUsdM2.value = usdM2 > 0 ? DataStore.formatNumberAR(usdM2) : '0,00';
 
     // Actualizar panel de desglose visual de signos (+, =, ÷, =)
     const elFMO = document.getElementById('calcFormulaMontoObra');
@@ -4342,11 +4351,11 @@ const App = {
     const elFRes = document.getElementById('calcFormulaResultado');
     const elFNota = document.getElementById('calcFormulaNota');
 
-    if (elFMO) elFMO.innerText = `USD ${mObra.toLocaleString('en-US')}`;
-    if (elFME) elFME.innerText = `USD ${mEquip.toLocaleString('en-US')}`;
-    if (elFMT) elFMT.innerText = `USD ${mTotal.toLocaleString('en-US')}`;
-    if (elFM2) elFM2.innerText = m2 > 0 ? `${m2.toLocaleString('en-US')} m²` : (isObraCivil ? '0 m² (Falta m²)' : 'N/A');
-    if (elFRes) elFRes.innerText = usdM2 > 0 ? `USD ${usdM2.toFixed(2)} / m²` : 'USD 0.00 / m²';
+    if (elFMO) elFMO.innerText = DataStore.formatUSD(mObra);
+    if (elFME) elFME.innerText = DataStore.formatUSD(mEquip);
+    if (elFMT) elFMT.innerText = DataStore.formatUSD(mTotal);
+    if (elFM2) elFM2.innerText = m2 > 0 ? `${DataStore.formatNumberAR(m2)} m²` : (isObraCivil ? '0,00 m² (Falta m²)' : 'N/A');
+    if (elFRes) elFRes.innerText = usdM2 > 0 ? `USD ${DataStore.formatNumberAR(usdM2)} / m²` : 'USD 0,00 / m²';
     if (elFNota) {
       if (isObraCivil && m2 <= 0) {
         elFNota.innerText = '⚠️ M² obligatorio para Obra Civil';
@@ -4386,13 +4395,13 @@ const App = {
       depBadge.innerText = (depVal || '').replace('Departamento de ', 'Dpto. ').replace('Centros Periféricos', 'Ctros. Periféricos');
     }
     setVal('modalObraPartida', item.partida || '');
-    setVal('modalObraMontoPartida', item.monto_partida_usd || (item.partida ? item.monto_total_usd : '') || '');
+    setVal('modalObraMontoPartida', item.monto_partida_usd ? DataStore.formatNumberAR(item.monto_partida_usd) : (item.partida && item.monto_total_usd ? DataStore.formatNumberAR(item.monto_total_usd) : ''));
     setVal('modalObraCategoria', item.categoria || 'Obra Civil');
     setVal('modalObraClasificacion', item.clasificacion || '');
-    setVal('modalObraMontoObra', montoObra);
-    setVal('modalObraMontoEquip', montoEquip);
-    setVal('modalObraM2', item.superficie_m2 || 0);
-    setVal('modalObraUsdM2', item.costo_usd_m2 || 0);
+    setVal('modalObraMontoObra', montoObra ? DataStore.formatNumberAR(montoObra) : '0,00');
+    setVal('modalObraMontoEquip', montoEquip ? DataStore.formatNumberAR(montoEquip) : '0,00');
+    setVal('modalObraM2', item.superficie_m2 ? DataStore.formatNumberAR(item.superficie_m2) : '0,00');
+    setVal('modalObraUsdM2', item.costo_usd_m2 ? DataStore.formatNumberAR(item.costo_usd_m2) : '0,00');
     setVal('modalObraResponsable', item.responsable || '');
     setVal('modalObraResponsableId', item.responsable_id || '');
 
@@ -4480,7 +4489,7 @@ const App = {
     const panelContratacion = document.getElementById('modalObraContratacionPanel');
     if (panelContratacion) {
       setVal('modalObraOrdenCompra', item.orden_compra || item.numero_oc || '');
-      setVal('modalObraMontoAdjudicado', item.monto_adjudicado_usd || item.monto_total_usd || montoObra || 0);
+      setVal('modalObraMontoAdjudicado', (item.monto_adjudicado_usd || item.monto_total_usd || montoObra) ? DataStore.formatNumberAR(item.monto_adjudicado_usd || item.monto_total_usd || montoObra) : '0,00');
       setVal('modalObraAnticipoPct', (item.anticipo_porcentaje !== undefined && item.anticipo_porcentaje !== null) ? item.anticipo_porcentaje : 0);
       setVal('modalObraPlazoMeses', item.plazo_meses || '');
       this.handleModalAnticipoChange();
@@ -4496,12 +4505,12 @@ const App = {
     const elUSD = document.getElementById('modalObraAnticipoUSD');
     const badge = document.getElementById('modalObraAnticipoInfoBadge');
 
-    const monto = parseFloat(elMonto ? elMonto.value : 0) || 0;
+    const monto = DataStore.parseCurrency(elMonto ? elMonto.value : 0) || 0;
     const pct = Math.min(100, Math.max(0, parseFloat(elPct ? elPct.value : 0) || 0));
     const anticipoUSD = Math.round((monto * (pct / 100)) * 100) / 100;
     const saldoUSD = Math.round((monto - anticipoUSD) * 100) / 100;
 
-    if (elUSD) elUSD.value = `USD ${DataStore.formatUSD(anticipoUSD)}`;
+    if (elUSD) elUSD.value = DataStore.formatUSD(anticipoUSD);
     if (badge) {
       badge.innerText = pct > 0 
         ? `Anticipo OC: ${pct}% (USD ${DataStore.formatUSD(anticipoUSD)}) • Saldo Restante: USD ${DataStore.formatUSD(saldoUSD)}`
@@ -5001,10 +5010,10 @@ const App = {
     const newPartida = document.getElementById('modalObraPartida').value.trim();
     const modalObraMontoPartida = document.getElementById('modalObraMontoPartida');
     const newMontoPartida = modalObraMontoPartida ? DataStore.parseCurrency(modalObraMontoPartida.value) || 0 : 0;
-    const newMontoObra = parseFloat(document.getElementById('modalObraMontoObra').value) || 0;
-    const newMontoEquip = parseFloat(document.getElementById('modalObraMontoEquip').value) || 0;
+    const newMontoObra = DataStore.parseCurrency(document.getElementById('modalObraMontoObra').value) || 0;
+    const newMontoEquip = DataStore.parseCurrency(document.getElementById('modalObraMontoEquip').value) || 0;
     const newMontoTotal = newMontoObra + newMontoEquip;
-    const newM2 = parseFloat(document.getElementById('modalObraM2')?.value) || 0;
+    const newM2 = DataStore.parseCurrency(document.getElementById('modalObraM2')?.value) || 0;
 
     // Validación de M2: Obligatorio para Obra Civil (mayor a 0), opcional para Infraestructura
     if (newTipo === 'Obra Civil' && newM2 <= 0) {

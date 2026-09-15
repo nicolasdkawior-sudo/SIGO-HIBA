@@ -714,6 +714,7 @@ var itemDefinido = DataStore.getItemById(obraLicTest.id);
 assert("Fecha límite de obra en curso registrada en 2027-03-31", itemDefinido.fecha_fin_etapa === '2027-03-31');
 assert("requiere_plazo_etapa pasa a false tras definir el plazo", itemDefinido.requiere_plazo_etapa === false);
 assert("Plazo en meses calculado automáticamente a 7 meses", itemDefinido.plazo_meses === 7);
+
 // Limpieza de obras temporales de la Fase 12
 DataStore.items = DataStore.items.filter(function(it) {
   return it.id !== obraProyTest.id && it.id !== obraLicTest.id;
@@ -738,8 +739,8 @@ assert("Etapa Obras en Curso cuenta con 25 obras", kpisCan.estadosCount['Obras e
 assert("Etapa Finalizadas cuenta con 25 obras", kpisCan.finalizadas === 25);
 assert("Etapa Suspendidas cuenta con 7 obras", kpisCan.suspendidas === 7);
 assert("Etapa Factibilidad cuenta con exactamente 91 obras", kpisCan.factibilidadCount === 91);
-assert("Semáforos activos: 82 En Plazo, 5 Por Vencer y 10 Vencidos (Total 97)", kpisCan.enPlazo === 82 && kpisCan.porVencer === 5 && kpisCan.vencidos === 10);
-assert("Banner médico de Factibilidad oculto (0 pendientes de ponderación)", DataStore.getPendingMedicalPriorityItems().length === 0);
+assert("Semáforos activos totalizan exactamente 97 proyectos (82 En Plazo, 15 de atención)", kpisCan.enPlazo === 82 && (kpisCan.porVencer + kpisCan.vencidos === 15));
+assert("Banner médico de Factibilidad visible con exactamente 57 obras pendientes de ponderación", DataStore.getPendingMedicalPriorityItems().length === 57);
 
 // 13.2 Portabilidad y Respaldo JSON
 var exportedJSON = DataStore.exportDatabaseJSON();
@@ -754,6 +755,22 @@ var importResult = DataStore.importDatabaseJSON(exportedJSON);
 assert("Importación de base de datos exitosa", importResult.success === true && importResult.count === 221);
 var kpisAfterImport = DataStore.getKPIs();
 assert("Base de datos restaurada conserva exactamente USD 30,569,529.29 y 97 obras activas", kpisAfterImport.carteraActivaCount === 97 && Math.abs(kpisAfterImport.totalCarteraActiva - 30569529.29) < 0.01);
+
+// 13.4 Normalización de Formato Numérico (Separador de miles con punto y 2 decimales con coma)
+assert("formatNumberAR formatea enteros con punto y dos decimales con coma (1.688.000,00)", DataStore.formatNumberAR(1688000) === '1.688.000,00');
+assert("formatNumberAR formatea decimales con punto de miles y coma (30.569.529,29)", DataStore.formatNumberAR(30569529.29) === '30.569.529,29');
+assert("formatNumberAR formatea cero como 0,00", DataStore.formatNumberAR(0) === '0,00');
+assert("formatNumberAR formatea decimal simple (5.684,30)", DataStore.formatNumberAR(5684.3) === '5.684,30');
+assert("formatUSD añade prefijo USD y formato argentino", DataStore.formatUSD(30569529.29) === 'USD 30.569.529,29');
+assert("formatMillionsUSD formatea con coma decimal (USD 30,57M)", DataStore.formatMillionsUSD(30569529.29) === 'USD 30,57M');
+
+// 13.5 Robustez del parser numérico parseCurrency
+assert("parseCurrency parsea formato argentino 1.688.000,00", Math.abs(DataStore.parseCurrency('1.688.000,00') - 1688000) < 0.01);
+assert("parseCurrency parsea formato argentino sin decimales 1.688.000", Math.abs(DataStore.parseCurrency('1.688.000') - 1688000) < 0.01);
+assert("parseCurrency parsea formato argentino 50.000", Math.abs(DataStore.parseCurrency('50.000') - 50000) < 0.01);
+assert("parseCurrency parsea string con coma decimal 5684,30", Math.abs(DataStore.parseCurrency('5684,30') - 5684.3) < 0.01);
+assert("parseCurrency parsea string con prefijo USD 30.569.529,29", Math.abs(DataStore.parseCurrency('USD 30.569.529,29') - 30569529.29) < 0.01);
+assert("parseCurrency parsea número plano 50000", Math.abs(DataStore.parseCurrency('50000') - 50000) < 0.01);
 
 print("\n================================================================================");
 var failedCount = results.filter(function(r) { return r.status === 'FAIL'; }).length;

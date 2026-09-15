@@ -584,8 +584,8 @@ const DataStore = {
       localStorage.removeItem('sigo_active_user_id');
     }
 
-    // 2. Cargar Obras con verificación de versión canónica oficial (97 Proyectos / USD 30,569,529.29)
-    const CANONICAL_VERSION = 'v3_97_canonical';
+    // 2. Cargar Obras con verificación de versión canónica oficial (97 Proyectos / USD 30,569,529.29 / 57 Factibilidad)
+    const CANONICAL_VERSION = 'v3_97_factibilidad_57_v2';
     const currentVersion = localStorage.getItem('sigo_canonical_version');
     if (currentVersion !== CANONICAL_VERSION) {
       localStorage.removeItem('sigo_obras_data');
@@ -849,7 +849,7 @@ const DataStore = {
   resetToCanonical() {
     try {
       localStorage.removeItem('sigo_obras_data');
-      localStorage.setItem('sigo_canonical_version', 'v3_97_canonical');
+      localStorage.setItem('sigo_canonical_version', 'v3_97_factibilidad_57_v2');
       this.items = [];
       this.init();
       if (typeof broadcastDataChange === 'function') {
@@ -863,40 +863,63 @@ const DataStore = {
   },
 
   // ================= FORMATO DE MONEDA EN USD Y PARSEO DE DECIMALES =================
+  formatNumberAR(val) {
+    const n = typeof val === 'number' ? val : this.parseCurrency(val);
+    if (isNaN(n)) return '0,00';
+    const isNegative = n < 0;
+    const absN = Math.abs(n);
+    const parts = absN.toFixed(2).split('.');
+    const integerFormatted = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return (isNegative ? '-' : '') + integerFormatted + ',' + parts[1];
+  },
+
   parseCurrency(val) {
     if (typeof val === 'number') return isNaN(val) ? 0 : val;
     if (!val) return 0;
     let s = String(val).trim().replace(/[$\sUSDusd]/g, '');
+    if (!s) return 0;
     if (s.includes(',') && s.includes('.')) {
       if (s.lastIndexOf(',') > s.lastIndexOf('.')) {
-        // Formato con punto de miles y coma decimal (ej: 5.684,30)
+        // Formato AR/Europeo: 1.688.000,50 -> quitar puntos, cambiar coma por punto
         s = s.replace(/\./g, '').replace(',', '.');
       } else {
-        // Formato con coma de miles y punto decimal (ej: 5,684.30)
+        // Formato US: 1,688,000.50 -> quitar comas
         s = s.replace(/,/g, '');
       }
     } else if (s.includes(',')) {
-      // Solo coma decimal (ej: 5684,30)
-      s = s.replace(',', '.');
+      const commaCount = (s.match(/,/g) || []).length;
+      if (commaCount > 1) {
+        s = s.replace(/,/g, '');
+      } else {
+        s = s.replace(',', '.');
+      }
+    } else if (s.includes('.')) {
+      const dotCount = (s.match(/\./g) || []).length;
+      if (dotCount > 1) {
+        s = s.replace(/\./g, '');
+      } else {
+        const parts = s.split('.');
+        if (parts[1].length === 3 && parts[0] !== '0') {
+          s = parts[0] + parts[1];
+        }
+      }
     }
     const n = parseFloat(s);
     return isNaN(n) ? 0 : n;
   },
 
   formatUSD(amount) {
-    const n = typeof amount === 'number' ? amount : this.parseCurrency(amount);
-    if (isNaN(n)) return 'USD 0';
-    if (Number.isInteger(n)) {
-      return `USD ${n.toLocaleString('en-US')}`;
-    } else {
-      return `USD ${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    }
+    return `USD ${this.formatNumberAR(amount)}`;
   },
 
   formatMillionsUSD(amount) {
     const n = typeof amount === 'number' ? amount : this.parseCurrency(amount);
     const millions = (n || 0) / 1000000;
-    return `USD ${millions.toFixed(2)}M`;
+    const isNegative = millions < 0;
+    const absM = Math.abs(millions);
+    const parts = absM.toFixed(2).split('.');
+    const integerFormatted = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return `USD ${(isNegative ? '-' : '') + integerFormatted},${parts[1]}M`;
   },
 
   // ================= CARGA DE FACTIBILIDAD =================
@@ -3322,7 +3345,7 @@ const DataStore = {
       [""],
       ["INDICADORES CLAVE (KPIS)", "CANTIDAD", "MONTO TOTAL (USD)", "DETALLE ADICIONAL"],
       ["Obras en Curso (Ejecución Activa)", report.obrasEnCurso.total, report.obrasEnCurso.montoTotalUSD, `Avance Físico Promedio: ${report.obrasEnCurso.avancePromedio}%`],
-      ["Estudios de Factibilidad (Total en Cartera)", (report.factibilidad ? report.factibilidad.total : report.factibilidadSinPartida.total), (report.factibilidad ? report.factibilidad.montoTotalUSD : report.factibilidadSinPartida.montoTotalUSD), (report.factibilidad ? `${report.factibilidad.sinPartidaCount} sin partida (US$ ${report.factibilidad.sinPartidaUSD}) • ${report.factibilidad.conPartidaCount} con partida asignada (US$ ${report.factibilidad.conPartidaUSD})` : "En espera de aprobación presupuestaria")],
+      ["Estudios de Factibilidad (Total en Cartera)", (report.factibilidad ? report.factibilidad.total : report.factibilidadSinPartida.total), (report.factibilidad ? report.factibilidad.montoTotalUSD : report.factibilidadSinPartida.montoTotalUSD), (report.factibilidad ? `${report.factibilidad.sinPartidaCount} sin partida (${this.formatUSD(report.factibilidad.sinPartidaUSD)}) • ${report.factibilidad.conPartidaCount} con partida asignada (${this.formatUSD(report.factibilidad.conPartidaUSD)})` : "En espera de aprobación presupuestaria")],
       ["Obras Suspendidas (Capital Inmovilizado)", report.obrasSuspendidas.total, report.obrasSuspendidas.montoTotalUSD, "Obras frenadas temporal o definitivamente"],
       ["Partidas Sobre-ejecutadas (Déficit Presupuestario)", report.partidasDesvios.totalSobreEjecutadas, report.partidasDesvios.totalDeficitUSD, "Partidas Cortas que requieren ampliación"],
       ["Partidas Sub-ejecutadas (Superávit Remanente)", report.partidasDesvios.totalSubEjecutadas, report.partidasDesvios.totalSuperavitUSD, "Fondos aprobados sin comprometer"],

@@ -1168,7 +1168,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 5.0,
-      "prioridad_medica": 5.0,
+      "prioridad_medica": null,
       "prioridad_final": 5.0,
       "proveedor": "",
       "estado": "Ante Proyecto",
@@ -1185,7 +1185,8 @@ window.INITIAL_DATA = {
       "criterios_tecnicos": {},
       "cashflow": {},
       "creado_por": "Oshiro",
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "OBRA-034",
@@ -1197,7 +1198,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 8100.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 3.0,
+      "prioridad_medica": null,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Ante Proyecto",
@@ -1213,7 +1214,8 @@ window.INITIAL_DATA = {
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
       "cashflow": {},
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "OBRA-035",
@@ -1824,7 +1826,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 5.0,
-      "prioridad_medica": 5.0,
+      "prioridad_medica": null,
       "prioridad_final": 5.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -1841,7 +1843,8 @@ window.INITIAL_DATA = {
       "criterios_tecnicos": {},
       "cashflow": {},
       "creado_por": "Waldemar",
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "OBRA-054",
@@ -2422,8 +2425,8 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 0.0,
-      "prioridad_medica": 3.0,
-      "prioridad_final": 3.0,
+      "prioridad_medica": null,
+      "prioridad_final": 0.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
       "fecha_inicio_etapa": null,
@@ -2438,7 +2441,8 @@ window.INITIAL_DATA = {
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
       "cashflow": {},
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "OBRA-075",
@@ -2450,8 +2454,8 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 0.0,
-      "prioridad_medica": 3.0,
-      "prioridad_final": 3.0,
+      "prioridad_medica": null,
+      "prioridad_final": 0.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
       "fecha_inicio_etapa": null,
@@ -2466,7 +2470,8 @@ window.INITIAL_DATA = {
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
       "cashflow": {},
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "OBRA-076",
@@ -2478,8 +2483,8 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 0.0,
-      "prioridad_medica": 3.0,
-      "prioridad_final": 3.0,
+      "prioridad_medica": null,
+      "prioridad_final": 0.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
       "fecha_inicio_etapa": null,
@@ -2494,7 +2499,8 @@ window.INITIAL_DATA = {
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
       "cashflow": {},
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "OBRA-077",
@@ -2506,8 +2512,8 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 2356.0,
       "monto_total_usd": 2356.0,
       "prioridad_tecnica": 0.0,
-      "prioridad_medica": 3.0,
-      "prioridad_final": 3.0,
+      "prioridad_medica": null,
+      "prioridad_final": 0.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
       "fecha_inicio_etapa": null,
@@ -2523,7 +2529,8 @@ window.INITIAL_DATA = {
       "criterios_tecnicos": {},
       "cashflow": {},
       "creado_por": "Corbalán",
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "OBRA-078",
@@ -2535,7 +2542,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 2.0,
-      "prioridad_medica": 2.0,
+      "prioridad_medica": null,
       "prioridad_final": 2.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -2551,7 +2558,8 @@ window.INITIAL_DATA = {
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
       "cashflow": {},
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "OBRA-079",
@@ -2563,7 +2571,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 2.0,
-      "prioridad_medica": 2.0,
+      "prioridad_medica": null,
       "prioridad_final": 2.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -2579,7 +2587,8 @@ window.INITIAL_DATA = {
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
       "cashflow": {},
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "OBRA-080",
@@ -2591,7 +2600,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 2.0,
-      "prioridad_medica": 2.0,
+      "prioridad_medica": null,
       "prioridad_final": 2.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -2607,7 +2616,8 @@ window.INITIAL_DATA = {
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
       "cashflow": {},
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "OBRA-081",
@@ -2646,7 +2656,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 4.0,
+      "prioridad_medica": null,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -2662,7 +2672,8 @@ window.INITIAL_DATA = {
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
       "cashflow": {},
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "OBRA-083",
@@ -2701,7 +2712,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 2.0,
-      "prioridad_medica": 2.0,
+      "prioridad_medica": null,
       "prioridad_final": 2.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -2717,7 +2728,8 @@ window.INITIAL_DATA = {
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
       "cashflow": {},
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "OBRA-085",
@@ -2757,8 +2769,8 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 0.0,
-      "prioridad_medica": 3.0,
-      "prioridad_final": 3.0,
+      "prioridad_medica": null,
+      "prioridad_final": 0.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
       "fecha_inicio_etapa": null,
@@ -2773,7 +2785,8 @@ window.INITIAL_DATA = {
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
       "cashflow": {},
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "OBRA-087",
@@ -2785,7 +2798,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 523000.0,
       "prioridad_tecnica": 2.0,
-      "prioridad_medica": 2.0,
+      "prioridad_medica": null,
       "prioridad_final": 2.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -2801,7 +2814,8 @@ window.INITIAL_DATA = {
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
       "cashflow": {},
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     }
   ],
   "infraestructura": [
@@ -4242,7 +4256,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 55000.0,
       "prioridad_tecnica": 5.0,
-      "prioridad_medica": 5.0,
+      "prioridad_medica": null,
       "prioridad_final": 5.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -4266,7 +4280,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-043",
@@ -4278,7 +4293,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 110000.0,
       "prioridad_tecnica": 5.0,
-      "prioridad_medica": 5.0,
+      "prioridad_medica": null,
       "prioridad_final": 5.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -4302,7 +4317,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-044",
@@ -4664,7 +4680,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 60000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 4.0,
+      "prioridad_medica": null,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -4688,7 +4704,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-055",
@@ -4735,7 +4752,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 120000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 4.0,
+      "prioridad_medica": null,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -4759,7 +4776,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-057",
@@ -4771,7 +4789,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 300000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 4.0,
+      "prioridad_medica": null,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -4795,7 +4813,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-058",
@@ -4807,7 +4826,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 300000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 4.0,
+      "prioridad_medica": null,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -4831,7 +4850,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-059",
@@ -4843,7 +4863,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 15000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 4.0,
+      "prioridad_medica": null,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -4867,7 +4887,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 15000.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-060",
@@ -4949,7 +4970,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 35000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 4.0,
+      "prioridad_medica": null,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -4973,7 +4994,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-063",
@@ -4985,7 +5007,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 15000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 4.0,
+      "prioridad_medica": null,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -5009,7 +5031,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-064",
@@ -5021,7 +5044,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 40000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 4.0,
+      "prioridad_medica": null,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -5045,7 +5068,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 13333.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-065",
@@ -5127,7 +5151,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 9500.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 4.0,
+      "prioridad_medica": null,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -5151,7 +5175,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-068",
@@ -5163,7 +5188,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 40000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 4.0,
+      "prioridad_medica": null,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -5187,7 +5212,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-069",
@@ -5199,7 +5225,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 25000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 4.0,
+      "prioridad_medica": null,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -5223,7 +5249,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-070",
@@ -5235,7 +5262,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 250000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 4.0,
+      "prioridad_medica": null,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -5259,7 +5286,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-071",
@@ -5271,7 +5299,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 40000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 4.0,
+      "prioridad_medica": null,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -5295,7 +5323,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-072",
@@ -5307,7 +5336,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 150000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 4.0,
+      "prioridad_medica": null,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -5331,7 +5360,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 0.0,
         "cashflow_2029": 150000.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-073",
@@ -5343,7 +5373,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 400000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 4.0,
+      "prioridad_medica": null,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -5367,7 +5397,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-074",
@@ -5379,7 +5410,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 75000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 4.0,
+      "prioridad_medica": null,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -5403,7 +5434,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-075",
@@ -5415,7 +5447,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 25000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 4.0,
+      "prioridad_medica": null,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -5439,7 +5471,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 25000.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-076",
@@ -5451,7 +5484,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 25000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 4.0,
+      "prioridad_medica": null,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -5475,7 +5508,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-077",
@@ -5487,7 +5521,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 100000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 4.0,
+      "prioridad_medica": null,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -5511,7 +5545,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-078",
@@ -5523,7 +5558,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 95000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 4.0,
+      "prioridad_medica": null,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -5547,7 +5582,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-079",
@@ -6035,7 +6071,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 45000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 4.0,
+      "prioridad_medica": null,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6059,7 +6095,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-094",
@@ -6134,7 +6171,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 40000.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 3.0,
+      "prioridad_medica": null,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6158,7 +6195,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 40000.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-097",
@@ -6170,7 +6208,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 20000.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 3.0,
+      "prioridad_medica": null,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6194,7 +6232,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-098",
@@ -6206,7 +6245,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 3.0,
+      "prioridad_medica": null,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6222,7 +6261,8 @@ window.INITIAL_DATA = {
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
       "cashflow": {},
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-099",
@@ -6234,7 +6274,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 12000.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 3.0,
+      "prioridad_medica": null,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6258,7 +6298,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-100",
@@ -6270,7 +6311,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 150000.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 3.0,
+      "prioridad_medica": null,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6294,7 +6335,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 150000.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-101",
@@ -6306,7 +6348,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 3.0,
+      "prioridad_medica": null,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6322,7 +6364,8 @@ window.INITIAL_DATA = {
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
       "cashflow": {},
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-102",
@@ -6334,7 +6377,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 30000.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 3.0,
+      "prioridad_medica": null,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6358,7 +6401,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 20000.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-103",
@@ -6370,7 +6414,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 200000.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 3.0,
+      "prioridad_medica": null,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6394,7 +6438,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 166667.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-104",
@@ -6406,7 +6451,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 500000.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 3.0,
+      "prioridad_medica": null,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6430,7 +6475,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-105",
@@ -6442,7 +6488,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 60000.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 3.0,
+      "prioridad_medica": null,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6466,7 +6512,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 30000.0,
         "cashflow_2029": 30000.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-106",
@@ -6478,7 +6525,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 3.0,
+      "prioridad_medica": null,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6494,7 +6541,8 @@ window.INITIAL_DATA = {
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
       "cashflow": {},
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-107",
@@ -6506,7 +6554,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 3.0,
+      "prioridad_medica": null,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6522,7 +6570,8 @@ window.INITIAL_DATA = {
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
       "cashflow": {},
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-108",
@@ -6534,7 +6583,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 3.0,
+      "prioridad_medica": null,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6550,7 +6599,8 @@ window.INITIAL_DATA = {
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
       "cashflow": {},
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-109",
@@ -6562,7 +6612,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 50000.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 3.0,
+      "prioridad_medica": null,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6586,7 +6636,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 50000.0,
         "cashflow_2029": 0.0
       },
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-110",
@@ -6598,7 +6649,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 3.0,
+      "prioridad_medica": null,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6614,7 +6665,8 @@ window.INITIAL_DATA = {
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
       "cashflow": {},
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-111",
@@ -6626,7 +6678,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 3.0,
+      "prioridad_medica": null,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6642,7 +6694,8 @@ window.INITIAL_DATA = {
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
       "cashflow": {},
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-112",
@@ -6974,7 +7027,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 3.0,
+      "prioridad_medica": null,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6990,7 +7043,8 @@ window.INITIAL_DATA = {
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
       "cashflow": {},
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-124",
@@ -7002,7 +7056,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 3.0,
+      "prioridad_medica": null,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -7018,7 +7072,8 @@ window.INITIAL_DATA = {
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
       "cashflow": {},
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-125",
@@ -7030,7 +7085,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 3.0,
+      "prioridad_medica": null,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -7046,7 +7101,8 @@ window.INITIAL_DATA = {
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
       "cashflow": {},
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-126",
@@ -7058,7 +7114,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 3.0,
+      "prioridad_medica": null,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -7074,7 +7130,8 @@ window.INITIAL_DATA = {
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
       "cashflow": {},
-      "prioridad_medica_ponderada_default": true
+      "prioridad_medica_ponderada_default": false,
+      "prioridad_medica_origen": "Pendiente"
     },
     {
       "id": "INFRA-127",

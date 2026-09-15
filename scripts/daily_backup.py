@@ -47,14 +47,16 @@ all_items = obras + infra
 data_store_path = os.path.join(ROOT_DIR, "js", "data-store.js")
 users = []
 if os.path.exists(data_store_path):
-    with open(data_store_path, "r", encoding="utf-8") as f:
-        ds_content = f.read()
-    u_match = re.search(r"const DEFAULT_USERS\s*=\s*(\[[\s\S]*?\]);", ds_content)
-    if u_match:
-        try:
-            users = json.loads(u_match.group(1))
-        except Exception:
-            pass
+    import subprocess
+    try:
+        jsc_bin = "/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Helpers/jsc"
+        if os.path.exists(jsc_bin):
+            jsc_code = f'var window = {{}}; var localStorage = {{ getItem: function() {{ return null; }}, setItem: function() {{}}, removeItem: function() {{}} }}; load("{data_store_path}"); print(JSON.stringify(DEFAULT_USERS));'
+            res = subprocess.run([jsc_bin, "-e", jsc_code], capture_output=True, text=True)
+            if res.returncode == 0 and res.stdout.strip():
+                users = json.loads(res.stdout.strip())
+    except Exception:
+        pass
 
 # 3. Calcular métricas y KPIs
 activas = [o for o in all_items if o.get("estado") in ["Proyecto", "En licitación", "Obras en Curso"]]

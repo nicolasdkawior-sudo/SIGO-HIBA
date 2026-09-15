@@ -375,14 +375,14 @@
             <span class="text-xs font-bold uppercase tracking-wider" title="Proyecto + En licitación + Obras en Curso (Excluye Factibilidad y Suspendidas)">Cartera Activa (USD)</span>
             <span class="text-[10px] font-black bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200">USD</span>
           </div>
-          <div class="text-xl font-black text-slate-900" id="kpiTotalUsd">USD 0</div>
+          <div class="text-xl font-black text-slate-900" id="kpiTotalUsd">USD 0,00</div>
           <div class="text-xs text-slate-500 mt-0.5 font-medium" id="kpiTotalProyectos">0 proyectos activos</div>
         </div>
         <!-- Desglose transparente -->
         <div class="flex flex-wrap gap-1 mt-2.5 pt-2 border-t border-slate-100 text-[10px]">
-          <span id="kpiPillCivil" class="bg-blue-50 text-blue-800 px-1.5 py-0.5 rounded font-bold">Civil: USD 0</span>
-          <span id="kpiPillEquip" class="bg-purple-50 text-purple-800 px-1.5 py-0.5 rounded font-bold">Equip: USD 0</span>
-          <span id="kpiPillInfra" class="bg-emerald-50 text-emerald-800 px-1.5 py-0.5 rounded font-bold">Infra: USD 0</span>
+          <span id="kpiPillCivil" class="bg-blue-50 text-blue-800 px-1.5 py-0.5 rounded font-bold">Civil: USD 0,00</span>
+          <span id="kpiPillEquip" class="bg-purple-50 text-purple-800 px-1.5 py-0.5 rounded font-bold">Equip: USD 0,00</span>
+          <span id="kpiPillInfra" class="bg-emerald-50 text-emerald-800 px-1.5 py-0.5 rounded font-bold">Infra: USD 0,00</span>
         </div>
       </div>
 
@@ -697,7 +697,7 @@
             <label class="block font-semibold text-slate-700 mb-1">Monto Estimado (USD)</label>
             <div class="relative">
               <span class="absolute left-3 top-2 font-bold text-slate-400">USD</span>
-              <input type="number" id="factMonto" placeholder="50000" min="0" step="1000"
+              <input type="text" inputmode="decimal" id="factMonto" placeholder="Ej: 50.000,00"
                      class="w-full border border-slate-300 rounded-lg p-2 pl-12 font-mono font-bold text-slate-900">
             </div>
           </div>
@@ -765,7 +765,7 @@
           <label class="block font-bold text-slate-700 mb-1">Monto de la Partida Presupuestaria (USD) <span class="text-red-500">*</span></label>
           <div class="relative">
             <span class="absolute inset-y-0 left-0 pl-3 flex items-center font-bold text-slate-400">USD</span>
-            <input type="text" inputmode="decimal" id="inputMontoPartida" placeholder="Ej: 5684,30" required oninput="App.checkPartidaCortaModalAsignar()"
+            <input type="text" inputmode="decimal" id="inputMontoPartida" placeholder="Ej: 1.688.000,00" required oninput="App.checkPartidaCortaModalAsignar()"
                    class="w-full pl-12 border-2 border-emerald-500 rounded-lg p-2.5 font-mono text-sm font-black text-emerald-800 focus:outline-none">
           </div>
           <p class="text-[11px] text-slate-400 mt-1">Monto presupuestario formal asignado en dólares para esta partida.</p>
@@ -867,7 +867,7 @@
             <label class="block font-bold text-slate-700 mb-1">Monto de la Partida Presupuestaria (USD) <span class="text-red-500">*</span>:</label>
             <div class="relative">
               <span class="absolute inset-y-0 left-0 pl-3 flex items-center font-bold text-slate-400">USD</span>
-              <input type="text" inputmode="decimal" id="transQuickMontoPartidaInput" placeholder="Ej: 5684,30" class="w-full pl-12 border-2 border-emerald-500 rounded-lg p-2 font-mono font-bold text-emerald-900 bg-white">
+              <input type="text" inputmode="decimal" id="transQuickMontoPartidaInput" placeholder="Ej: 1.688.000,00" class="w-full pl-12 border-2 border-emerald-500 rounded-lg p-2 font-mono font-bold text-emerald-900 bg-white">
             </div>
           </div>
           <div>
@@ -910,13 +910,13 @@
               <label class="block font-bold text-slate-700 mb-1">Monto Total Adjudicado (USD) <span class="text-red-500">*</span>:</label>
               <div class="relative">
                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center font-bold text-slate-400">USD</span>
-                <input type="text" inputmode="decimal" id="transMontoAdjudicadoInput" oninput="App.handleAdjudicacionInputChange()" placeholder="Ej: 1000000" class="w-full pl-12 border-2 border-emerald-500 rounded-lg p-2 font-mono font-bold text-emerald-900 bg-white">
+                <input type="text" inputmode="decimal" id="transMontoAdjudicadoInput" oninput="App.handleAdjudicacionInputChange()" placeholder="Ej: 1.688.000,00" class="w-full pl-12 border-2 border-emerald-500 rounded-lg p-2 font-mono font-bold text-emerald-900 bg-white">
               </div>
             </div>
             <div>
               <div class="flex items-center justify-between mb-1">
                 <label class="block font-bold text-slate-700">Anticipo en OC (%) <span class="text-red-500">*</span>:</label>
-                <span id="transAnticipoCalculadoBadge" class="text-[10px] font-mono font-bold text-emerald-700 bg-white px-1.5 py-0.5 rounded border border-emerald-200">0% = USD 0</span>
+                <span id="transAnticipoCalculadoBadge" class="text-[10px] font-mono font-bold text-emerald-700 bg-white px-1.5 py-0.5 rounded border border-emerald-200">0% = USD 0,00</span>
               </div>
               <div class="relative">
                 <input type="number" step="0.1" min="0" max="100" id="transAnticipoPorcentajeInput" oninput="App.handleAdjudicacionInputChange()" placeholder="Ej: 30 (o 0 si no lleva)" class="w-full pr-8 border-2 border-emerald-500 rounded-lg p-2 font-mono font-bold text-emerald-900 bg-white">
@@ -1582,7 +1582,7 @@
           </div>
           <div>
             <label class="block font-semibold text-slate-700 mb-1">Monto Asignado Partida (USD)</label>
-            <input type="text" inputmode="decimal" id="modalObraMontoPartida" placeholder="Ej: 5684,30" class="w-full border border-slate-300 rounded-lg px-3 py-2 font-mono font-bold text-emerald-800">
+            <input type="text" inputmode="decimal" id="modalObraMontoPartida" placeholder="Ej: 1.688.000,00" class="w-full border border-slate-300 rounded-lg px-3 py-2 font-mono font-bold text-emerald-800">
           </div>
         </div>
 
@@ -1651,7 +1651,7 @@
             <!-- Monto Obra -->
             <div class="md:col-span-3">
               <label class="block font-semibold text-slate-700 mb-1">Monto Obra (USD)</label>
-              <input type="number" step="0.01" min="0" id="modalObraMontoObra" oninput="App.calculateModalUsdM2()" class="w-full border border-slate-300 rounded-lg px-3 py-2 font-mono font-bold text-slate-900">
+              <input type="text" inputmode="decimal" id="modalObraMontoObra" oninput="App.calculateModalUsdM2()" placeholder="0,00" class="w-full border border-slate-300 rounded-lg px-3 py-2 font-mono font-bold text-slate-900">
             </div>
 
             <!-- Signo + grande, en negrita y color -->
@@ -1662,7 +1662,7 @@
             <!-- Monto Equipamiento -->
             <div class="md:col-span-3">
               <label class="block font-semibold text-slate-700 mb-1">Monto Equipamiento (USD)</label>
-              <input type="number" step="0.01" min="0" id="modalObraMontoEquip" oninput="App.calculateModalUsdM2()" class="w-full border border-slate-300 rounded-lg px-3 py-2 font-mono font-bold text-slate-900">
+              <input type="text" inputmode="decimal" id="modalObraMontoEquip" oninput="App.calculateModalUsdM2()" placeholder="0,00" class="w-full border border-slate-300 rounded-lg px-3 py-2 font-mono font-bold text-slate-900">
             </div>
 
             <!-- Superficie M2 -->
@@ -1671,13 +1671,13 @@
                 <label class="block font-semibold text-slate-700">Superficie (M2)</label>
                 <span id="modalObraM2RequiredBadge" class="text-[10px] text-rose-600 font-bold bg-rose-50 px-1.5 py-0.2 rounded border border-rose-200 hidden">* Obligatorio</span>
               </div>
-              <input type="number" step="0.01" min="0" id="modalObraM2" oninput="App.calculateModalUsdM2()" class="w-full border border-slate-300 rounded-lg px-3 py-2 font-mono font-medium text-slate-900">
+              <input type="text" inputmode="decimal" id="modalObraM2" oninput="App.calculateModalUsdM2()" placeholder="0,00" class="w-full border border-slate-300 rounded-lg px-3 py-2 font-mono font-medium text-slate-900">
             </div>
 
             <!-- USD / M2 -->
             <div class="md:col-span-3">
               <label class="block font-semibold text-slate-700 mb-1">USD / M2</label>
-              <input type="number" step="0.01" min="0" id="modalObraUsdM2" readonly class="w-full border border-slate-300 rounded-lg px-3 py-2 font-mono font-black bg-slate-100 text-blue-900">
+              <input type="text" id="modalObraUsdM2" readonly placeholder="0,00" class="w-full border border-slate-300 rounded-lg px-3 py-2 font-mono font-black bg-slate-100 text-blue-900">
             </div>
           </div>
 
@@ -1686,16 +1686,16 @@
             <div class="flex items-center space-x-1.5 font-mono text-xs flex-wrap">
               <span class="font-bold text-slate-600">Verificación:</span>
               <span class="text-slate-500 font-bold">(</span>
-              <span id="calcFormulaMontoObra" class="font-bold text-slate-900">USD 0</span>
+              <span id="calcFormulaMontoObra" class="font-bold text-slate-900">USD 0,00</span>
               <span class="text-blue-600 font-black text-sm mx-1">+</span>
-              <span id="calcFormulaMontoEquip" class="font-bold text-slate-900">USD 0</span>
+              <span id="calcFormulaMontoEquip" class="font-bold text-slate-900">USD 0,00</span>
               <span class="text-slate-500 font-bold">)</span>
               <span class="text-slate-600 font-bold mx-1">=</span>
-              <span id="calcFormulaTotal" class="font-bold text-emerald-800">USD 0</span>
+              <span id="calcFormulaTotal" class="font-bold text-emerald-800">USD 0,00</span>
               <span class="text-blue-600 font-black text-sm mx-1">÷</span>
-              <span id="calcFormulaM2" class="font-bold text-slate-900">0 m²</span>
+              <span id="calcFormulaM2" class="font-bold text-slate-900">0,00 m²</span>
               <span class="text-slate-600 font-bold mx-1">=</span>
-              <span id="calcFormulaResultado" class="font-black text-blue-800 text-sm">USD 0.00 / m²</span>
+              <span id="calcFormulaResultado" class="font-black text-blue-800 text-sm">USD 0,00 / m²</span>
             </div>
             <span id="calcFormulaNota" class="text-[10px] text-slate-500 font-medium">Cálculo instantáneo</span>
           </div>
@@ -1755,7 +1755,7 @@
             </div>
             <div>
               <label class="block text-slate-700 text-xs font-semibold mb-1">Costo Adjudicado (USD)</label>
-              <input type="number" step="0.01" id="modalObraMontoAdjudicado" readonly class="w-full border border-emerald-300 rounded px-2.5 py-1.5 bg-white font-mono font-bold text-emerald-950">
+              <input type="text" id="modalObraMontoAdjudicado" readonly placeholder="0,00" class="w-full border border-emerald-300 rounded px-2.5 py-1.5 bg-white font-mono font-bold text-emerald-950">
             </div>
             <div>
               <label class="block text-slate-700 text-xs font-semibold mb-1">Anticipo en OC (%)</label>

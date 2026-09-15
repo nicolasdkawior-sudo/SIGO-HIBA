@@ -537,9 +537,40 @@ Para garantizar máxima transparencia y certeza entre todas las vistas de SIGO H
   2. Selecciona el flujo **`Restaurar Base de Datos (Rollback)`**.
   3. Presiona el botón **Run workflow** e indica el archivo deseado (ej. `backup_2026-09-14_1500.json`).
   4. GitHub Actions ejecuta `scripts/restore_backup.py`, sincroniza `js/initial-data.js` y `app/js/initial-data.js` con paridad simétrica 100%, e incrementa la versión canónica.
-  5. Vercel detecta automáticamente el commit y en 45 segundos el sitio `https://www.sigohiba.com` queda 100% restaurado y operativo.
 
+---
 
+## 18. RESTABLECIMIENTO DEL BANNER DE EVALUACIÓN DE DIRECCIÓN MÉDICA (57 OBRAS DE FACTIBILIDAD), CIRCUITO DE SALIDA POR PARTIDA O PROYECTO Y NORMALIZACIÓN TOTAL DE FORMATO NUMÉRICO (PUNTO DE MILES Y COMA DECIMAL)
 
+### 18.1. Priorización de Dirección Médica y Requerimiento de Criticidad en Factibilidad
+- **Diagnóstico y Conciliación del Catálogo:**
+  De las 91 obras registradas en `Estudio de Factibilidad`, 34 obras fueron evaluadas formalmente por Dirección Médica con criticidad médica explícita (1★ a 5★). Las restantes 57 obras no poseían evaluación formal previa.
+- **Restablecimiento del Banner Superior:**
+  Para los perfiles con atribución de evaluación médica (`Dirección Médica` y `Dirección General / Admin`), se reactivó el banner interactivo:
+  `Atención Dirección Médica: 57` ("Tenés 57 obras que requieren tu evaluación para asignarles Prioridad Médica").
+- **Modal de Asignación por Estrellas:**
+  Al ingresar al modal (`#modalMedicalPriority`), se presentan las 57 obras pendientes para que los directores califiquen con estrellas (1★ a 5★). Al asignar la criticidad, la obra recibe `prioridad_medica_origen = 'Dirección Médica'`, recalcula la prioridad final ponderada con la técnica, y se descuenta del banner de alertas.
+- **Regla de Salida Automática por Asignación de Partida o Pase a Proyecto:**
+  Si cualquiera de estas obras de Factibilidad recibe una partida presupuestaria formal asignada por Administración/Dirección o avanza a la etapa de Proyecto, **desaparece de inmediato y de forma automática** de la lista de pendientes de Dirección Médica, adoptando si correspondiera la criticidad técnica por default para no bloquear el flujo de compras ni la ejecución de la obra.
+- **Invarianza Estricta de la Cartera Activa:**
+  Dado que las obras en Estudio de Factibilidad no computan en el cálculo de cartera activa (que suma exclusivamente Proyecto, En licitación y Obras en Curso), el volumen financiero se mantiene rigurosamente invariable en **USD 30,569,529.29 (97 proyectos activos)**.
 
-
+### 18.2. Normalización Total del Formato Numérico (Enteros con Punto y Exactamente Dos Decimales con Coma)
+- **Metodología Oficial Aplicada:**
+  - **Separador de miles / enteros:** **SIEMPRE con punto (`.`)**, e.g. `1.688.000,00` y `30.569.529,29`.
+  - **Separador decimal:** **SIEMPRE con coma (`,`)**.
+  - **Cantidad de decimales:** **SOLO DOS**, sin omitir ceros (e.g. `,00`).
+- **Implementación Centralizada en `DataStore`:**
+  - `DataStore.formatNumberAR(val)`: Formateador determinístico puro que extrae parte entera y decimales, aplica separación de miles por puntos y concatena la coma decimal con 2 dígitos fijos.
+  - `DataStore.formatUSD(amount)`: Retorna `USD ${DataStore.formatNumberAR(amount)}`.
+  - `DataStore.formatMillionsUSD(amount)`: Retorna `USD ${millones_formateados}M` con coma decimal (e.g. `USD 30,57M`).
+  - `DataStore.parseCurrency(val)`: Parser numérico de alta tolerancia que procesa nativamente entradas en formato argentino (`1.688.000,00`, `1.688.000`, `50.000`, `5.684,30`), compatibiliza formatos históricos y previene desbordes o conversiones erróneas de coma/punto.
+- **Alcance Exhaustivo en Todo el Recorrido de SIGO:**
+  1. **KPIs del Dashboard Principal:** Cartera Activa (`USD 30.569.529,29`), Desglose Civil (`Civil: USD 22.518.691,29`), Equipamiento (`Equip: USD 1.515.000,00`) e Infraestructura (`Infra: USD 6.535.838,00`).
+  2. **Tablero Kanban y Tabla ERP:** Montos de obra, partidas asignadas, alertas de déficit de partida corta e importes consolidados.
+  3. **Cash Flow y Diagrama de Gantt:** Montos totales adjudicados, anticipos, saldos, cuotas mensuales y barras gráficas plurianuales.
+  4. **Informe Ejecutivo (3 Páginas PDF y Excel):** Formateo unificado de totales, desgloses por sede, avances y afectación financiera para el ejercicio contable oficial.
+  5. **Modales de Carga, Transición y Detalle de Obra:**
+     - Inputs monetarios convertidos a `type="text" inputmode="decimal"` con placeholders estándar (`Ej: 1.688.000,00`, `Ej: 50.000,00`).
+     - Pre-cargas de campos con formato argentino completo.
+     - Verificación instantánea de fórmula de cálculo de USD/M2 con visualización de signos (`USD 0,00`, `0,00 m²`, `USD 0,00 / m²`).
