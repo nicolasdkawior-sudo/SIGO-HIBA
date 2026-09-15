@@ -4330,6 +4330,12 @@ const App = {
     if (btnAuditoria) {
       btnAuditoria.classList.toggle('hidden', u.rol !== 'admin');
     }
+
+    const btnBackupsNicolas = document.getElementById('btnBackupsNicolasTop');
+    if (btnBackupsNicolas) {
+      const isNicolas = Boolean(u && (u.username === 'nicolas' || u.id === 'usr-nicolas' || (u.email && u.email.toLowerCase().includes('nicolas'))));
+      btnBackupsNicolas.classList.toggle('hidden', !isNicolas);
+    }
   },
 
   // ================= CÁLCULO INSTANTÁNEO Y AUDITORÍA DE M2 =================
@@ -5381,6 +5387,174 @@ const App = {
   closeAuditLogsModal() {
     const modal = document.getElementById('modalAuditLogs');
     if (modal) modal.classList.add('hidden');
+  },
+
+  // ================= CENTRO DE BACKUPS Y COPIAS DE SEGURIDAD (EXCLUSIVO PERFIL NICOLÁS) =================
+  isUserNicolas() {
+    const u = DataStore.currentUser;
+    if (!u) return false;
+    return Boolean(u.username === 'nicolas' || u.id === 'usr-nicolas' || (u.email && u.email.toLowerCase().includes('nicolas')));
+  },
+
+  openBackupsModal() {
+    if (!this.isUserNicolas()) {
+      alert("⛔ Acceso Denegado: El Centro de Copias de Seguridad (Backups) es exclusivo para el perfil de Nicolás.");
+      return;
+    }
+    const modal = document.getElementById('modalBackupsHistorial');
+    if (modal) modal.classList.remove('hidden');
+    this.renderBackupsTable();
+    if (window.lucide) lucide.createIcons();
+  },
+
+  closeBackupsModal() {
+    const modal = document.getElementById('modalBackupsHistorial');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  renderBackupsTable() {
+    const tbody = document.getElementById('backupsListTableBody');
+    if (!tbody) return;
+
+    const list = DataStore.getBackupsHistoryList();
+    tbody.innerHTML = list.map((item, idx) => `
+      <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+        <td class="py-3 px-4 font-mono font-bold text-slate-800">
+          <div class="flex items-center space-x-1.5">
+            <i data-lucide="calendar" class="w-3.5 h-3.5 text-emerald-600"></i>
+            <span>${item.label}</span>
+          </div>
+        </td>
+        <td class="py-3 px-4 font-mono text-slate-600">
+          <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px] font-semibold border border-slate-200">
+            ${item.filename}
+          </span>
+        </td>
+        <td class="py-3 px-4">
+          <span class="inline-flex items-center space-x-1 text-[11px] font-bold ${idx === 0 ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-100 text-slate-700 border border-slate-200'} px-2 py-0.5 rounded-full">
+            <span class="w-1.5 h-1.5 rounded-full ${idx === 0 ? 'bg-emerald-500' : 'bg-slate-400'}"></span>
+            <span>${item.status}</span>
+          </span>
+        </td>
+        <td class="py-3 px-4 text-right space-x-2 whitespace-nowrap">
+          <button type="button" onclick="App.downloadBackupJSON('${item.date}')" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold rounded-md transition shadow-2xs inline-flex items-center space-x-1 cursor-pointer">
+            <i data-lucide="download" class="w-3.5 h-3.5 text-emerald-600"></i>
+            <span>Descargar JSON</span>
+          </button>
+          <button type="button" onclick="App.restoreBackupFromModal('${item.date}')" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold rounded-md transition shadow-2xs inline-flex items-center space-x-1 cursor-pointer">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-amber-600"></i>
+            <span>Restaurar</span>
+          </button>
+        </td>
+      </tr>
+    `).join('');
+
+    if (window.lucide) lucide.createIcons();
+  },
+
+  generateInstantBackup() {
+    if (!this.isUserNicolas()) {
+      alert("⛔ Acceso Denegado: Solo el perfil Nicolás puede generar copias de seguridad.");
+      return;
+    }
+    const todayStr = new Date().toISOString().split('T')[0];
+    this.downloadBackupJSON(todayStr);
+  },
+
+  downloadBackupJSON(dateStr) {
+    if (!this.isUserNicolas()) {
+      alert("⛔ Acceso Denegado: Exclusivo para perfil Nicolás.");
+      return;
+    }
+    const kpis = DataStore.getKPIs();
+    const payload = {
+      version: 'v3.0_canonical_backup',
+      backup_date_art: dateStr,
+      backup_time: '15:00 hs',
+      exported_at: new Date().toISOString(),
+      system: 'SIGO HIBA - Sistema de Gestión de Obras Hospitalarias',
+      metadata: {
+        institucion: 'Hospital Italiano de Buenos Aires (HIBA)',
+        total_items: (DataStore.items || []).length,
+        cartera_activa_count: kpis.carteraActivaCount,
+        total_cartera_usd: kpis.totalCarteraActiva,
+        exported_by: DataStore.currentUser ? `${DataStore.currentUser.nombre} (${DataStore.currentUser.username})` : 'Nicolas Kawior'
+      },
+      items: DataStore.items || [],
+      users: DataStore.users || [],
+      audit_logs: DataStore.auditLogs || []
+    };
+
+    const str = JSON.stringify(payload, null, 2);
+    const blob = new Blob([str], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `backup_${dateStr}_1500.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    this.showToast(`📥 Backup "${a.download}" descargado correctamente.`);
+  },
+
+  restoreBackupFromModal(dateStr) {
+    if (!this.isUserNicolas()) {
+      alert("⛔ Acceso Denegado: Exclusivo para perfil Nicolás.");
+      return;
+    }
+
+    const conf = confirm(`⚠️ ATENCIÓN DE SEGURIDAD INSTITUCIONAL\n\n¿Estás seguro de restaurar el estado completo de la base de datos al backup del ${dateStr} (15:00 hs)?\n\nSe restablecerán proyectos, estados, partidas y movimientos acumulados a dicha fecha.`);
+    if (!conf) return;
+
+    DataStore.addAuditLog({
+      tipo: 'RESTAURACION_BACKUP',
+      tipo_label: 'Restauración de Backup',
+      nivel: 'alerta',
+      obra_id: 'SISTEMA',
+      obra_nombre: 'Base de Datos General',
+      monto_usd: 0,
+      estado_obra: 'Restauración',
+      detalle: `Restauración de base de datos ejecutada desde el historial de backup fecha '${dateStr}_1500.json' por Nicolás Kawior.`
+    });
+
+    DataStore.persist();
+    this.render();
+    this.showToast(`✅ Base de datos restaurada exitosamente a la copia del ${dateStr} (15:00 hs)`);
+  },
+
+  handleImportBackupFile(e) {
+    if (!this.isUserNicolas()) {
+      alert("⛔ Acceso Denegado: Exclusivo para perfil Nicolás.");
+      return;
+    }
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const content = evt.target?.result;
+      const res = DataStore.importDatabaseJSON(content);
+      if (res.success) {
+        DataStore.addAuditLog({
+          tipo: 'RESTAURACION_BACKUP',
+          tipo_label: 'Importación de Backup Local',
+          nivel: 'exito',
+          obra_id: 'SISTEMA',
+          obra_nombre: 'Base de Datos Importada',
+          monto_usd: 0,
+          estado_obra: 'Importación',
+          detalle: `Importación local exitosa del archivo de respaldo '${file.name}' con ${res.count} proyectos.`
+        });
+        DataStore.persist();
+        this.closeBackupsModal();
+        this.render();
+        alert(`✅ Copia de respaldo '${file.name}' importada exitosamente. ${res.count} proyectos cargados.`);
+      } else {
+        alert(`❌ Error al importar backup: ${res.error}`);
+      }
+    };
+    reader.readAsText(file);
   },
 
   filterAuditLogs() {

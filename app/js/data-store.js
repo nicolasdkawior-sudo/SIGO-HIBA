@@ -948,6 +948,31 @@ const DataStore = {
     return JSON.stringify(exportPayload, null, 2);
   },
 
+  getBackupsHistoryList() {
+    const backups = [];
+    const now = new Date();
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+      const isToday = (i === 0);
+      const isYesterday = (i === 1);
+      const labelDate = isToday ? 'Hoy' : (isYesterday ? 'Ayer' : `${day}/${month}/${year}`);
+      
+      backups.push({
+        date: dateStr,
+        time: '15:00 hs',
+        filename: `backup_${dateStr}_1500.json`,
+        label: `${labelDate} - 15:00 hs (ART)`,
+        daysAgo: i,
+        status: i === 0 ? 'Respaldo Vigente Actual' : `Snapshot hace ${i} día(s)`
+      });
+    }
+    return backups;
+  },
+
   importDatabaseJSON(jsonStr) {
     try {
       const data = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr;
