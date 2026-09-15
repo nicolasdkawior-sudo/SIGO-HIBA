@@ -424,6 +424,7 @@ const DEFAULT_USERS = [
 ];
 
 const DataStore = {
+  CANONICAL_VERSION: 'v3_97_factibilidad_57_v2',
   items: [],
   users: [],
   auditLogs: [],
@@ -586,11 +587,13 @@ const DataStore = {
     }
 
     // 2. Cargar Obras con verificación de versión canónica oficial (97 Proyectos / USD 30,569,529.29 / 57 Factibilidad)
-    const CANONICAL_VERSION = 'v3_97_factibilidad_57_v2';
     const currentVersion = localStorage.getItem('sigo_canonical_version');
-    if (currentVersion !== CANONICAL_VERSION) {
+    const validVersions = [this.CANONICAL_VERSION, 'v3_97_canonical', 'v3_97_factibilidad_57'];
+    if (!currentVersion || !validVersions.includes(currentVersion)) {
       localStorage.removeItem('sigo_obras_data');
-      localStorage.setItem('sigo_canonical_version', CANONICAL_VERSION);
+      localStorage.setItem('sigo_canonical_version', this.CANONICAL_VERSION);
+    } else if (currentVersion !== this.CANONICAL_VERSION) {
+      localStorage.setItem('sigo_canonical_version', this.CANONICAL_VERSION);
     }
 
     const localObras = localStorage.getItem('sigo_obras_data');
@@ -767,7 +770,7 @@ const DataStore = {
   persist() {
     try {
       localStorage.setItem('sigo_obras_data', JSON.stringify(this.items));
-      localStorage.setItem('sigo_canonical_version', 'v3_97_canonical');
+      localStorage.setItem('sigo_canonical_version', this.CANONICAL_VERSION);
       if (typeof broadcastDataChange === 'function') {
         broadcastDataChange('DATA_PERSISTED');
       }
@@ -987,7 +990,7 @@ const DataStore = {
   resetToCanonical() {
     try {
       localStorage.removeItem('sigo_obras_data');
-      localStorage.setItem('sigo_canonical_version', 'v3_97_factibilidad_57_v2');
+      localStorage.setItem('sigo_canonical_version', this.CANONICAL_VERSION);
       this.items = [];
       this.init();
       if (typeof broadcastDataChange === 'function') {

@@ -5214,12 +5214,12 @@ const App = {
           estado_nuevo: rel.estado,
           observaciones: `🔄 Sincronización automática: Partida presupuestaria modificada en ${item.id} de "${oldPartida}" a "${newPartida}"`
         });
-        DataStore.saveItem(rel);
+        DataStore.saveItem(rel, true);
         syncCount++;
       });
     }
 
-    DataStore.saveItem(item);
+    DataStore.saveItem(item, true);
     this.toggleAdminEditMode(false);
     this.closeObraModal();
     this.render();
