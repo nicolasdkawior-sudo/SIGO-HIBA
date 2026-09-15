@@ -504,12 +504,12 @@ DataStore.persist();
 DataStore.currentUser = authAdmin.user;
 var repDir = DataStore.getExecutiveReportData(refDatePrueba);
 assert("Informe contiene datos de Página 1 (Resumen de Cartera)", Boolean(repDir.obrasEnCurso && repDir.factibilidad && repDir.factibilidadSinPartida && repDir.partidasDesvios));
-assert("Factibilidad consolidada reporta exactamente 94 obras totales en estudio", repDir.factibilidad.total === 94);
-assert("Factibilidad monto total solicitado es exactamente USD 20,151,232", repDir.factibilidad.montoTotalUSD === 20151232);
-assert("Factibilidad desglosa exactamente 91 obras sin partida (USD 19,616,232)", repDir.factibilidad.sinPartidaCount === 91 && repDir.factibilidad.sinPartidaUSD === 19616232);
-assert("Factibilidad desglosa exactamente 3 obras con partida asignada (USD 535,000)", repDir.factibilidad.conPartidaCount === 3 && repDir.factibilidad.conPartidaUSD === 535000);
-assert("Conciliación matemática perfecta: 91 sin partida + 3 con partida = 94 total", repDir.factibilidad.sinPartidaCount + repDir.factibilidad.conPartidaCount === repDir.factibilidad.total);
-assert("Conciliación económica perfecta: USD 19,616,232 + USD 535,000 = USD 20,151,232", repDir.factibilidad.sinPartidaUSD + repDir.factibilidad.conPartidaUSD === repDir.factibilidad.montoTotalUSD);
+assert("Factibilidad consolidada reporta exactamente 91 obras totales en estudio", repDir.factibilidad.total === 91);
+assert("Factibilidad monto total solicitado es exactamente USD 17,616,232", repDir.factibilidad.montoTotalUSD === 17616232);
+assert("Factibilidad desglosa exactamente 90 obras sin partida (USD 17,466,232)", repDir.factibilidad.sinPartidaCount === 90 && repDir.factibilidad.sinPartidaUSD === 17466232);
+assert("Factibilidad desglosa 1 obra con partida asignada en factibilidad (USD 150,000)", repDir.factibilidad.conPartidaCount === 1 && repDir.factibilidad.conPartidaUSD === 150000);
+assert("Conciliación matemática perfecta: 91 obras en factibilidad", repDir.factibilidad.sinPartidaCount + repDir.factibilidad.conPartidaCount === repDir.factibilidad.total);
+assert("Conciliación económica perfecta: USD 17,616,232", repDir.factibilidad.sinPartidaUSD + repDir.factibilidad.conPartidaUSD === repDir.factibilidad.montoTotalUSD);
 assert("Informe contiene datos de Página 2 (Cash Flow Oficial 01/04 - 31/03)", Boolean(repDir.cashflowEjecucion && repDir.cashflowEjecucion.mesesTotales));
 assert("Informe contiene datos de Página 3 (Sedes, Módulos y Certificación)", Boolean(repDir.desgloseSedes && repDir.desgloseModulos && repDir.semaforos));
 
@@ -707,7 +707,41 @@ DataStore.items = DataStore.items.filter(function(it) {
   return it.id !== obraProyTest.id && it.id !== obraLicTest.id;
 });
 DataStore.persist();
-DataStore.currentUser = authAdmin.user; // Restaurar admin
+// --- FASE 13: BASE CANÓNICA OFICIAL (97 PROYECTOS / USD 30,569,529.29), EXPORTACIÓN/IMPORTACIÓN JSON Y MULTI-PESTAÑA ---
+print("\n--- FASE 13: BASE CANÓNICA OFICIAL (97 PROYECTOS / USD 30,569,529.29), EXPORTACIÓN/IMPORTACIÓN JSON Y MULTI-PESTAÑA ---");
+
+// 13.1 Restablecer a base canónica oficial
+DataStore.resetToCanonical();
+DataStore.currentUser = authAdmin.user;
+
+var kpisCan = DataStore.getKPIs();
+assert("Cartera Activa canónica cuenta con exactamente 97 proyectos activos", kpisCan.carteraActivaCount === 97);
+assert("Inversión total estimada en cartera activa es exactamente USD 30,569,529.29", Math.abs(kpisCan.totalCarteraActiva - 30569529.29) < 0.01);
+assert("Inversión Civil es exactamente USD 22,518,691.29", Math.abs(kpisCan.sumObraActiva - 22518691.29) < 0.01);
+assert("Inversión Equipamiento es exactamente USD 1,515,000.00", kpisCan.sumEquipActivo === 1515000);
+assert("Inversión Infraestructura es exactamente USD 6,535,838.00", kpisCan.sumInfraActiva === 6535838);
+assert("Etapa Proyecto cuenta con 56 obras", kpisCan.estadosCount['Proyecto'] === 56);
+assert("Etapa Licitación cuenta con 16 obras", kpisCan.estadosCount['En licitación'] === 16);
+assert("Etapa Obras en Curso cuenta con 25 obras", kpisCan.estadosCount['Obras en Curso'] === 25);
+assert("Etapa Finalizadas cuenta con 25 obras", kpisCan.finalizadas === 25);
+assert("Etapa Suspendidas cuenta con 7 obras", kpisCan.suspendidas === 7);
+assert("Etapa Factibilidad cuenta con exactamente 91 obras", kpisCan.factibilidadCount === 91);
+assert("Semáforos activos: 82 En Plazo, 5 Por Vencer y 10 Vencidos (Total 97)", kpisCan.enPlazo === 82 && kpisCan.porVencer === 5 && kpisCan.vencidos === 10);
+assert("Banner médico de Factibilidad oculto (0 pendientes de ponderación)", DataStore.getPendingMedicalPriorityItems().length === 0);
+
+// 13.2 Portabilidad y Respaldo JSON
+var exportedJSON = DataStore.exportDatabaseJSON();
+assert("Exportación genera JSON válido", Boolean(exportedJSON && exportedJSON.length > 1000));
+var parsedBackup = JSON.parse(exportedJSON);
+assert("Respaldo exportado contiene 221 obras en catálogo", parsedBackup.metadata.total_items === 221);
+assert("Respaldo exportado contiene 97 proyectos activos", parsedBackup.metadata.cartera_activa_count === 97);
+assert("Respaldo exportado contiene monto canónico de USD 30,569,529.29", Math.abs(parsedBackup.metadata.total_cartera_usd - 30569529.29) < 0.01);
+
+// 13.3 Importación y Restauración íntegra
+var importResult = DataStore.importDatabaseJSON(exportedJSON);
+assert("Importación de base de datos exitosa", importResult.success === true && importResult.count === 221);
+var kpisAfterImport = DataStore.getKPIs();
+assert("Base de datos restaurada conserva exactamente USD 30,569,529.29 y 97 obras activas", kpisAfterImport.carteraActivaCount === 97 && Math.abs(kpisAfterImport.totalCarteraActiva - 30569529.29) < 0.01);
 
 print("\n================================================================================");
 var failedCount = results.filter(function(r) { return r.status === 'FAIL'; }).length;

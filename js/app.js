@@ -116,6 +116,7 @@ const App = {
 
     this.setupEventListeners();
     this.updateCloudStatusUI();
+    this.initMultiTabSync();
 
     if (!this.checkAuth()) {
       if (window.lucide) lucide.createIcons();
@@ -2160,6 +2161,142 @@ const App = {
 
   closeMedicalPriorityModal() {
     document.getElementById('modalMedicalPriority').classList.add('hidden');
+  },
+
+  // ================= SINCRONIZACIÓN MULTI-PESTAÑA REACTIVA =================
+  initMultiTabSync() {
+    if (typeof sigoBroadcast !== 'undefined' && sigoBroadcast) {
+      sigoBroadcast.onmessage = (event) => {
+        if (event.data && (event.data.type === 'DATA_PERSISTED' || event.data.type === 'DATABASE_RESTORED' || event.data.type === 'USERS_PERSISTED')) {
+          console.log('🔄 Sincronización reactiva multi-pestaña recibida:', event.data.type);
+          DataStore.reloadFromStorage();
+          if (DataStore.currentUser) {
+            this.refreshAllViews();
+          }
+        }
+      };
+    }
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'sigo_obras_data' || e.key === 'sigo_users_list') {
+          console.log('🔄 Sincronización por storage event recibida:', e.key);
+          DataStore.reloadFromStorage();
+          if (DataStore.currentUser) {
+            this.refreshAllViews();
+          }
+        }
+      });
+    }
+  },
+
+  refreshAllViews() {
+    try {
+      const kpis = DataStore.getKPIs(this.filters);
+      this.renderKPIs(kpis);
+      this.renderPipelineChart(kpis);
+      this.renderFilteredTable();
+      this.renderMedicalPriorityWarning();
+      this.checkPendingDeadlinesNotification();
+      if (this.currentView === 'cashflow') {
+        this.renderCashflowView();
+      } else if (this.currentView === 'sedes') {
+        this.renderSedesReport();
+      }
+      if (window.lucide) lucide.createIcons();
+    } catch (e) {
+      console.warn("Error refrescando vistas:", e);
+    }
+  },
+
+  // ================= GESTIÓN Y RESPALDO DE BASE DE DATOS =================
+  openDatabaseBackupModal() {
+    const u = DataStore.currentUser;
+    if (!u || u.rol !== 'admin') {
+      alert("⛔ Acceso Denegado: Solo administradores pueden gestionar la base de datos.");
+      return;
+    }
+    this.updateDatabaseBackupModalStats();
+    const modal = document.getElementById('modalDatabaseBackup');
+    if (modal) modal.classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+  },
+
+  closeDatabaseBackupModal() {
+    const modal = document.getElementById('modalDatabaseBackup');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  updateDatabaseBackupModalStats() {
+    const kpis = DataStore.getKPIs();
+    const elTot = document.getElementById('dbBackupStatTotal');
+    const elAct = document.getElementById('dbBackupStatActive');
+    const elUsd = document.getElementById('dbBackupStatUSD');
+    if (elTot) elTot.innerText = `${(DataStore.items || []).length} obras`;
+    if (elAct) elAct.innerText = `${kpis.carteraActivaCount || 0} activas`;
+    if (elUsd) elUsd.innerText = DataStore.formatUSD(kpis.totalCarteraActiva);
+  },
+
+  exportDatabase() {
+    try {
+      const jsonStr = DataStore.exportDatabaseJSON();
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `SIGO_HIBA_BASE_DATOS_${dateStr}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      alert("✅ Base de datos exportada exitosamente.\nPuedes usar este archivo para restaurar o migrar el sistema en cualquier computadora.");
+    } catch (e) {
+      console.error("Error exportando base:", e);
+      alert("⚠️ Error al exportar la base de datos: " + e.message);
+    }
+  },
+
+  handleImportDatabase() {
+    const fileInput = document.getElementById('importDatabaseFileInput');
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+      alert("⚠️ Por favor selecciona un archivo JSON de respaldo para restaurar.");
+      return;
+    }
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target.result;
+        const res = DataStore.importDatabaseJSON(content);
+        if (res.success) {
+          this.refreshAllViews();
+          this.updateDatabaseBackupModalStats();
+          alert(`✅ ¡Base de datos restaurada con éxito!\nSe cargaron ${res.count} obras correctamente.`);
+          this.closeDatabaseBackupModal();
+        } else {
+          alert("❌ Error al restaurar la base de datos:\n" + res.error);
+        }
+      } catch (err) {
+        alert("❌ Formato de archivo inválido:\n" + err.message);
+      }
+    };
+    reader.readAsText(file);
+  },
+
+  handleResetToCanonical() {
+    const conf = confirm("⚠️ ¿Estás seguro de que deseas restablecer la base de datos al estado canónico oficial de fábrica?\n\nEsto restaurará los 97 proyectos activos por USD 30,569,529.29 y 91 factibilidades por USD 17.62M.");
+    if (!conf) return;
+
+    const res = DataStore.resetToCanonical();
+    if (res.success) {
+      this.refreshAllViews();
+      this.updateDatabaseBackupModalStats();
+      alert(`✅ Base de datos restablecida a valores canónicos oficiales.\nTotal: ${res.count} obras cargadas.`);
+      this.closeDatabaseBackupModal();
+    } else {
+      alert("❌ Error al restablecer base canónica: " + res.error);
+    }
   },
 
   // ================= GESTIÓN DE USUARIOS =================

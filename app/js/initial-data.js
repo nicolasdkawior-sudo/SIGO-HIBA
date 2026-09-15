@@ -3,7 +3,8 @@ window.INITIAL_DATA = {
     "institucion": "Hospital Italiano de Buenos Aires (HIBA)",
     "generado_el": "2026-09-10T13:52:30.669253",
     "total_obras": 87,
-    "total_infraestructura": 134
+    "total_infraestructura": 134,
+    "version": "v3_canonical_97"
   },
   "obras": [
     {
@@ -88,8 +89,8 @@ window.INITIAL_DATA = {
       "prioridad_final": 1.0,
       "proveedor": "",
       "estado": "Obras en Curso",
-      "fecha_inicio_etapa": null,
-      "fecha_fin_etapa": null,
+      "fecha_inicio_etapa": "2026-06-01",
+      "fecha_fin_etapa": "2026-09-28",
       "fecha_fin_obra": null,
       "clasificacion": "Administrativo",
       "categoria": "Obra Civil",
@@ -99,7 +100,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 50.0,
       "costo_usd_m2": 3000.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "requiere_plazo_etapa": false
     },
     {
       "id": "OBRA-004",
@@ -151,8 +153,8 @@ window.INITIAL_DATA = {
       "nombre": "UCIC PB + tercer sala de Hemodinamia",
       "sede": "Almagro",
       "monto_obra_usd": 6942000.0,
-      "monto_equipamiento_usd": 2000000.0,
-      "monto_total_usd": 8942000.0,
+      "monto_equipamiento_usd": 0.0,
+      "monto_total_usd": 6942000.0,
       "prioridad_tecnica": 5.0,
       "prioridad_medica": 5.0,
       "prioridad_final": 5.0,
@@ -276,9 +278,9 @@ window.INITIAL_DATA = {
       "prioridad_medica": 5.0,
       "prioridad_final": 5.0,
       "proveedor": "1",
-      "estado": "Ante Proyecto",
-      "fecha_inicio_etapa": "2027-07-01",
-      "fecha_fin_etapa": "2028-04-30",
+      "estado": "Proyecto",
+      "fecha_inicio_etapa": "2026-01-01",
+      "fecha_fin_etapa": "2026-08-30",
       "fecha_fin_obra": "2028-04-30",
       "clasificacion": "Ampliación",
       "categoria": "Obra Civil",
@@ -304,7 +306,8 @@ window.INITIAL_DATA = {
         "cashflow_2028": 852951.0,
         "cashflow_2029": 0.0
       },
-      "creado_por": "Palmioli"
+      "creado_por": "Palmioli",
+      "requiere_plazo_etapa": false
     },
     {
       "id": "OBRA-009",
@@ -347,9 +350,9 @@ window.INITIAL_DATA = {
       "partida": "",
       "nombre": "Angiografía (Cambio Angiógrafo)",
       "sede": "Almagro",
-      "monto_obra_usd": 330000.0,
-      "monto_equipamiento_usd": 900000.0,
-      "monto_total_usd": 1230000.0,
+      "monto_obra_usd": 576350.0,
+      "monto_equipamiento_usd": 0.0,
+      "monto_total_usd": 576350.0,
       "prioridad_tecnica": 4.0,
       "prioridad_medica": 4.0,
       "prioridad_final": 4.0,
@@ -473,9 +476,9 @@ window.INITIAL_DATA = {
       "prioridad_medica": 4.0,
       "prioridad_final": 4.0,
       "proveedor": "",
-      "estado": "Estudio de Factibilidad",
-      "fecha_inicio_etapa": "2026-07-30",
-      "fecha_fin_etapa": "2026-09-30",
+      "estado": "Proyecto",
+      "fecha_inicio_etapa": "2026-01-01",
+      "fecha_fin_etapa": "2026-08-30",
       "fecha_fin_obra": "2026-09-30",
       "clasificacion": "Instalacion de equipo",
       "categoria": "Equipos c/obra",
@@ -500,7 +503,9 @@ window.INITIAL_DATA = {
         "cashflow_2027": 0.0,
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "monto_partida_usd": 175000.0,
+      "requiere_plazo_etapa": false
     },
     {
       "id": "OBRA-014",
@@ -655,8 +660,8 @@ window.INITIAL_DATA = {
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Proyecto",
-      "fecha_inicio_etapa": null,
-      "fecha_fin_etapa": null,
+      "fecha_inicio_etapa": "2026-06-01",
+      "fecha_fin_etapa": "2026-09-28",
       "fecha_fin_obra": null,
       "clasificacion": "Mejora general",
       "categoria": "Terminaciones",
@@ -666,7 +671,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 200.0,
       "costo_usd_m2": 210.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "requiere_plazo_etapa": false
     },
     {
       "id": "OBRA-019",
@@ -821,8 +827,8 @@ window.INITIAL_DATA = {
       "prioridad_final": 5.0,
       "proveedor": "1",
       "estado": "Proyecto",
-      "fecha_inicio_etapa": null,
-      "fecha_fin_etapa": null,
+      "fecha_inicio_etapa": "2026-06-01",
+      "fecha_fin_etapa": "2027-06-30",
       "fecha_fin_obra": null,
       "clasificacion": "Nuevo Layout",
       "categoria": "Obra Civil",
@@ -839,7 +845,8 @@ window.INITIAL_DATA = {
         "impacto_produccion": 0.0,
         "criterio_tec_final": 0.0
       },
-      "cashflow": {}
+      "cashflow": {},
+      "requiere_plazo_etapa": false
     },
     {
       "id": "OBRA-024",
@@ -897,8 +904,8 @@ window.INITIAL_DATA = {
       "prioridad_final": 2.0,
       "proveedor": "",
       "estado": "En licitación",
-      "fecha_inicio_etapa": null,
-      "fecha_fin_etapa": null,
+      "fecha_inicio_etapa": "2026-06-01",
+      "fecha_fin_etapa": "2027-06-30",
       "fecha_fin_obra": null,
       "clasificacion": "Nuevas oficinas",
       "categoria": "Obra Civil",
@@ -915,7 +922,8 @@ window.INITIAL_DATA = {
         "impacto_produccion": 0.0,
         "criterio_tec_final": 0.0
       },
-      "cashflow": {}
+      "cashflow": {},
+      "requiere_plazo_etapa": false
     },
     {
       "id": "OBRA-026",
@@ -1035,9 +1043,9 @@ window.INITIAL_DATA = {
       "prioridad_medica": 5.0,
       "prioridad_final": 5.0,
       "proveedor": "",
-      "estado": "Estudio de Factibilidad",
-      "fecha_inicio_etapa": null,
-      "fecha_fin_etapa": null,
+      "estado": "Proyecto",
+      "fecha_inicio_etapa": "2026-01-01",
+      "fecha_fin_etapa": "2026-08-30",
       "fecha_fin_obra": null,
       "clasificacion": "Instalacion de equipo",
       "categoria": "Equipos c/obra",
@@ -1054,7 +1062,9 @@ window.INITIAL_DATA = {
         "impacto_produccion": 3.0,
         "criterio_tec_final": 0.0
       },
-      "cashflow": {}
+      "cashflow": {},
+      "monto_partida_usd": 210000.0,
+      "requiere_plazo_etapa": false
     },
     {
       "id": "OBRA-030",
@@ -1105,8 +1115,8 @@ window.INITIAL_DATA = {
       "prioridad_final": 0.0,
       "proveedor": "AVSA Arquitectura",
       "estado": "Obras en Curso",
-      "fecha_inicio_etapa": null,
-      "fecha_fin_etapa": null,
+      "fecha_inicio_etapa": "2026-06-01",
+      "fecha_fin_etapa": "2027-06-30",
       "fecha_fin_obra": null,
       "clasificacion": "",
       "categoria": "",
@@ -1116,7 +1126,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "requiere_plazo_etapa": false
     },
     {
       "id": "OBRA-032",
@@ -1132,8 +1143,8 @@ window.INITIAL_DATA = {
       "prioridad_final": 5.0,
       "proveedor": "Gandulfo",
       "estado": "Obras en Curso",
-      "fecha_inicio_etapa": "2026-06-18",
-      "fecha_fin_etapa": null,
+      "fecha_inicio_etapa": "2026-06-01",
+      "fecha_fin_etapa": "2027-06-30",
       "fecha_fin_obra": null,
       "clasificacion": "Arreglo de Sala",
       "categoria": "Obra Civil",
@@ -1143,7 +1154,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "requiere_plazo_etapa": false
     },
     {
       "id": "OBRA-033",
@@ -1155,7 +1167,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 5.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 5.0,
       "prioridad_final": 5.0,
       "proveedor": "",
       "estado": "Ante Proyecto",
@@ -1171,7 +1183,8 @@ window.INITIAL_DATA = {
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
       "cashflow": {},
-      "creado_por": "Oshiro"
+      "creado_por": "Oshiro",
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "OBRA-034",
@@ -1183,7 +1196,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 8100.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 3.0,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Ante Proyecto",
@@ -1198,7 +1211,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "OBRA-035",
@@ -1206,9 +1220,9 @@ window.INITIAL_DATA = {
       "partida": "",
       "nombre": "Nuevo Pabellón Kinesiología",
       "sede": "San Justo",
-      "monto_obra_usd": 1847000.0,
+      "monto_obra_usd": 1690650.0,
       "monto_equipamiento_usd": 0.0,
-      "monto_total_usd": 1847000.0,
+      "monto_total_usd": 1690650.0,
       "prioridad_tecnica": 4.0,
       "prioridad_medica": 4.0,
       "prioridad_final": 4.0,
@@ -1400,8 +1414,8 @@ window.INITIAL_DATA = {
       "prioridad_final": 2.0,
       "proveedor": "",
       "estado": "Proyecto",
-      "fecha_inicio_etapa": null,
-      "fecha_fin_etapa": null,
+      "fecha_inicio_etapa": "2026-06-01",
+      "fecha_fin_etapa": "2027-06-30",
       "fecha_fin_obra": null,
       "clasificacion": "Mejora general/Ampliacion",
       "categoria": "Obra Civil",
@@ -1418,7 +1432,8 @@ window.INITIAL_DATA = {
         "impacto_produccion": 2.0,
         "criterio_tec_final": 2.2
       },
-      "cashflow": {}
+      "cashflow": {},
+      "requiere_plazo_etapa": false
     },
     {
       "id": "OBRA-041",
@@ -1611,8 +1626,8 @@ window.INITIAL_DATA = {
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Proyecto",
-      "fecha_inicio_etapa": "2026-08-03",
-      "fecha_fin_etapa": null,
+      "fecha_inicio_etapa": "2026-06-01",
+      "fecha_fin_etapa": "2027-06-30",
       "fecha_fin_obra": null,
       "clasificacion": "Nuevas oficinas",
       "categoria": "Obra Civil",
@@ -1622,7 +1637,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 52.0,
       "costo_usd_m2": 838.46,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "requiere_plazo_etapa": false
     },
     {
       "id": "OBRA-047",
@@ -1756,8 +1772,8 @@ window.INITIAL_DATA = {
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Proyecto",
-      "fecha_inicio_etapa": "2026-08-03",
-      "fecha_fin_etapa": null,
+      "fecha_inicio_etapa": "2026-06-01",
+      "fecha_fin_etapa": "2027-06-30",
       "fecha_fin_obra": null,
       "clasificacion": "Instalacion de equipo",
       "categoria": "Equipos c/obra",
@@ -1767,7 +1783,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "requiere_plazo_etapa": false
     },
     {
       "id": "OBRA-052",
@@ -1806,7 +1823,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 5.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 5.0,
       "prioridad_final": 5.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -1822,7 +1839,8 @@ window.INITIAL_DATA = {
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
       "cashflow": {},
-      "creado_por": "Waldemar"
+      "creado_por": "Waldemar",
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "OBRA-054",
@@ -1973,8 +1991,8 @@ window.INITIAL_DATA = {
       "partida": "",
       "nombre": "Farmacia - Óptica - Recuperación",
       "sede": "San Justo",
-      "monto_obra_usd": 0.0,
-      "monto_equipamiento_usd": 754250.0,
+      "monto_obra_usd": 754250.0,
+      "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 754250.0,
       "prioridad_tecnica": 0.0,
       "prioridad_medica": 0.0,
@@ -2000,8 +2018,8 @@ window.INITIAL_DATA = {
       "partida": "",
       "nombre": "Pabellón Devoto A",
       "sede": "San Justo",
-      "monto_obra_usd": 0.0,
-      "monto_equipamiento_usd": 743245.0,
+      "monto_obra_usd": 743245.0,
+      "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 743245.0,
       "prioridad_tecnica": 0.0,
       "prioridad_medica": 0.0,
@@ -2027,8 +2045,8 @@ window.INITIAL_DATA = {
       "partida": "",
       "nombre": "Nueva Dirección Ex HSBC",
       "sede": "Almagro",
-      "monto_obra_usd": 0.0,
-      "monto_equipamiento_usd": 700000.0,
+      "monto_obra_usd": 700000.0,
+      "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 700000.0,
       "prioridad_tecnica": 0.0,
       "prioridad_medica": 0.0,
@@ -2081,8 +2099,8 @@ window.INITIAL_DATA = {
       "partida": "",
       "nombre": "Obra Ampliación Sala UPS Data Center",
       "sede": "Almagro",
-      "monto_obra_usd": 0.0,
-      "monto_equipamiento_usd": 586850.0,
+      "monto_obra_usd": 586850.0,
+      "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 586850.0,
       "prioridad_tecnica": 0.0,
       "prioridad_medica": 0.0,
@@ -2403,61 +2421,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 0.0,
-      "prioridad_medica": 0.0,
-      "prioridad_final": 5.0,
-      "proveedor": "",
-      "estado": "Estudio de Factibilidad",
-      "fecha_inicio_etapa": null,
-      "fecha_fin_etapa": null,
-      "fecha_fin_obra": null,
-      "clasificacion": "",
-      "categoria": "",
-      "motivo": "",
-      "responsable": "",
-      "observaciones": "",
-      "superficie_m2": 0.0,
-      "costo_usd_m2": 0.0,
-      "criterios_tecnicos": {},
-      "cashflow": {}
-    },
-    {
-      "id": "OBRA-075",
-      "tipo": "Obra Civil",
-      "partida": "",
-      "nombre": "TESTA nivel  - Solados",
-      "sede": "Almagro",
-      "monto_obra_usd": 0.0,
-      "monto_equipamiento_usd": 0.0,
-      "monto_total_usd": 0.0,
-      "prioridad_tecnica": 0.0,
-      "prioridad_medica": 0.0,
-      "prioridad_final": 0.0,
-      "proveedor": "",
-      "estado": "Estudio de Factibilidad",
-      "fecha_inicio_etapa": null,
-      "fecha_fin_etapa": null,
-      "fecha_fin_obra": null,
-      "clasificacion": "",
-      "categoria": "",
-      "motivo": "",
-      "responsable": "",
-      "observaciones": "",
-      "superficie_m2": 0.0,
-      "costo_usd_m2": 0.0,
-      "criterios_tecnicos": {},
-      "cashflow": {}
-    },
-    {
-      "id": "OBRA-076",
-      "tipo": "Obra Civil",
-      "partida": "",
-      "nombre": "Hematologia- Mejoras en Sala de espera",
-      "sede": "Almagro",
-      "monto_obra_usd": 0.0,
-      "monto_equipamiento_usd": 0.0,
-      "monto_total_usd": 0.0,
-      "prioridad_tecnica": 0.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 3.0,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -2472,7 +2436,64 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "prioridad_medica_ponderada_default": true
+    },
+    {
+      "id": "OBRA-075",
+      "tipo": "Obra Civil",
+      "partida": "",
+      "nombre": "TESTA nivel  - Solados",
+      "sede": "Almagro",
+      "monto_obra_usd": 0.0,
+      "monto_equipamiento_usd": 0.0,
+      "monto_total_usd": 0.0,
+      "prioridad_tecnica": 0.0,
+      "prioridad_medica": 3.0,
+      "prioridad_final": 3.0,
+      "proveedor": "",
+      "estado": "Estudio de Factibilidad",
+      "fecha_inicio_etapa": null,
+      "fecha_fin_etapa": null,
+      "fecha_fin_obra": null,
+      "clasificacion": "",
+      "categoria": "",
+      "motivo": "",
+      "responsable": "",
+      "observaciones": "",
+      "superficie_m2": 0.0,
+      "costo_usd_m2": 0.0,
+      "criterios_tecnicos": {},
+      "cashflow": {},
+      "prioridad_medica_ponderada_default": true
+    },
+    {
+      "id": "OBRA-076",
+      "tipo": "Obra Civil",
+      "partida": "",
+      "nombre": "Hematologia- Mejoras en Sala de espera",
+      "sede": "Almagro",
+      "monto_obra_usd": 0.0,
+      "monto_equipamiento_usd": 0.0,
+      "monto_total_usd": 0.0,
+      "prioridad_tecnica": 0.0,
+      "prioridad_medica": 3.0,
+      "prioridad_final": 3.0,
+      "proveedor": "",
+      "estado": "Estudio de Factibilidad",
+      "fecha_inicio_etapa": null,
+      "fecha_fin_etapa": null,
+      "fecha_fin_obra": null,
+      "clasificacion": "",
+      "categoria": "",
+      "motivo": "",
+      "responsable": "",
+      "observaciones": "",
+      "superficie_m2": 0.0,
+      "costo_usd_m2": 0.0,
+      "criterios_tecnicos": {},
+      "cashflow": {},
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "OBRA-077",
@@ -2484,8 +2505,8 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 2356.0,
       "monto_total_usd": 2356.0,
       "prioridad_tecnica": 0.0,
-      "prioridad_medica": 0.0,
-      "prioridad_final": 4.0,
+      "prioridad_medica": 3.0,
+      "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
       "fecha_inicio_etapa": null,
@@ -2500,7 +2521,8 @@ window.INITIAL_DATA = {
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
       "cashflow": {},
-      "creado_por": "Corbalán"
+      "creado_por": "Corbalán",
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "OBRA-078",
@@ -2512,61 +2534,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 2.0,
-      "prioridad_medica": 0.0,
-      "prioridad_final": 4.0,
-      "proveedor": "",
-      "estado": "Estudio de Factibilidad",
-      "fecha_inicio_etapa": null,
-      "fecha_fin_etapa": null,
-      "fecha_fin_obra": null,
-      "clasificacion": "",
-      "categoria": "",
-      "motivo": "",
-      "responsable": "",
-      "observaciones": "",
-      "superficie_m2": 0.0,
-      "costo_usd_m2": 0.0,
-      "criterios_tecnicos": {},
-      "cashflow": {}
-    },
-    {
-      "id": "OBRA-079",
-      "tipo": "Obra Civil",
-      "partida": "",
-      "nombre": "Sector 75- Sala de Espera 4to y 5to piso",
-      "sede": "Almagro",
-      "monto_obra_usd": 0.0,
-      "monto_equipamiento_usd": 0.0,
-      "monto_total_usd": 0.0,
-      "prioridad_tecnica": 2.0,
-      "prioridad_medica": 0.0,
-      "prioridad_final": 4.0,
-      "proveedor": "",
-      "estado": "Estudio de Factibilidad",
-      "fecha_inicio_etapa": null,
-      "fecha_fin_etapa": null,
-      "fecha_fin_obra": null,
-      "clasificacion": "",
-      "categoria": "",
-      "motivo": "",
-      "responsable": "",
-      "observaciones": "",
-      "superficie_m2": 0.0,
-      "costo_usd_m2": 0.0,
-      "criterios_tecnicos": {},
-      "cashflow": {}
-    },
-    {
-      "id": "OBRA-080",
-      "tipo": "Obra Civil",
-      "partida": "",
-      "nombre": "UTIA - Poliductos exterior Biofilia",
-      "sede": "Almagro",
-      "monto_obra_usd": 0.0,
-      "monto_equipamiento_usd": 0.0,
-      "monto_total_usd": 0.0,
-      "prioridad_tecnica": 2.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 2.0,
       "prioridad_final": 2.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -2581,7 +2549,64 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "prioridad_medica_ponderada_default": true
+    },
+    {
+      "id": "OBRA-079",
+      "tipo": "Obra Civil",
+      "partida": "",
+      "nombre": "Sector 75- Sala de Espera 4to y 5to piso",
+      "sede": "Almagro",
+      "monto_obra_usd": 0.0,
+      "monto_equipamiento_usd": 0.0,
+      "monto_total_usd": 0.0,
+      "prioridad_tecnica": 2.0,
+      "prioridad_medica": 2.0,
+      "prioridad_final": 2.0,
+      "proveedor": "",
+      "estado": "Estudio de Factibilidad",
+      "fecha_inicio_etapa": null,
+      "fecha_fin_etapa": null,
+      "fecha_fin_obra": null,
+      "clasificacion": "",
+      "categoria": "",
+      "motivo": "",
+      "responsable": "",
+      "observaciones": "",
+      "superficie_m2": 0.0,
+      "costo_usd_m2": 0.0,
+      "criterios_tecnicos": {},
+      "cashflow": {},
+      "prioridad_medica_ponderada_default": true
+    },
+    {
+      "id": "OBRA-080",
+      "tipo": "Obra Civil",
+      "partida": "",
+      "nombre": "UTIA - Poliductos exterior Biofilia",
+      "sede": "Almagro",
+      "monto_obra_usd": 0.0,
+      "monto_equipamiento_usd": 0.0,
+      "monto_total_usd": 0.0,
+      "prioridad_tecnica": 2.0,
+      "prioridad_medica": 2.0,
+      "prioridad_final": 2.0,
+      "proveedor": "",
+      "estado": "Estudio de Factibilidad",
+      "fecha_inicio_etapa": null,
+      "fecha_fin_etapa": null,
+      "fecha_fin_obra": null,
+      "clasificacion": "",
+      "categoria": "",
+      "motivo": "",
+      "responsable": "",
+      "observaciones": "",
+      "superficie_m2": 0.0,
+      "costo_usd_m2": 0.0,
+      "criterios_tecnicos": {},
+      "cashflow": {},
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "OBRA-081",
@@ -2620,7 +2645,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 4.0,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -2635,7 +2660,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "OBRA-083",
@@ -2674,8 +2700,8 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 2.0,
-      "prioridad_medica": 0.0,
-      "prioridad_final": 3.0,
+      "prioridad_medica": 2.0,
+      "prioridad_final": 2.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
       "fecha_inicio_etapa": "2026-06-18",
@@ -2689,7 +2715,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "OBRA-085",
@@ -2705,8 +2732,8 @@ window.INITIAL_DATA = {
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Proyecto",
-      "fecha_inicio_etapa": null,
-      "fecha_fin_etapa": null,
+      "fecha_inicio_etapa": "2026-06-01",
+      "fecha_fin_etapa": "2027-06-30",
       "fecha_fin_obra": null,
       "clasificacion": "Producción",
       "categoria": "Obra Civil",
@@ -2716,7 +2743,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 53.0,
       "costo_usd_m2": 2000.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "requiere_plazo_etapa": false
     },
     {
       "id": "OBRA-086",
@@ -2728,8 +2756,8 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 0.0,
-      "prioridad_medica": 0.0,
-      "prioridad_final": 0.0,
+      "prioridad_medica": 3.0,
+      "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
       "fecha_inicio_etapa": null,
@@ -2743,7 +2771,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "OBRA-087",
@@ -2755,7 +2784,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 523000.0,
       "prioridad_tecnica": 2.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 2.0,
       "prioridad_final": 2.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -2770,7 +2799,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "prioridad_medica_ponderada_default": true
     }
   ],
   "infraestructura": [
@@ -4211,7 +4241,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 55000.0,
       "prioridad_tecnica": 5.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 5.0,
       "prioridad_final": 5.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -4234,7 +4264,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 0.0,
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-043",
@@ -4246,7 +4277,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 110000.0,
       "prioridad_tecnica": 5.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 5.0,
       "prioridad_final": 5.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -4269,7 +4300,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 0.0,
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-044",
@@ -4631,7 +4663,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 60000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 4.0,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -4654,7 +4686,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 0.0,
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-055",
@@ -4701,7 +4734,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 120000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 4.0,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -4724,7 +4757,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 120000.0,
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-057",
@@ -4736,7 +4770,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 300000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 4.0,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -4759,7 +4793,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 300000.0,
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-058",
@@ -4771,7 +4806,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 300000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 4.0,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -4794,7 +4829,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 300000.0,
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-059",
@@ -4806,7 +4842,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 15000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 4.0,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -4829,7 +4865,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 0.0,
         "cashflow_2028": 15000.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-060",
@@ -4911,7 +4948,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 35000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 4.0,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -4934,7 +4971,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 35000.0,
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-063",
@@ -4946,7 +4984,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 15000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 4.0,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -4969,7 +5007,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 15000.0,
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-064",
@@ -4981,7 +5020,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 40000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 4.0,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -5004,7 +5043,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 26667.0,
         "cashflow_2028": 13333.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-065",
@@ -5086,7 +5126,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 9500.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 4.0,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -5109,7 +5149,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 9500.0,
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-068",
@@ -5121,7 +5162,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 40000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 4.0,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -5144,7 +5185,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 40000.0,
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-069",
@@ -5156,7 +5198,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 25000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 4.0,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -5179,7 +5221,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 25000.0,
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-070",
@@ -5191,7 +5234,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 250000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 4.0,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -5214,7 +5257,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 83333.0,
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-071",
@@ -5226,7 +5270,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 40000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 4.0,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -5249,7 +5293,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 40000.0,
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-072",
@@ -5261,7 +5306,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 150000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 4.0,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -5284,7 +5329,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 0.0,
         "cashflow_2028": 0.0,
         "cashflow_2029": 150000.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-073",
@@ -5296,7 +5342,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 400000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 4.0,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -5319,7 +5365,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 186667.0,
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-074",
@@ -5331,7 +5378,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 75000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 4.0,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -5354,7 +5401,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 62500.0,
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-075",
@@ -5366,7 +5414,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 25000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 4.0,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -5389,7 +5437,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 0.0,
         "cashflow_2028": 25000.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-076",
@@ -5401,7 +5450,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 25000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 4.0,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -5424,7 +5473,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 0.0,
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-077",
@@ -5436,7 +5486,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 100000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 4.0,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -5459,7 +5509,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 100000.0,
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-078",
@@ -5471,7 +5522,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 95000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 4.0,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -5494,7 +5545,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 95000.0,
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-079",
@@ -5720,8 +5772,8 @@ window.INITIAL_DATA = {
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Proyecto",
-      "fecha_inicio_etapa": null,
-      "fecha_fin_etapa": null,
+      "fecha_inicio_etapa": "2026-06-01",
+      "fecha_fin_etapa": "2027-06-30",
       "fecha_fin_obra": null,
       "clasificacion": "",
       "categoria": "Energia Electrica",
@@ -5731,7 +5783,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "requiere_plazo_etapa": false
     },
     {
       "id": "INFRA-086",
@@ -5887,8 +5940,8 @@ window.INITIAL_DATA = {
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Proyecto",
-      "fecha_inicio_etapa": null,
-      "fecha_fin_etapa": null,
+      "fecha_inicio_etapa": "2026-06-01",
+      "fecha_fin_etapa": "2027-06-30",
       "fecha_fin_obra": null,
       "clasificacion": "",
       "categoria": "Inst Sanit",
@@ -5898,7 +5951,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "requiere_plazo_etapa": false
     },
     {
       "id": "INFRA-091",
@@ -5980,7 +6034,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 45000.0,
       "prioridad_tecnica": 4.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 4.0,
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6003,7 +6057,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 9000.0,
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-094",
@@ -6054,8 +6109,8 @@ window.INITIAL_DATA = {
       "prioridad_final": 4.0,
       "proveedor": "",
       "estado": "Proyecto",
-      "fecha_inicio_etapa": null,
-      "fecha_fin_etapa": null,
+      "fecha_inicio_etapa": "2026-06-01",
+      "fecha_fin_etapa": "2027-06-30",
       "fecha_fin_obra": null,
       "clasificacion": "",
       "categoria": "Gases Clínicos",
@@ -6065,7 +6120,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "requiere_plazo_etapa": false
     },
     {
       "id": "INFRA-096",
@@ -6077,7 +6133,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 40000.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 3.0,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6100,7 +6156,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 0.0,
         "cashflow_2028": 40000.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-097",
@@ -6112,7 +6169,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 20000.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 3.0,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6135,7 +6192,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 0.0,
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-098",
@@ -6147,7 +6205,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 3.0,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6162,7 +6220,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-099",
@@ -6174,7 +6233,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 12000.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 3.0,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6197,7 +6256,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 12000.0,
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-100",
@@ -6209,7 +6269,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 150000.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 3.0,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6232,7 +6292,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 0.0,
         "cashflow_2028": 150000.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-101",
@@ -6244,7 +6305,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 3.0,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6259,7 +6320,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-102",
@@ -6271,7 +6333,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 30000.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 3.0,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6294,7 +6356,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 10000.0,
         "cashflow_2028": 20000.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-103",
@@ -6306,7 +6369,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 200000.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 3.0,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6329,7 +6392,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 33333.0,
         "cashflow_2028": 166667.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-104",
@@ -6341,7 +6405,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 500000.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 3.0,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6364,7 +6428,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 291667.0,
         "cashflow_2028": 0.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-105",
@@ -6376,7 +6441,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 60000.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 3.0,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6399,7 +6464,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 0.0,
         "cashflow_2028": 30000.0,
         "cashflow_2029": 30000.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-106",
@@ -6411,7 +6477,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 3.0,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6426,7 +6492,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-107",
@@ -6438,7 +6505,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 3.0,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6453,7 +6520,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-108",
@@ -6465,7 +6533,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 3.0,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6480,7 +6548,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-109",
@@ -6492,7 +6561,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 50000.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 3.0,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6515,7 +6584,8 @@ window.INITIAL_DATA = {
         "cashflow_2027": 0.0,
         "cashflow_2028": 50000.0,
         "cashflow_2029": 0.0
-      }
+      },
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-110",
@@ -6527,7 +6597,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 3.0,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6542,7 +6612,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-111",
@@ -6554,7 +6625,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 3.0,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6569,7 +6640,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-112",
@@ -6612,8 +6684,8 @@ window.INITIAL_DATA = {
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Proyecto",
-      "fecha_inicio_etapa": null,
-      "fecha_fin_etapa": null,
+      "fecha_inicio_etapa": "2026-06-01",
+      "fecha_fin_etapa": "2027-06-30",
       "fecha_fin_obra": null,
       "clasificacion": "",
       "categoria": "Aire acondicionado",
@@ -6623,7 +6695,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "requiere_plazo_etapa": false
     },
     {
       "id": "INFRA-114",
@@ -6639,8 +6712,8 @@ window.INITIAL_DATA = {
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Proyecto",
-      "fecha_inicio_etapa": null,
-      "fecha_fin_etapa": null,
+      "fecha_inicio_etapa": "2026-06-01",
+      "fecha_fin_etapa": "2027-06-30",
       "fecha_fin_obra": null,
       "clasificacion": "",
       "categoria": "Aire acondicionado",
@@ -6650,7 +6723,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "requiere_plazo_etapa": false
     },
     {
       "id": "INFRA-115",
@@ -6666,8 +6740,8 @@ window.INITIAL_DATA = {
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Proyecto",
-      "fecha_inicio_etapa": null,
-      "fecha_fin_etapa": null,
+      "fecha_inicio_etapa": "2026-06-01",
+      "fecha_fin_etapa": "2027-06-30",
       "fecha_fin_obra": null,
       "clasificacion": "",
       "categoria": "Aire acondicionado",
@@ -6677,7 +6751,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "requiere_plazo_etapa": false
     },
     {
       "id": "INFRA-116",
@@ -6693,8 +6768,8 @@ window.INITIAL_DATA = {
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Proyecto",
-      "fecha_inicio_etapa": null,
-      "fecha_fin_etapa": null,
+      "fecha_inicio_etapa": "2026-06-01",
+      "fecha_fin_etapa": "2027-06-30",
       "fecha_fin_obra": null,
       "clasificacion": "",
       "categoria": "Aire acondicionado",
@@ -6704,7 +6779,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "requiere_plazo_etapa": false
     },
     {
       "id": "INFRA-117",
@@ -6790,8 +6866,8 @@ window.INITIAL_DATA = {
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Proyecto",
-      "fecha_inicio_etapa": null,
-      "fecha_fin_etapa": null,
+      "fecha_inicio_etapa": "2026-06-01",
+      "fecha_fin_etapa": "2027-06-30",
       "fecha_fin_obra": null,
       "clasificacion": "",
       "categoria": "Inst Sanit",
@@ -6801,7 +6877,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "requiere_plazo_etapa": false
     },
     {
       "id": "INFRA-120",
@@ -6816,7 +6893,7 @@ window.INITIAL_DATA = {
       "prioridad_medica": 0.0,
       "prioridad_final": 3.0,
       "proveedor": "",
-      "estado": "En Asignación de Partida",
+      "estado": "Obras Finalizadas",
       "fecha_inicio_etapa": null,
       "fecha_fin_etapa": null,
       "fecha_fin_obra": null,
@@ -6844,8 +6921,8 @@ window.INITIAL_DATA = {
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Proyecto",
-      "fecha_inicio_etapa": null,
-      "fecha_fin_etapa": null,
+      "fecha_inicio_etapa": "2026-06-01",
+      "fecha_fin_etapa": "2027-06-30",
       "fecha_fin_obra": null,
       "clasificacion": "",
       "categoria": "Obra Civil",
@@ -6855,7 +6932,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "requiere_plazo_etapa": false
     },
     {
       "id": "INFRA-122",
@@ -6871,8 +6949,8 @@ window.INITIAL_DATA = {
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Proyecto",
-      "fecha_inicio_etapa": null,
-      "fecha_fin_etapa": null,
+      "fecha_inicio_etapa": "2026-06-01",
+      "fecha_fin_etapa": "2027-06-30",
       "fecha_fin_obra": null,
       "clasificacion": "",
       "categoria": "Obra Civil",
@@ -6882,7 +6960,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "requiere_plazo_etapa": false
     },
     {
       "id": "INFRA-123",
@@ -6894,7 +6973,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 3.0,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6909,7 +6988,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-124",
@@ -6921,7 +7001,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 3.0,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6936,7 +7016,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-125",
@@ -6948,7 +7029,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 3.0,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6963,7 +7044,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-126",
@@ -6975,7 +7057,7 @@ window.INITIAL_DATA = {
       "monto_equipamiento_usd": 0.0,
       "monto_total_usd": 0.0,
       "prioridad_tecnica": 3.0,
-      "prioridad_medica": 0.0,
+      "prioridad_medica": 3.0,
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Estudio de Factibilidad",
@@ -6990,7 +7072,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "prioridad_medica_ponderada_default": true
     },
     {
       "id": "INFRA-127",
@@ -7006,8 +7089,8 @@ window.INITIAL_DATA = {
       "prioridad_final": 3.0,
       "proveedor": "",
       "estado": "Proyecto",
-      "fecha_inicio_etapa": null,
-      "fecha_fin_etapa": null,
+      "fecha_inicio_etapa": "2026-06-01",
+      "fecha_fin_etapa": "2027-06-30",
       "fecha_fin_obra": null,
       "clasificacion": "",
       "categoria": "Obra Civil",
@@ -7017,7 +7100,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "requiere_plazo_etapa": false
     },
     {
       "id": "INFRA-128",
@@ -7033,8 +7117,8 @@ window.INITIAL_DATA = {
       "prioridad_final": 2.0,
       "proveedor": "",
       "estado": "Proyecto",
-      "fecha_inicio_etapa": null,
-      "fecha_fin_etapa": null,
+      "fecha_inicio_etapa": "2026-06-01",
+      "fecha_fin_etapa": "2027-06-30",
       "fecha_fin_obra": null,
       "clasificacion": "",
       "categoria": "Aire acondicionado",
@@ -7044,7 +7128,8 @@ window.INITIAL_DATA = {
       "superficie_m2": 0.0,
       "costo_usd_m2": 0.0,
       "criterios_tecnicos": {},
-      "cashflow": {}
+      "cashflow": {},
+      "requiere_plazo_etapa": false
     },
     {
       "id": "INFRA-129",

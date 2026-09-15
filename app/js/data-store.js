@@ -3,6 +3,25 @@
 // Autenticación Segura con SHA-256 + Salt, Claves Temporales y Eliminación de Usuarios
 // ==============================================================================
 
+// Canal global de sincronización multi-pestaña reactiva (SIGO Sync)
+const sigoBroadcast = (typeof window !== 'undefined' && typeof window.BroadcastChannel !== 'undefined')
+  ? new BroadcastChannel('sigo_sync_channel')
+  : null;
+
+function broadcastDataChange(type = 'DATA_UPDATED') {
+  if (sigoBroadcast) {
+    try {
+      sigoBroadcast.postMessage({
+        type: type,
+        timestamp: Date.now(),
+        user: (typeof DataStore !== 'undefined' && DataStore.currentUser) ? DataStore.currentUser.id : 'anon'
+      });
+    } catch (e) {
+      // Ignorar errores en entornos cerrados o sandboxes
+    }
+  }
+}
+
 // Implementación pura y sincrónica de SHA-256 (estándar FIPS 180-4)
 function sha256(ascii) {
   function rightRotate(value, amount) {
@@ -565,7 +584,14 @@ const DataStore = {
       localStorage.removeItem('sigo_active_user_id');
     }
 
-    // 2. Cargar Obras
+    // 2. Cargar Obras con verificación de versión canónica oficial (97 Proyectos / USD 30,569,529.29)
+    const CANONICAL_VERSION = 'v3_97_canonical';
+    const currentVersion = localStorage.getItem('sigo_canonical_version');
+    if (currentVersion !== CANONICAL_VERSION) {
+      localStorage.removeItem('sigo_obras_data');
+      localStorage.setItem('sigo_canonical_version', CANONICAL_VERSION);
+    }
+
     const localObras = localStorage.getItem('sigo_obras_data');
     if (localObras) {
       try {
@@ -724,11 +750,116 @@ const DataStore = {
   },
 
   persist() {
-    localStorage.setItem('sigo_obras_data', JSON.stringify(this.items));
+    try {
+      localStorage.setItem('sigo_obras_data', JSON.stringify(this.items));
+      localStorage.setItem('sigo_canonical_version', 'v3_97_canonical');
+      if (typeof broadcastDataChange === 'function') {
+        broadcastDataChange('DATA_PERSISTED');
+      }
+    } catch (e) {
+      console.error("Error persistiendo datos:", e);
+    }
   },
 
   persistUsers() {
-    localStorage.setItem('sigo_users_list', JSON.stringify(this.users));
+    try {
+      localStorage.setItem('sigo_users_list', JSON.stringify(this.users));
+      if (typeof broadcastDataChange === 'function') {
+        broadcastDataChange('USERS_PERSISTED');
+      }
+    } catch (e) {
+      console.error("Error persistiendo usuarios:", e);
+    }
+  },
+
+  reloadFromStorage() {
+    try {
+      const localObras = localStorage.getItem('sigo_obras_data');
+      if (localObras) {
+        this.items = JSON.parse(localObras);
+      }
+      const localUsers = localStorage.getItem('sigo_users_list');
+      if (localUsers) {
+        this.users = JSON.parse(localUsers);
+      }
+      return true;
+    } catch (e) {
+      console.error("Error recargando datos de storage:", e);
+      return false;
+    }
+  },
+
+  // ================= PORTABILIDAD Y GESTIÓN DE BASE DE DATOS =================
+  exportDatabaseJSON() {
+    const kpis = this.getKPIs();
+    const exportPayload = {
+      version: 'v3_97_canonical',
+      exported_at: new Date().toISOString(),
+      system: 'SIGO HIBA - Sistema de Gestión de Obras',
+      metadata: {
+        institucion: 'Hospital Italiano de Buenos Aires (HIBA)',
+        total_items: (this.items || []).length,
+        cartera_activa_count: kpis.carteraActivaCount,
+        total_cartera_usd: kpis.totalCarteraActiva,
+        sum_civil_usd: kpis.sumObraActiva,
+        sum_equip_usd: kpis.sumEquipActivo,
+        sum_infra_usd: kpis.sumInfraActiva,
+        exported_by: this.currentUser ? `${this.currentUser.nombre} (${this.currentUser.username})` : 'Administrador'
+      },
+      items: this.items || [],
+      users: this.users || []
+    };
+    return JSON.stringify(exportPayload, null, 2);
+  },
+
+  importDatabaseJSON(jsonStr) {
+    try {
+      const data = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr;
+      if (!data || (!data.items && !Array.isArray(data))) {
+        throw new Error("El archivo no contiene un formato de base de datos válido de SIGO HIBA.");
+      }
+      const items = Array.isArray(data) ? data : data.items;
+      if (!Array.isArray(items) || items.length === 0) {
+        throw new Error("El archivo no contiene registros de obras válidos.");
+      }
+
+      // Validar integridad mínima
+      const valid = items.every(it => it.id && it.nombre && it.estado);
+      if (!valid) {
+        throw new Error("Se detectaron obras con campos requeridos faltantes (id, nombre, estado).");
+      }
+
+      this.items = items;
+      if (data.users && Array.isArray(data.users) && data.users.length > 0) {
+        this.users = data.users;
+        this.persistUsers();
+      }
+
+      this.persist();
+      if (typeof broadcastDataChange === 'function') {
+        broadcastDataChange('DATABASE_RESTORED');
+      }
+      return { success: true, count: items.length };
+    } catch (err) {
+      console.error("Error importando base de datos:", err);
+      return { success: false, error: err.message };
+    }
+  },
+
+  resetToCanonical() {
+    try {
+      localStorage.removeItem('sigo_obras_data');
+      localStorage.setItem('sigo_canonical_version', 'v3_97_canonical');
+      this.items = [];
+      this.init();
+      if (typeof broadcastDataChange === 'function') {
+        broadcastDataChange('DATABASE_RESTORED');
+      }
+      return { success: true, count: this.items.length };
+    } catch (err) {
+      console.error("Error restableciendo base canónica:", err);
+      return { success: false, error: err.message };
+    }
   },
 
   // ================= FORMATO DE MONEDA EN USD Y PARSEO DE DECIMALES =================
@@ -1294,7 +1425,7 @@ const DataStore = {
     }
 
     // REGLA CANÓNICA: En Factibilidad NO debe indicar plazos (está en análisis sin dinero ni proyecto)
-    if (estado.includes('factibilidad') || estado.includes('ante proyecto')) {
+    if (estado.includes('factibilidad') || estado.includes('ante proyecto') || estado.includes('asignación') || estado.includes('asignacion')) {
       return { 
         status: 'en_analisis', 
         label: 'En Análisis', 
@@ -2037,7 +2168,6 @@ const DataStore = {
       const isFactibilidad = (
         item.estado === 'Estudio de Factibilidad' ||
         item.estado === 'Ante Proyecto' ||
-        item.estado === 'En Asignación de Partida' ||
         (item.estado || '').toLowerCase().includes('factibilidad')
       );
 

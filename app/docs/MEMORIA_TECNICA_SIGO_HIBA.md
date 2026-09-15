@@ -433,5 +433,50 @@ Para garantizar máxima transparencia y certeza entre todas las vistas de SIGO H
 - **Roles Operativos (Jefes de Obra / PM, Compradores):**
   - Reflejan su volumen exacto de proyectos asignados a su cargo (ej. Arq. Palmioli: 8 obras; Ing. Waldemar: 14 obras; Arq. Cossano: 3 obras; Compras: 16 obras; etc.).
 
+---
+
+## 15. PERSISTENCIA CANÓNICA DE LA BASE DE DATOS, RESPALDO JSON Y SINCRONIZACIÓN MULTI-PESTAÑA REACTIVA
+
+### 15.1. Cuadre Matemático Oficial Canónico (97 Proyectos / USD 30,569,529.29)
+- **Cifra Canónica de Arranque e Invocación Limpia:**
+  Para erradicar cualquier ambigüedad entre sesiones previas almacenadas en el navegador y nuevas aperturas de incógnito o dispositivos limpios, se unificó la base de datos canónica oficial (`INITIAL_DATA`) en ambos puntos de entrada (`/` y `/app`):
+  * **Cartera Activa:** **97 proyectos activos** ($56\text{ en Proyecto} + 16\text{ en Licitación} + 25\text{ en Obras en Curso}$).
+  * **Inversión Total Cartera Activa:** **USD 30,569,529.29**
+    - **Inversión Civil:** USD 22,518,691.29
+    - **Inversión Equipamiento:** USD 1,515,000.00
+    - **Inversión Infraestructura:** USD 6,535,838.00
+  * **Embudo Operativo:**
+    - **Estudio de Factibilidad:** 91 obras (USD 17,616,232.00) [90 sin partida por USD 17,466,232 + 1 con partida asignada INFRA-007 por USD 150,000].
+    - **En Proyecto:** 56 obras (USD 20,637,952.29).
+    - **En Licitación:** 16 obras (USD 3,652,650.00).
+    - **Obras en Curso:** 25 obras (USD 6,278,927.00).
+    - **Finalizadas:** 25 obras (USD 1,937,687.94).
+    - **Suspendidas:** 7 obras (USD 5,588,300.00).
+    - **Total Catálogo Maestro:** 221 obras.
+  * **Semáforos de Cartera Activa:**
+    - **En Plazo:** 82 obras.
+    - **Por Vencer:** 5 obras.
+    - **Vencidos:** 10 obras.
+    - **Total Semáforos Activos:** 97 obras.
+  * **Ponderación Médica:** Todas las factibilidades cuentan con criticidad médica establecida (Banner de Dirección Médica con 0 pendientes, oculto automáticamente).
+
+### 15.2. Sincronización Multi-Pestaña Reactiva en Tiempo Real
+- **Arquitectura de Sincronización:**
+  Se implementó una doble vía de comunicación entre ventanas concurrentes:
+  1. `BroadcastChannel('sigo_sync_channel')`: Comunicación directa entre pestañas del mismo origen en navegadores modernos. Emite y recibe mensajes como `OBRAS_UPDATED`, `USERS_UPDATED`, `DATABASE_IMPORTED`, `CANONICAL_RESET`.
+  2. `window.addEventListener('storage')`: Respaldo reactivo para navegadores o entornos donde el canal broadcast no se encuentre disponible o para eventos generados en otras pestañas.
+- **Mecanismo de Actualización Silenciosa:**
+  Cuando el usuario efectúa un cambio en una ventana (ej. creación, edición, avance de etapa, asignación presupuestaria o importación de base de datos), el `DataStore` emite el evento correspondiente. Todas las demás pestañas abiertas recargan la memoria desde el `localStorage` y refrescan inmediatamente sus tablas, métricas, filtros y dashboards sin requerir recarga manual de página (`F5`).
+
+### 15.3. Módulo de Respaldo, Importación y Restablecimiento de Base de Datos
+- **Acceso Administrativo Unificado:**
+  Se incorporó el botón **"Base de Datos"** tanto en la barra superior (topbar) para el perfil Administrador como en el pie del panel de Usuarios.
+- **Modal de Gestión Integral (`#modalDatabaseBackup`):**
+  Ofrece 3 herramientas fundamentales:
+  1. **Descargar Copia de Seguridad JSON:** Exporta un archivo fechado (`sigo_backup_YYYY-MM-DD_HH-mm.json`) con la estructura íntegra de obras, usuarios, metadatos, timestamp y versión del esquema.
+  2. **Restaurar Copia de Seguridad:** Permite seleccionar cualquier archivo JSON de respaldo, verifica la integridad estructural de las obras y usuarios, actualiza el almacenamiento y notifica en tiempo real a todas las ventanas abiertas.
+  3. **Restablecer a Valores Oficiales de Fábrica:** Botón con confirmación de seguridad que purga cualquier residuo desfasado y restablece la base canónica oficial del hospital (97 proyectos activos, USD 30,569,529.29).
+
+
 
 
