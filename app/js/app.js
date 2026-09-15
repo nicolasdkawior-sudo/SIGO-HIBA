@@ -5212,8 +5212,8 @@ const App = {
     item.responsable_id = newResponsableId || null;
     item.proveedor = newProveedor;
     item.fecha_inicio_etapa = newFechaInicio;
-    const isFact = (item.estado === 'Estudio de Factibilidad' || item.estado === 'Ante Proyecto');
-    if (isFact) {
+    const isFactStage = (item.estado === 'Estudio de Factibilidad' || item.estado === 'Ante Proyecto');
+    if (isFactStage) {
       item.fecha_fin_etapa = null;
       item.fecha_fin_obra = null;
       item.requiere_plazo_etapa = false;
