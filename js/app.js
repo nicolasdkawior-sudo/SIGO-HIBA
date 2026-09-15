@@ -1794,7 +1794,6 @@ const App = {
     const inputOrdenCompra = document.getElementById('transOrdenCompraInput');
     const inputMontoAdj = document.getElementById('transMontoAdjudicadoInput');
     const inputAnticipo = document.getElementById('transAnticipoPorcentajeInput');
-    const inputPlazo = document.getElementById('transPlazoMesesInput');
 
     if (containerAdjudicacion) {
       if (currentStage === 'En licitación' && nextStage === 'Obras en Curso') {
@@ -1804,7 +1803,6 @@ const App = {
         const defMontoAdj = item.monto_adjudicado_usd || item.monto_total_usd || item.monto_obra_usd || '';
         if (inputMontoAdj) inputMontoAdj.value = defMontoAdj > 0 ? defMontoAdj : '';
         if (inputAnticipo) inputAnticipo.value = (item.anticipo_porcentaje !== undefined && item.anticipo_porcentaje !== null) ? item.anticipo_porcentaje : '';
-        if (inputPlazo) inputPlazo.value = item.plazo_meses || 10;
         this.handleAdjudicacionInputChange();
       } else {
         containerAdjudicacion.classList.add('hidden');
@@ -1818,28 +1816,16 @@ const App = {
   handleAdjudicacionInputChange() {
     const inputMonto = document.getElementById('transMontoAdjudicadoInput');
     const inputAnticipo = document.getElementById('transAnticipoPorcentajeInput');
-    const inputPlazo = document.getElementById('transPlazoMesesInput');
     const badge = document.getElementById('transAnticipoCalculadoBadge');
-    const elAnticipoUSD = document.getElementById('transDesgloseAnticipoUSD');
-    const elSaldoUSD = document.getElementById('transDesgloseSaldoUSD');
 
     const monto = DataStore.parseCurrency(inputMonto ? inputMonto.value : 0) || 0;
-    const pct = Math.min(100, Math.max(0, parseFloat(inputAnticipo ? inputAnticipo.value : 0) || 0));
-    const plazo = parseInt(inputPlazo ? inputPlazo.value : 0, 10) || 10;
+    const rawVal = inputAnticipo ? inputAnticipo.value : '';
+    const pct = (rawVal === '' || isNaN(parseFloat(rawVal))) ? 0 : Math.min(100, Math.max(0, parseFloat(rawVal)));
 
     const anticipoUSD = Math.round((monto * (pct / 100)) * 100) / 100;
-    const saldoUSD = Math.round((monto - anticipoUSD) * 100) / 100;
 
     if (badge) {
       badge.innerText = `${pct}% = USD ${DataStore.formatUSD(anticipoUSD)}`;
-    }
-    if (elAnticipoUSD) {
-      elAnticipoUSD.innerText = `USD ${DataStore.formatUSD(anticipoUSD)} (${pct}% en Mes 1)`;
-    }
-    if (elSaldoUSD) {
-      const mesesRestantes = Math.max(1, plazo - 1);
-      const cuotaMensual = Math.round((saldoUSD / mesesRestantes) * 100) / 100;
-      elSaldoUSD.innerText = `USD ${DataStore.formatUSD(saldoUSD)} (${mesesRestantes} meses de USD ${DataStore.formatUSD(cuotaMensual)} c/u)`;
     }
   },
 
@@ -1946,7 +1932,6 @@ const App = {
       const ordenCompra = (document.getElementById('transOrdenCompraInput')?.value || '').trim();
       const montoAdj = DataStore.parseCurrency(document.getElementById('transMontoAdjudicadoInput')?.value) || 0;
       const rawAnticipo = document.getElementById('transAnticipoPorcentajeInput')?.value;
-      const plazoMeses = parseInt(document.getElementById('transPlazoMesesInput')?.value, 10) || 0;
 
       if (!proveedor) {
         alert("⚠️ Debes indicar la Razón Social del Proveedor Adjudicado para avanzar a 'Obras en Curso'.");
@@ -1976,7 +1961,7 @@ const App = {
       extraData.numero_oc = ordenCompra;
       extraData.montoAdjudicado = montoAdj;
       extraData.porcentajeAnticipo = anticipoPct;
-      if (plazoMeses > 0) extraData.plazoMeses = plazoMeses;
+      // Nota: El plazo de la etapa en curso es obligación del proyectista al asumir la obra adjudicada
     }
 
     const res = DataStore.confirmAndAdvanceStage(id, compDate, null, notes, extraData);

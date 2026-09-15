@@ -821,17 +821,17 @@
   </div>
 
   <!-- ================= MODAL: TRANSICIÓN SECUENCIAL AUTOMATIZADA ================= -->
-  <div id="modalTransition" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-100 text-xs">
-      <div class="bg-blue-600 text-white px-5 py-3.5 flex items-center justify-between font-bold">
+  <div id="modalTransition" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 modal-backdrop overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-slate-100 text-xs flex flex-col max-h-[90vh] overflow-hidden my-auto">
+      <div class="bg-blue-600 text-white px-5 py-3.5 flex items-center justify-between font-bold shrink-0">
         <div class="flex items-center space-x-2">
           <i data-lucide="check-circle-2" class="w-4 h-4"></i>
           <span>Finalizar Etapa y Avanzar Obra</span>
         </div>
-        <button onclick="App.closeTransitionModal()"><i data-lucide="x" class="w-4 h-4"></i></button>
+        <button onclick="App.closeTransitionModal()" class="text-white hover:text-slate-200 transition p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
       </div>
 
-      <div class="p-5 space-y-4">
+      <div class="p-5 space-y-4 overflow-y-auto flex-1 overscroll-contain">
         <input type="hidden" id="transItemId">
         <div>
           <div class="text-slate-400 text-[11px] font-semibold">Proyecto</div>
@@ -920,41 +920,22 @@
               </div>
             </div>
             <div>
-              <label class="block font-bold text-slate-700 mb-1">Plazo de Ejecución (Meses):</label>
-              <input type="number" min="1" max="60" id="transPlazoMesesInput" oninput="App.handleAdjudicacionInputChange()" placeholder="Ej: 10" class="w-full border border-slate-300 rounded-lg p-2 font-mono font-bold text-slate-900 bg-white">
+              <div class="flex items-center justify-between mb-1">
+                <label class="block font-bold text-slate-700">Anticipo en OC (%) <span class="text-red-500">*</span>:</label>
+                <span id="transAnticipoCalculadoBadge" class="text-[10px] font-mono font-bold text-emerald-700 bg-white px-1.5 py-0.5 rounded border border-emerald-200">0% = USD 0</span>
+              </div>
+              <div class="relative">
+                <input type="number" step="0.1" min="0" max="100" id="transAnticipoPorcentajeInput" oninput="App.handleAdjudicacionInputChange()" placeholder="Ej: 30 (o 0 si no lleva)" class="w-full pr-8 border-2 border-emerald-500 rounded-lg p-2 font-mono font-bold text-emerald-900 bg-white">
+                <span class="absolute inset-y-0 right-0 pr-3 flex items-center font-bold text-slate-400 text-xs">%</span>
+              </div>
             </div>
           </div>
 
-          <!-- Campo de Anticipo en Orden de Compra -->
-          <div class="bg-white p-3 rounded-lg border border-emerald-300 shadow-2xs space-y-2">
-            <div class="flex items-center justify-between">
-              <label class="block font-bold text-slate-800 text-xs flex items-center space-x-1">
-                <span>Porcentaje de Anticipo en Orden de Compra (%) <span class="text-red-500">*</span>:</span>
-              </label>
-              <span id="transAnticipoCalculadoBadge" class="text-[11px] font-mono font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">0% = USD 0</span>
+          <div class="p-2.5 bg-blue-50 border border-blue-200 rounded-lg text-[11px] text-blue-800 flex items-start space-x-2">
+            <i data-lucide="info" class="w-4 h-4 text-blue-600 shrink-0 mt-0.5"></i>
+            <div>
+              Al confirmar la adjudicación, la obra <strong>retornará automáticamente al proyectista original</strong> en estado <strong>Obras en Curso</strong>, quien tendrá la obligación de definir el plazo de ejecución.
             </div>
-            <div class="relative">
-              <input type="number" step="0.1" min="0" max="100" id="transAnticipoPorcentajeInput" oninput="App.handleAdjudicacionInputChange()" placeholder="Ej: 30 (cargar 0 si no lleva anticipo)" class="w-full pr-8 border-2 border-emerald-500 rounded-lg p-2 font-mono font-bold text-emerald-900 bg-white">
-              <span class="absolute inset-y-0 right-0 pr-3 flex items-center font-bold text-slate-400 text-xs">%</span>
-            </div>
-            <!-- Desglose dinámico del flujo estimado -->
-            <div id="transAnticipoDesgloseNotice" class="text-[11px] text-slate-600 bg-slate-50 p-2 rounded border border-slate-200 flex flex-col gap-0.5">
-              <div class="flex justify-between">
-                <span>Anticipo Inicial (Mes 1):</span>
-                <strong id="transDesgloseAnticipoUSD" class="text-emerald-800 font-mono">USD 0</strong>
-              </div>
-              <div class="flex justify-between">
-                <span>Saldo a Distribuir en Meses Restantes:</span>
-                <strong id="transDesgloseSaldoUSD" class="text-blue-800 font-mono">USD 0</strong>
-              </div>
-            </div>
-            <p class="text-[10px] text-emerald-800 font-medium">
-              💡 El anticipo impacta en el mes 1 y el saldo restante se distribuye en cuotas mensuales iguales durante los meses restantes de ejecución.
-            </p>
-          </div>
-
-          <div class="p-2 bg-blue-50 border border-blue-200 rounded text-[11px] text-blue-800">
-            🔁 Al confirmar la adjudicación, la obra <strong>retornará automáticamente al proyectista original</strong> en estado <strong>Obras en Curso</strong>.
           </div>
         </div>
 
@@ -981,7 +962,7 @@
         </div>
       </div>
 
-      <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-end space-x-2">
+      <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-end space-x-2 shrink-0 sticky bottom-0 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <button onclick="App.closeTransitionModal()" class="px-3 py-1.5 border border-slate-300 rounded-lg font-semibold text-slate-600 hover:bg-slate-100">Cancelar</button>
         <button onclick="App.confirmTransition()" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-2xs transition">
           Confirmar y Avanzar
@@ -991,9 +972,9 @@
   </div>
 
   <!-- ================= MODAL: DEFINIR PLAZO ESTIMADO DE ETAPA (OBLIGATORIO) ================= -->
-  <div id="modalDefinirPlazoEtapa" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 modal-backdrop">
-    <div class="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200 animate-in fade-in zoom-in duration-150">
-      <div class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white px-5 py-4 flex items-center justify-between">
+  <div id="modalDefinirPlazoEtapa" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 modal-backdrop overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200 animate-in fade-in zoom-in duration-150 flex flex-col max-h-[90vh] my-auto">
+      <div class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white px-5 py-4 flex items-center justify-between shrink-0">
         <div class="flex items-center space-x-2.5">
           <div class="p-2 bg-white/10 rounded-lg">
             <i data-lucide="calendar-clock" class="w-5 h-5 text-blue-200"></i>
@@ -1008,7 +989,7 @@
         </button>
       </div>
 
-      <div class="p-5 space-y-4">
+      <div class="p-5 space-y-4 overflow-y-auto flex-1 overscroll-contain">
         <input type="hidden" id="modalPlazoItemId">
 
         <!-- Ficha de la Obra y Responsable -->
@@ -1056,7 +1037,7 @@
         </div>
       </div>
 
-      <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-end space-x-2">
+      <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-end space-x-2 shrink-0 sticky bottom-0 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <button onclick="App.closeDefinirPlazoModal()" class="px-3.5 py-1.5 border border-slate-300 rounded-lg font-semibold text-xs text-slate-600 hover:bg-slate-100">
           Cancelar
         </button>

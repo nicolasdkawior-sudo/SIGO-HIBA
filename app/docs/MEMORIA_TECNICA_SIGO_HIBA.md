@@ -477,6 +477,37 @@ Para garantizar máxima transparencia y certeza entre todas las vistas de SIGO H
   2. **Restaurar Copia de Seguridad:** Permite seleccionar cualquier archivo JSON de respaldo, verifica la integridad estructural de las obras y usuarios, actualiza el almacenamiento y notifica en tiempo real a todas las ventanas abiertas.
   3. **Restablecer a Valores Oficiales de Fábrica:** Botón con confirmación de seguridad que purga cualquier residuo desfasado y restablece la base canónica oficial del hospital (97 proyectos activos, USD 30,569,529.29).
 
+---
+
+## 16. PERFIL DE COMPRAS Y LICITACIONES: ADJUDICACIÓN DE COMPULSA SIN ASIGNACIÓN DE PLAZO DE OBRA, SUPRESIÓN DE EXPLICACIÓN DE CASHFLOW Y VISTA MODAL CON SCROLL ADAPTABLE
+
+### 16.1. Retiro de la Asignación de Plazo de Siguiente Etapa en el Perfil Comprador
+- **Fundamentación Operativa:**
+  Al concluir el proceso licitatorio, el rol Comprador (`usr-licitaciones`) es responsable de consolidar los datos comerciales de la compulsa:
+  1. Razón Social del Proveedor Adjudicado.
+  2. Número Oficial de Orden de Compra (OC).
+  3. Monto Total Adjudicado (USD).
+  4. Porcentaje de Anticipo en Orden de Compra (%).
+- **Obligación del Proyectista:**
+  Se retiró del formulario del comprador cualquier opción o campo para fijar el plazo de ejecución en meses de la siguiente etapa. La determinación del plazo y cronograma de obra es competencia técnica exclusiva del **Proyectista Original**, quien retoma la titularidad de la obra al pasar a `Obras en Curso`.
+- **Comportamiento Sistémico:**
+  Al adjudicarse la compulsa, la obra ingresa a `Obras en Curso` con `requiere_plazo_etapa = true` y `fecha_fin_etapa = null`. El proyectista responsable (o la administración) debe ingresar formalmente la fecha límite estimada (`modalDefinirPlazoEtapa`) para habilitar el seguimiento del cronograma y los semáforos de avance.
+
+### 16.2. Supresión de Explicaciones Teóricas de Cash Flow en la Carga de OC
+- Se eliminó el bloque explicativo sobre el impacto contable del anticipo en el primer mes y prorrateo del saldo en cuotas mensuales, así como la tarjeta de desglose mes a mes dentro del modal de adjudicación.
+- El comprador dispone únicamente del selector de porcentaje de anticipo con un badge numérico dinámico y conciso (`% = USD X`), simplificando la carga operativa sin elementos que saturen la pantalla ni generen redundancias visuales.
+
+### 16.3. Arquitectura de Scroll y Botonera Fija en Modales (`max-h-[90vh]` y `sticky bottom-0`)
+- **Problema Detectado:** En pantallas de notebooks o monitores con resoluciones verticales reducidas (ej. 768px u 800px), los modales con múltiples campos sobrepasaban el alto de la ventana, provocando que los botones inferiores de "Confirmar y Avanzar" o "Cancelar" quedaran fuera de pantalla e inaccesibles.
+- **Solución Implementada:**
+  1. Fondo con scroll de seguridad: `modal-backdrop overflow-y-auto`.
+  2. Contenedor con altura máxima restringida: `flex flex-col max-h-[90vh] overflow-hidden`.
+  3. Cabecera fija: `shrink-0`.
+  4. Cuerpo del formulario con desplazamiento independiente: `flex-1 overflow-y-auto overscroll-contain`.
+  5. Pie de modal con botonera anclada y sombra de separación: `shrink-0 sticky bottom-0 z-10 bg-slate-50 border-t border-slate-200`.
+- **Garantía Operativa:** Los botones de acción permanecen permanentemente visibles e interactivos en cualquier dispositivo o resolución, permitiendo un desplazamiento fluido por el formulario.
+
+
 
 
 

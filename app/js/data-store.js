@@ -1392,6 +1392,14 @@ const DataStore = {
       item.fecha_fin_compulsa = cleanDate;
     } else if (item.estado === 'Obras en Curso') {
       item.fecha_fin_obra = cleanDate;
+      if (item.fecha_inicio_etapa) {
+        const startParts = item.fecha_inicio_etapa.split('-');
+        const endParts = cleanDate.split('-');
+        if (startParts.length === 3 && endParts.length === 3) {
+          const delta = (parseInt(endParts[0], 10) - parseInt(startParts[0], 10)) * 12 + (parseInt(endParts[1], 10) - parseInt(startParts[1], 10)) + 1;
+          if (delta > 0) item.plazo_meses = delta;
+        }
+      }
     }
 
     const uName = this.currentUser.nombre;

@@ -634,9 +634,9 @@ var obraLicTest = {
   monto_total_usd: 500000,
   responsable: 'Lic. Mariana López',
   responsable_id: 'usr-licitaciones',
-  proyectista_id: 'usr-martin',
-  proyectista_nombre: 'Arq. Martín Gómez',
-  proyectista_dependencia: 'Departamento de Arquitectura & Obras Civiles',
+  proyectista_id: 'usr-palmioli',
+  proyectista_nombre: 'Arq. Palmioli (PM Central)',
+  proyectista_dependencia: 'Departamento de Proyectos Central',
   prioridad_tecnica: 4,
   prioridad_medica: 4,
   prioridad_final: 4,
@@ -681,13 +681,12 @@ var resNoAnticipo = DataStore.confirmAndAdvanceStage(obraLicTest.id, '2026-09-14
 });
 assert("Bloqueado si no se ingresa el Porcentaje de Anticipo en OC", resNoAnticipo.success === false && resNoAnticipo.msg.indexOf("Porcentaje de Anticipo") !== -1);
 
-// 12.6 Adjudicación exitosa con todos los campos obligatorios completos
+// 12.6 Adjudicación exitosa con todos los campos obligatorios completos (el comprador no establece el plazo de la siguiente etapa)
 var resAdjSuccess = DataStore.confirmAndAdvanceStage(obraLicTest.id, '2026-09-14', null, 'Adjudicación aprobada por Comisión', {
   proveedor: 'Techint Ingeniería y Construcción S.A.',
   ordenCompra: 'OC-2026-8899',
   montoAdjudicado: 485000,
-  anticipoPorcentaje: 30,
-  plazoMeses: 10
+  anticipoPorcentaje: 30
 });
 
 assert("Adjudicación exitosa a 'Obras en Curso'", resAdjSuccess.success === true && resAdjSuccess.nextStage === 'Obras en Curso');
@@ -697,11 +696,24 @@ assert("Persistencia correcta de Orden de Compra (numero_oc)", obraLicTest.numer
 assert("Persistencia correcta de Monto Adjudicado USD", obraLicTest.monto_adjudicado_usd === 485000);
 assert("Persistencia correcta de Porcentaje de Anticipo (30%)", obraLicTest.anticipo_porcentaje === 30);
 assert("Cálculo preciso del Anticipo USD (30% de 485.000 = 145.500)", obraLicTest.anticipo_monto_usd === 145500);
-assert("Plazo de obra asignado (10 meses)", obraLicTest.plazo_meses === 10);
-assert("La obra en curso retorna al proyectista original (Arq. Martín Gómez)", obraLicTest.responsable === 'Arq. Martín Gómez');
+assert("La obra en curso retorna al proyectista original (Arq. Palmioli)", obraLicTest.responsable === 'Arq. Palmioli (PM Central)');
+assert("La obra en curso nace con requiere_plazo_etapa true para el proyectista", obraLicTest.requiere_plazo_etapa === true);
+assert("La obra en curso nace con fecha_fin_etapa null (debe fijarla el proyectista)", obraLicTest.fecha_fin_etapa === null);
 assert("El historial incluye el registro con el número de OC", obraLicTest.historial[0].observaciones.indexOf('OC N° OC-2026-8899') !== -1);
 assert("En Obras en Curso el Comprador ya NO puede certificar avance (canUserAdvanceItem es false)", DataStore.canUserAdvanceItem(obraLicTest) === false);
 
+// 12.7 El Proyectista asume la obra y define el plazo de ejecución obligatorio
+var authProyectista = DataStore.authenticate('palmioli', 'Admin2025!');
+DataStore.currentUser = authProyectista.user;
+assert("Login exitoso del Proyectista original (Arq. Palmioli)", authProyectista.success && DataStore.currentUser.id === 'usr-palmioli');
+assert("El Proyectista PUEDE certificar y definir plazo de su obra en curso", DataStore.canUserAdvanceItem(obraLicTest) === true);
+
+var resDefPlazo = DataStore.definirPlazoEtapa(obraLicTest.id, '2027-03-31', 'Plazo de ejecución de 7 meses establecido por el proyectista');
+assert("Definición de plazo de obra exitosa por el Proyectista", resDefPlazo.success === true);
+var itemDefinido = DataStore.getItemById(obraLicTest.id);
+assert("Fecha límite de obra en curso registrada en 2027-03-31", itemDefinido.fecha_fin_etapa === '2027-03-31');
+assert("requiere_plazo_etapa pasa a false tras definir el plazo", itemDefinido.requiere_plazo_etapa === false);
+assert("Plazo en meses calculado automáticamente a 7 meses", itemDefinido.plazo_meses === 7);
 // Limpieza de obras temporales de la Fase 12
 DataStore.items = DataStore.items.filter(function(it) {
   return it.id !== obraProyTest.id && it.id !== obraLicTest.id;
