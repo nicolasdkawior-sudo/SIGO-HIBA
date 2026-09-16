@@ -2777,6 +2777,13 @@ const DataStore = {
   },
 
   // ================= CONSOLIDADO DE CASH FLOW (SOLO OBRAS EN CURSO) =================
+  matchesSanJustoUnified(userDep, itemDep) {
+    if (!userDep || !itemDep) return false;
+    const u = String(userDep).toLowerCase();
+    const d = String(itemDep).toLowerCase();
+    return u.includes('san justo') && d.includes('san justo');
+  },
+
   getCashflowSummary(tipoFilter = 'TODOS', partidaFilter = 'todas', searchQuery = '', refDate = new Date()) {
     const all = this.items || [];
     const accountingInfo = this.getAccountingYearInfo(refDate);
