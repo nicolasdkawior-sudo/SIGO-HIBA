@@ -625,7 +625,7 @@ const DataStore = {
           }
         });
 
-        this.persist();
+        this.persist(false);
       }
     }
 
@@ -746,7 +746,7 @@ const DataStore = {
         }
       });
       if (updatedAny) {
-        this.persist();
+        this.persist(false);
       }
     }
 
@@ -782,10 +782,12 @@ const DataStore = {
             const cloudStr = JSON.stringify(cloudItems);
             if (currentStr !== cloudStr) {
               this.items = cloudItems;
-              this.persist();
+              this.persist(false);
               return true;
             }
           }
+        } else if ((!cloudData || cloudData.length === 0) && this.items && this.items.length > 0) {
+          SupabaseManager.pushAllObrasToCloud(this.items);
         }
       } catch (e) {
         console.error("Error en syncWithCloud:", e);
@@ -794,14 +796,14 @@ const DataStore = {
     return false;
   },
 
-  persist() {
+  persist(pushToCloud = false) {
     try {
       localStorage.setItem('sigo_obras_data', JSON.stringify(this.items));
       localStorage.setItem('sigo_canonical_version', this.CANONICAL_VERSION);
       if (typeof broadcastDataChange === 'function') {
         broadcastDataChange('DATA_PERSISTED');
       }
-      if (typeof SupabaseManager !== 'undefined' && SupabaseManager.isConfigured && typeof SupabaseManager.pushAllObrasToCloud === 'function') {
+      if (pushToCloud && typeof SupabaseManager !== 'undefined' && SupabaseManager.isConfigured && typeof SupabaseManager.pushAllObrasToCloud === 'function') {
         SupabaseManager.pushAllObrasToCloud(this.items);
       }
     } catch (e) {
@@ -1181,7 +1183,7 @@ const DataStore = {
     };
 
     this.items.unshift(newItem);
-    this.persist();
+    this.persist(true);
 
     this.addAuditLog({
       tipo: 'CREACION_OBRA',
@@ -3314,7 +3316,7 @@ const DataStore = {
     } else {
       this.items.unshift(item);
     }
-    this.persist();
+    this.persist(true);
 
     if (SupabaseManager.isConfigured) {
       SupabaseManager.upsertObraInCloud(item);
@@ -3346,7 +3348,7 @@ const DataStore = {
     });
 
     const deletedItem = this.items.splice(idx, 1)[0];
-    this.persist();
+    this.persist(true);
 
     if (typeof SupabaseManager !== 'undefined' && SupabaseManager.isConfigured && typeof SupabaseManager.deleteObraInCloud === 'function') {
       SupabaseManager.deleteObraInCloud(itemId);
