@@ -3062,145 +3062,170 @@ const App = {
       <!-- ========================================================================= -->
       <!-- PÁGINA 1: RESUMEN EJECUTIVO & ESTADO GENERAL DE CARTERA                   -->
       <!-- ========================================================================= -->
-      <div class="report-page report-page-1 bg-white p-5 sm:p-6 rounded-xl border border-slate-200 shadow-sm print:border-none print:shadow-none print:p-0">
+      <div class="report-page report-page-1 bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-md print:border-none print:shadow-none print:p-0">
         
         <!-- MEMBRETE OFICIAL PÁGINA 1 -->
-        <div class="border-b-2 border-slate-900 pb-3 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div class="flex items-center space-x-3.5">
-            <img src="img/logo-hospital-italiano-icon.png" alt="Hospital Italiano" class="w-12 h-12 object-contain shrink-0">
+        <div class="border-b-2 border-slate-900 pb-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-center space-x-4">
+            <div class="p-2 bg-slate-50 rounded-2xl border border-slate-200/80 shadow-xs shrink-0">
+              <img src="img/logo-hospital-italiano-icon.png" alt="Hospital Italiano" class="w-12 h-12 object-contain">
+            </div>
             <div>
-              <h1 class="text-base font-black text-slate-900 tracking-tight leading-none uppercase">Hospital Italiano de Buenos Aires</h1>
+              <div class="flex items-center space-x-2">
+                <h1 class="text-lg font-black text-slate-900 tracking-tight leading-none uppercase">Hospital Italiano de Buenos Aires</h1>
+              </div>
               <h2 class="text-xs font-bold text-blue-900 mt-1">Dirección de Infraestructura y Obras • Dirección General</h2>
-              <div class="text-[10px] text-slate-500 font-mono mt-0.5">SISTEMA INTEGRAL DE GESTIÓN DE OBRAS E INVERSIONES (SIGO)</div>
+              <div class="text-[10px] text-slate-500 font-mono mt-0.5 tracking-wide">SISTEMA INTEGRAL DE GESTIÓN DE OBRAS E INVERSIONES (SIGO HIBA)</div>
             </div>
           </div>
           <div class="sm:text-right text-xs">
-            <div class="flex sm:justify-end items-center space-x-1.5 mb-0.5">
-              <span class="bg-rose-100 text-rose-800 border border-rose-300 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">Confidencial</span>
-              <span class="bg-blue-100 text-blue-900 text-[9px] font-bold px-2 py-0.5 rounded-full">Pág 1 de 3 • Resumen General</span>
+            <div class="flex sm:justify-end items-center space-x-2 mb-1">
+              <span class="bg-rose-50 text-rose-700 border border-rose-200/80 text-[10px] font-extrabold px-3 py-0.5 rounded-full uppercase tracking-wider">Confidencial</span>
+              <span class="bg-blue-50 text-blue-900 border border-blue-200/80 text-[10px] font-bold px-3 py-0.5 rounded-full">Pág 1 de 3 • Resumen General</span>
             </div>
             <div class="text-[11px] text-slate-700">Fecha de Emisión: <strong>${report.fechaEmision}</strong></div>
             <div class="text-[10px] text-slate-500">Emitido por: <strong>${report.emisor}</strong></div>
           </div>
         </div>
 
-        <!-- 4 TARJETAS KPI DE DIRECCIÓN -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4 report-page-card">
+        <!-- 4 TARJETAS KPI DE DIRECCIÓN ESTILO EXECUTIVE ANALYTICS -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 report-page-card">
           
           <!-- KPI 1: Obras en Curso -->
-          <div class="bg-gradient-to-br from-blue-50 to-indigo-50/70 border border-blue-200 rounded-xl p-3.5 shadow-2xs">
-            <div class="flex items-center justify-between text-blue-900 mb-1">
-              <span class="font-bold text-[10px] uppercase tracking-wider">Obras en Ejecución</span>
-              <i data-lucide="activity" class="w-4 h-4 text-blue-600"></i>
-            </div>
-            <div class="text-xl font-black text-slate-900">${report.obrasEnCurso.total} <span class="text-xs font-semibold text-slate-500">obras</span></div>
-            <div class="text-xs font-bold text-blue-800 mt-0.5">US$ ${fmt(report.obrasEnCurso.montoTotalUSD)}</div>
-            <div class="mt-2 flex items-center justify-between text-[10px] text-slate-500">
-              <span>Avance Físico Promedio:</span>
-              <strong class="text-blue-900">${report.obrasEnCurso.avancePromedio}%</strong>
-            </div>
-            <div class="w-full bg-blue-200 rounded-full h-1.5 mt-1 overflow-hidden">
-              <div class="bg-blue-600 h-1.5 rounded-full" style="width: ${Math.min(100, report.obrasEnCurso.avancePromedio)}%"></div>
-            </div>
-          </div>
-
-          <!-- KPI 2: Cartera en Estudio de Factibilidad (Total 94) -->
-          <div class="bg-gradient-to-br from-amber-50 to-orange-50/70 border border-amber-200 rounded-xl p-3.5 shadow-2xs">
-            <div class="flex items-center justify-between text-amber-900 mb-1">
-              <span class="font-bold text-[10px] uppercase tracking-wider">Estudios de Factibilidad</span>
-              <i data-lucide="clock" class="w-4 h-4 text-amber-600"></i>
-            </div>
-            <div class="text-xl font-black text-slate-900">${report.factibilidad ? report.factibilidad.total : report.factibilidadSinPartida.total} <span class="text-xs font-semibold text-slate-500">en estudio</span></div>
-            <div class="text-xs font-bold text-amber-800 mt-0.5">US$ ${fmt(report.factibilidad ? report.factibilidad.montoTotalUSD : report.factibilidadSinPartida.montoTotalUSD)} <span class="text-[9px] font-normal text-slate-500">(solicitado total)</span></div>
-            <div class="mt-2 text-[10px] space-y-0.5 border-t border-amber-200/60 pt-1">
-              <div class="flex justify-between text-amber-900">
-                <span>Sin Partida (Pendiente):</span>
-                <strong>${report.factibilidad ? report.factibilidad.sinPartidaCount : report.factibilidadSinPartida.total} (US$ ${fmt(report.factibilidad ? report.factibilidad.sinPartidaUSD : report.factibilidadSinPartida.montoTotalUSD)})</strong>
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs hover:shadow-md transition">
+            <div class="flex items-center justify-between text-slate-700 mb-2">
+              <span class="font-bold text-[10px] text-slate-500 uppercase tracking-wider">Obras en Ejecución</span>
+              <div class="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+                <i data-lucide="activity" class="w-4 h-4"></i>
               </div>
-              <div class="flex justify-between text-emerald-800">
-                <span>Con Partida Asignada:</span>
-                <strong>${report.factibilidad ? report.factibilidad.conPartidaCount : 0} (US$ ${fmt(report.factibilidad ? report.factibilidad.conPartidaUSD : 0)})</strong>
+            </div>
+            <div class="text-2xl font-black text-slate-900 leading-none">${report.obrasEnCurso.total} <span class="text-xs font-bold text-slate-400">obras</span></div>
+            <div class="text-xs font-bold text-blue-800 mt-1.5 font-mono">US$ ${fmt(report.obrasEnCurso.montoTotalUSD)}</div>
+            
+            <div class="mt-3 pt-2.5 border-t border-slate-100">
+              <div class="flex items-center justify-between text-[11px]">
+                <span class="inline-flex items-center text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60">
+                  <i data-lucide="arrow-up-right" class="w-3 h-3 mr-0.5"></i> ${report.obrasEnCurso.avancePromedio}% avance
+                </span>
+                <span class="text-[10px] text-slate-400 font-medium">Promedio físico</span>
+              </div>
+              <div class="w-full bg-slate-100 rounded-full h-1.5 mt-2 overflow-hidden">
+                <div class="bg-gradient-to-r from-blue-600 to-indigo-600 h-1.5 rounded-full" style="width: ${Math.min(100, report.obrasEnCurso.avancePromedio)}%"></div>
               </div>
             </div>
           </div>
 
-          <!-- KPI 3: Desvíos Presupuestarios en Partidas -->
-          <div class="bg-gradient-to-br from-rose-50 to-pink-50/70 border border-rose-200 rounded-xl p-3.5 shadow-2xs">
-            <div class="flex items-center justify-between text-rose-900 mb-1">
-              <span class="font-bold text-[10px] uppercase tracking-wider">Desvíos Presupuestarios</span>
-              <i data-lucide="trending-down" class="w-4 h-4 text-rose-600"></i>
+          <!-- KPI 2: Cartera en Estudio de Factibilidad -->
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs hover:shadow-md transition">
+            <div class="flex items-center justify-between text-slate-700 mb-2">
+              <span class="font-bold text-[10px] text-slate-500 uppercase tracking-wider">Estudios de Factibilidad</span>
+              <div class="w-8 h-8 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600">
+                <i data-lucide="clock" class="w-4 h-4"></i>
+              </div>
             </div>
-            <div class="flex items-center justify-between">
+            <div class="text-2xl font-black text-slate-900 leading-none">${report.factibilidad ? report.factibilidad.total : report.factibilidadSinPartida.total} <span class="text-xs font-bold text-slate-400">en estudio</span></div>
+            <div class="text-xs font-bold text-amber-800 mt-1.5 font-mono">US$ ${fmt(report.factibilidad ? report.factibilidad.montoTotalUSD : report.factibilidadSinPartida.montoTotalUSD)}</div>
+            
+            <div class="mt-3 pt-2.5 border-t border-slate-100 text-[10px] space-y-1">
+              <div class="flex justify-between items-center text-amber-900 font-semibold">
+                <span class="flex items-center"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>Sin Partida:</span>
+                <strong class="font-mono bg-amber-50 text-amber-800 px-1.5 py-0.5 rounded border border-amber-200/60">${report.factibilidad ? report.factibilidad.sinPartidaCount : report.factibilidadSinPartida.total}</strong>
+              </div>
+              <div class="flex justify-between items-center text-emerald-900 font-semibold">
+                <span class="flex items-center"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>Con Partida:</span>
+                <strong class="font-mono bg-emerald-50 text-emerald-800 px-1.5 py-0.5 rounded border border-emerald-200/60">${report.factibilidad ? report.factibilidad.conPartidaCount : 0}</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- KPI 3: Desvíos Presupuestarios -->
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs hover:shadow-md transition">
+            <div class="flex items-center justify-between text-slate-700 mb-2">
+              <span class="font-bold text-[10px] text-slate-500 uppercase tracking-wider">Desvíos Presupuestarios</span>
+              <div class="w-8 h-8 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600">
+                <i data-lucide="trending-down" class="w-4 h-4"></i>
+              </div>
+            </div>
+            
+            <div class="flex items-baseline justify-between">
               <div>
-                <div class="text-sm font-black text-rose-700 leading-tight">-${fmt(report.partidasDesvios.totalDeficitUSD)} USD</div>
-                <div class="text-[10px] text-slate-500 font-medium">${report.partidasDesvios.totalSobreEjecutadas} partidas con déficit</div>
+                <div class="text-lg font-black text-rose-600 font-mono">-${fmt(report.partidasDesvios.totalDeficitUSD)} USD</div>
+                <div class="text-[10px] text-slate-400 font-medium">${report.partidasDesvios.totalSobreEjecutadas} en déficit</div>
               </div>
               <div class="text-right">
-                <div class="text-xs font-bold text-emerald-700 leading-tight">+${fmt(report.partidasDesvios.totalSuperavitUSD)} USD</div>
-                <div class="text-[10px] text-slate-500 font-medium">${report.partidasDesvios.totalSubEjecutadas} con remanente</div>
+                <div class="text-xs font-bold text-emerald-600 font-mono">+${fmt(report.partidasDesvios.totalSuperavitUSD)} USD</div>
+                <div class="text-[10px] text-slate-400 font-medium">${report.partidasDesvios.totalSubEjecutadas} remanente</div>
               </div>
             </div>
-            <div class="mt-2 text-[10px] text-slate-500 border-t border-rose-200/60 pt-1 flex justify-between">
-              <span>Partidas con ajuste requerido:</span>
-              <strong class="text-rose-900">${report.partidasDesvios.totalSobreEjecutadas + report.partidasDesvios.totalSubEjecutadas}</strong>
+
+            <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[10px]">
+              <span class="text-slate-500">Partidas con ajuste:</span>
+              <span class="font-bold bg-rose-50 text-rose-800 border border-rose-200/80 px-2 py-0.5 rounded-full font-mono">${report.partidasDesvios.totalSobreEjecutadas + report.partidasDesvios.totalSubEjecutadas}</span>
             </div>
           </div>
 
-          <!-- KPI 4: Obras Suspendidas (Capital Inmovilizado) -->
-          <div class="bg-gradient-to-br from-slate-100 to-slate-200/60 border border-slate-300 rounded-xl p-3.5 shadow-2xs">
-            <div class="flex items-center justify-between text-slate-700 mb-1">
-              <span class="font-bold text-[10px] uppercase tracking-wider">Obras Suspendidas</span>
-              <i data-lucide="pause-circle" class="w-4 h-4 text-slate-600"></i>
+          <!-- KPI 4: Obras Suspendidas -->
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs hover:shadow-md transition">
+            <div class="flex items-center justify-between text-slate-700 mb-2">
+              <span class="font-bold text-[10px] text-slate-500 uppercase tracking-wider">Obras Suspendidas</span>
+              <div class="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600">
+                <i data-lucide="pause-circle" class="w-4 h-4"></i>
+              </div>
             </div>
-            <div class="text-xl font-black text-slate-900">${report.obrasSuspendidas.total} <span class="text-xs font-semibold text-slate-500">en pausa</span></div>
-            <div class="text-xs font-bold text-slate-700 mt-0.5">US$ ${fmt(report.obrasSuspendidas.montoTotalUSD)}</div>
-            <div class="mt-2 text-[10px] bg-slate-200/80 text-slate-700 font-semibold px-2 py-0.5 rounded flex items-center space-x-1">
-              <i data-lucide="lock" class="w-3 h-3 text-slate-500 shrink-0"></i>
-              <span>Capital inmovilizado en cartera</span>
+            <div class="text-2xl font-black text-slate-900 leading-none">${report.obrasSuspendidas.total} <span class="text-xs font-bold text-slate-400">en pausa</span></div>
+            <div class="text-xs font-bold text-slate-700 mt-1.5 font-mono">US$ ${fmt(report.obrasSuspendidas.montoTotalUSD)}</div>
+            
+            <div class="mt-3 pt-2.5 border-t border-slate-100">
+              <div class="text-[10px] bg-slate-50 text-slate-600 border border-slate-200/70 font-semibold px-2.5 py-1 rounded-xl flex items-center space-x-1.5">
+                <i data-lucide="lock" class="w-3 h-3 text-slate-400 shrink-0"></i>
+                <span>Capital inmovilizado en cartera</span>
+              </div>
             </div>
           </div>
 
         </div>
 
-        <!-- 3 CUADRANTES DE CONTROL EJECUTIVO -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 report-page-card">
+        <!-- 2 CUADRANTES DE CONTROL EJECUTIVO REDISEÑADOS -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6 report-page-card">
 
-          <!-- CUADRANTE 1: OBRAS EN CURSO (EJECUCIÓN ACTIVA) -->
-          <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50 flex flex-col justify-between">
+          <!-- CUADRANTE 1: OBRAS EN CURSO -->
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
             <div>
-              <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200">
-                <h3 class="font-black text-xs text-slate-900 flex items-center space-x-1.5">
-                  <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+              <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
+                <h3 class="font-black text-xs text-slate-900 flex items-center space-x-2 uppercase tracking-wide">
+                  <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
                   <span>Obras en Ejecución Activa (${report.obrasEnCurso.total})</span>
                 </h3>
-                <span class="text-[10px] font-bold text-blue-700 font-mono">Total: US$ ${fmt(report.obrasEnCurso.montoTotalUSD)}</span>
+                <span class="text-[11px] font-bold text-blue-700 font-mono bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200/60">Total: US$ ${fmt(report.obrasEnCurso.montoTotalUSD)}</span>
               </div>
 
-              <div class="overflow-x-auto max-h-[200px] overflow-y-auto">
-                <table class="w-full text-[11px] text-left">
-                  <thead class="bg-slate-200/60 text-slate-600 font-bold sticky top-0">
+              <div class="overflow-x-auto max-h-[220px] overflow-y-auto">
+                <table class="w-full text-[11px] text-left border-collapse">
+                  <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-[9px] tracking-wider sticky top-0 border-b border-slate-200/80">
                     <tr>
-                      <th class="py-1 px-1.5">Cód</th>
-                      <th class="py-1 px-1.5">Proyecto & Proveedor</th>
-                      <th class="py-1 px-1.5">Sede</th>
-                      <th class="py-1 px-1.5 text-right">Inversión USD</th>
-                      <th class="py-1 px-1.5 text-center">Avance</th>
+                      <th class="py-2 px-2">Cód</th>
+                      <th class="py-2 px-2">Proyecto & Contratista</th>
+                      <th class="py-2 px-2">Sede</th>
+                      <th class="py-2 px-2 text-right">Inversión USD</th>
+                      <th class="py-2 px-2 text-center">Avance</th>
                     </tr>
                   </thead>
-                  <tbody class="divide-y divide-slate-200">
+                  <tbody class="divide-y divide-slate-100">
                     ${report.obrasEnCurso.items.length === 0 ? `
-                      <tr><td colspan="5" class="py-3 text-center text-slate-400">No hay obras en curso actualmente</td></tr>
+                      <tr><td colspan="5" class="py-4 text-center text-slate-400 font-medium">No hay obras en curso actualmente</td></tr>
                     ` : report.obrasEnCurso.items.slice(0, 6).map(item => `
-                      <tr class="hover:bg-white transition">
-                        <td class="py-1 px-1.5 font-mono font-bold text-blue-700">${item.id}</td>
-                        <td class="py-1 px-1.5">
-                          <div class="font-bold text-slate-800 max-w-[170px] truncate" title="${item.nombre}">${item.nombre}</div>
-                          <div class="text-[9px] text-slate-500 truncate">${item.proveedor || 'Sin adjudicar'}</div>
+                      <tr class="hover:bg-slate-50/80 transition">
+                        <td class="py-2 px-2 font-mono font-bold text-blue-700">${item.id}</td>
+                        <td class="py-2 px-2">
+                          <div class="font-bold text-slate-900 max-w-[170px] truncate" title="${item.nombre}">${item.nombre}</div>
+                          <div class="text-[9px] text-slate-400 truncate">${item.proveedor || 'Sin adjudicar'}</div>
                         </td>
-                        <td class="py-1 px-1.5 text-slate-600">${item.sede}</td>
-                        <td class="py-1 px-1.5 text-right font-mono font-bold text-slate-900">$${fmt(item.monto_adjudicado_usd || item.monto_total_usd || 0)}</td>
-                        <td class="py-1 px-1.5 text-center">
-                          <span class="font-bold text-[10px] text-slate-700">${item.avance_fisico || 0}%</span>
+                        <td class="py-2 px-2 text-slate-600 font-medium">${item.sede}</td>
+                        <td class="py-2 px-2 text-right font-mono font-bold text-slate-900">$${fmt(item.monto_adjudicado_usd || item.monto_total_usd || 0)}</td>
+                        <td class="py-2 px-2 text-center">
+                          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-200/60">
+                            ${item.avance_fisico || 0}%
+                          </span>
                         </td>
                       </tr>
                     `).join('')}
@@ -3209,38 +3234,38 @@ const App = {
               </div>
             </div>
             ${report.obrasEnCurso.items.length > 6 ? `
-              <div class="text-[10px] text-slate-400 text-right pt-1 mt-1 border-t border-slate-200">Mostrando 6 de ${report.obrasEnCurso.items.length} obras activas. Ver tabla completa en Pág. 2 y XLSX.</div>
+              <div class="text-[10px] text-slate-400 text-right pt-2 mt-2 border-t border-slate-100">Mostrando 6 de ${report.obrasEnCurso.items.length} obras activas. Ver tabla completa en Pág. 2 y XLSX.</div>
             ` : ''}
           </div>
 
-          <!-- CUADRANTE 2: CARTERA EN ESTUDIO DE FACTIBILIDAD -->
-          <div class="border border-amber-200 rounded-xl p-3.5 bg-amber-50/30 flex flex-col justify-between">
+          <!-- CUADRANTE 2: FACTIBILIDAD -->
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
             <div>
-              <div class="flex items-center justify-between pb-2 mb-2 border-b border-amber-200">
-                <h3 class="font-black text-xs text-amber-950 flex items-center space-x-1.5">
-                  <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+              <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
+                <h3 class="font-black text-xs text-amber-950 flex items-center space-x-2 uppercase tracking-wide">
+                  <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
                   <span>Cartera en Factibilidad (${report.factibilidad ? report.factibilidad.total : report.factibilidadSinPartida.total})</span>
                 </h3>
-                <span class="text-[10px] font-bold text-amber-800 font-mono">Solicitado: US$ ${fmt(report.factibilidad ? report.factibilidad.montoTotalUSD : report.factibilidadSinPartida.montoTotalUSD)}</span>
+                <span class="text-[11px] font-bold text-amber-800 font-mono bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200/60">Solicitado: US$ ${fmt(report.factibilidad ? report.factibilidad.montoTotalUSD : report.factibilidadSinPartida.montoTotalUSD)}</span>
               </div>
 
-              <div class="overflow-x-auto max-h-[200px] overflow-y-auto">
-                <table class="w-full text-[11px] text-left">
-                  <thead class="bg-amber-100/60 text-amber-900 font-bold sticky top-0">
+              <div class="overflow-x-auto max-h-[220px] overflow-y-auto">
+                <table class="w-full text-[11px] text-left border-collapse">
+                  <thead class="bg-amber-50/70 text-amber-900 font-bold uppercase text-[9px] tracking-wider sticky top-0 border-b border-amber-200/60">
                     <tr>
-                      <th class="py-1 px-1.5">Cód</th>
-                      <th class="py-1 px-1.5">Solicitud</th>
-                      <th class="py-1 px-1.5">Sede</th>
-                      <th class="py-1 px-1.5">Partida</th>
-                      <th class="py-1 px-1.5 text-center">Criticidad</th>
-                      <th class="py-1 px-1.5 text-right">Estimado USD</th>
+                      <th class="py-2 px-2">Cód</th>
+                      <th class="py-2 px-2">Solicitud</th>
+                      <th class="py-2 px-2">Sede</th>
+                      <th class="py-2 px-2">Partida</th>
+                      <th class="py-2 px-2 text-center">Criticidad</th>
+                      <th class="py-2 px-2 text-right">Estimado USD</th>
                     </tr>
                   </thead>
-                  <tbody class="divide-y divide-amber-100">
+                  <tbody class="divide-y divide-amber-100/60">
                     ${(() => {
                       const list = (report.factibilidad ? report.factibilidad.items : report.factibilidadSinPartida.items);
                       if (!list || list.length === 0) {
-                        return `<tr><td colspan="6" class="py-3 text-center text-slate-400">No hay factibilidades en cartera</td></tr>`;
+                        return `<tr><td colspan="6" class="py-4 text-center text-slate-400 font-medium">No hay factibilidades en cartera</td></tr>`;
                       }
                       const sorted = [...list].sort((a, b) => {
                         const aPart = DataStore.hasValidPartida(a) && a.monto_partida_usd > 0 ? 1 : 0;
@@ -3251,21 +3276,21 @@ const App = {
                       return sorted.slice(0, 6).map(item => {
                         const hasPart = DataStore.hasValidPartida(item) && item.monto_partida_usd > 0;
                         return `
-                          <tr class="hover:bg-white transition">
-                            <td class="py-1 px-1.5 font-mono font-bold text-amber-700">${item.id}</td>
-                            <td class="py-1 px-1.5 font-bold text-slate-800 max-w-[130px] truncate" title="${item.nombre}">${item.nombre}</td>
-                            <td class="py-1 px-1.5 text-slate-600">${item.sede}</td>
-                            <td class="py-1 px-1.5">
+                          <tr class="hover:bg-amber-50/40 transition">
+                            <td class="py-2 px-2 font-mono font-bold text-amber-700">${item.id}</td>
+                            <td class="py-2 px-2 font-bold text-slate-900 max-w-[130px] truncate" title="${item.nombre}">${item.nombre}</td>
+                            <td class="py-2 px-2 text-slate-600 font-medium">${item.sede}</td>
+                            <td class="py-2 px-2">
                               ${hasPart 
-                                ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">Part. ${item.partida}</span>` 
-                                : `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-amber-100 text-amber-800">Sin Partida</span>`}
+                                ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/80">Part. ${item.partida}</span>` 
+                                : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-800 border border-amber-200/80">Sin Partida</span>`}
                             </td>
-                            <td class="py-1 px-1.5 text-center">
+                            <td class="py-2 px-2 text-center">
                               <span class="font-bold text-[10px] ${item.prioridad_medica_ponderada_default ? 'text-amber-700' : 'text-blue-700'}">
                                 ${item.prioridad_medica || item.prioridad_tecnica || 3}★ ${item.prioridad_medica_ponderada_default ? '(Def)' : ''}
                               </span>
                             </td>
-                            <td class="py-1 px-1.5 text-right font-mono font-bold text-amber-900">$${fmt(item.monto_total_usd || item.monto_obra_usd || 0)}</td>
+                            <td class="py-2 px-2 text-right font-mono font-bold text-amber-950">$${fmt(item.monto_total_usd || item.monto_obra_usd || 0)}</td>
                           </tr>
                         `;
                       }).join('');
@@ -3274,51 +3299,51 @@ const App = {
                 </table>
               </div>
             </div>
-            <div class="text-[10px] text-slate-600 font-medium pt-1 mt-1 border-t border-amber-200 flex justify-between items-center">
-              <span class="text-amber-800 font-semibold">⚠️ ${report.factibilidad ? report.factibilidad.sinPartidaCount : report.factibilidadSinPartida.total} sin partida (pendiente Dirección)</span>
-              <span class="text-emerald-800 font-bold">✓ ${report.factibilidad ? report.factibilidad.conPartidaCount : 0} con partida asignada</span>
+            <div class="text-[10px] text-slate-600 font-medium pt-2 mt-2 border-t border-amber-200/60 flex justify-between items-center">
+              <span class="text-amber-800 font-bold bg-amber-50 px-2 py-0.5 rounded-md">⚠️ ${report.factibilidad ? report.factibilidad.sinPartidaCount : report.factibilidadSinPartida.total} sin partida</span>
+              <span class="text-emerald-800 font-bold bg-emerald-50 px-2 py-0.5 rounded-md">✓ ${report.factibilidad ? report.factibilidad.conPartidaCount : 0} asignadas</span>
             </div>
           </div>
 
         </div>
 
-        <!-- AUDITORÍA DE PARTIDAS: CUADRANTE INFERIOR DE PÁGINA 1 -->
-        <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50 report-page-card">
-          <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200">
-            <h3 class="font-black text-xs text-slate-900 flex items-center space-x-1.5">
-              <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+        <!-- AUDITORÍA DE PARTIDAS: CUADRANTE INFERIOR -->
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs report-page-card">
+          <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
+            <h3 class="font-black text-xs text-slate-900 flex items-center space-x-2 uppercase tracking-wide">
+              <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
               <span>Auditoría de Desvíos Presupuestarios en Partidas (${report.partidasDesvios.totalSobreEjecutadas + report.partidasDesvios.totalSubEjecutadas} identificadas)</span>
             </h3>
-            <span class="text-[10px] font-bold ${report.partidasDesvios.balanceNetoUSD >= 0 ? 'text-emerald-700' : 'text-rose-700'}">
+            <span class="text-[11px] font-bold ${report.partidasDesvios.balanceNetoUSD >= 0 ? 'text-emerald-700 bg-emerald-50 border-emerald-200/80' : 'text-rose-700 bg-rose-50 border-rose-200/80'} px-2.5 py-1 rounded-full border font-mono">
               Balance Neto: ${report.partidasDesvios.balanceNetoUSD >= 0 ? '+' : ''}$${fmt(report.partidasDesvios.balanceNetoUSD)} USD
             </span>
           </div>
 
-          <div class="overflow-x-auto max-h-[160px] overflow-y-auto">
-            <table class="w-full text-[11px] text-left">
-              <thead class="bg-slate-200/60 text-slate-600 font-bold sticky top-0">
+          <div class="overflow-x-auto max-h-[170px] overflow-y-auto">
+            <table class="w-full text-[11px] text-left border-collapse">
+              <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-[9px] tracking-wider sticky top-0 border-b border-slate-200/80">
                 <tr>
-                  <th class="py-1 px-1.5">Partida</th>
-                  <th class="py-1 px-1.5">Obra / Proyecto</th>
-                  <th class="py-1 px-1.5">Estado</th>
-                  <th class="py-1 px-1.5 text-right">Asignado USD</th>
-                  <th class="py-1 px-1.5 text-right">Requerido USD</th>
-                  <th class="py-1 px-1.5 text-right">Desvío USD</th>
+                  <th class="py-2 px-2">Partida</th>
+                  <th class="py-2 px-2">Obra / Proyecto</th>
+                  <th class="py-2 px-2">Estado</th>
+                  <th class="py-2 px-2 text-right">Asignado USD</th>
+                  <th class="py-2 px-2 text-right">Requerido USD</th>
+                  <th class="py-2 px-2 text-right">Desvío USD</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-slate-200">
+              <tbody class="divide-y divide-slate-100">
                 ${(report.partidasDesvios.sobreEjecutadas.concat(report.partidasDesvios.subEjecutadas)).length === 0 ? `
-                  <tr><td colspan="6" class="py-3 text-center text-slate-400">Todas las partidas coinciden exactamente con el costo requerido</td></tr>
+                  <tr><td colspan="6" class="py-4 text-center text-slate-400 font-medium">Todas las partidas coinciden exactamente con el costo requerido</td></tr>
                 ` : (report.partidasDesvios.sobreEjecutadas.concat(report.partidasDesvios.subEjecutadas)).slice(0, 5).map(item => {
                   const isDeficit = item.deficit_usd > 0;
                   return `
-                    <tr class="hover:bg-white transition">
-                      <td class="py-1 px-1.5 font-mono font-bold text-slate-700">${item.partida}</td>
-                      <td class="py-1 px-1.5 font-semibold text-slate-800 max-w-[200px] truncate" title="${item.nombre}">${item.id} - ${item.nombre}</td>
-                      <td class="py-1 px-1.5 text-slate-500">${item.estado}</td>
-                      <td class="py-1 px-1.5 text-right font-mono text-slate-600">$${fmt(item.monto_partida_usd)}</td>
-                      <td class="py-1 px-1.5 text-right font-mono text-slate-600">$${fmt(item.costo_requerido_usd)}</td>
-                      <td class="py-1 px-1.5 text-right font-mono font-bold ${isDeficit ? 'text-rose-600' : 'text-emerald-600'}">
+                    <tr class="hover:bg-slate-50/80 transition">
+                      <td class="py-2 px-2 font-mono font-bold text-slate-800">${item.partida}</td>
+                      <td class="py-2 px-2 font-semibold text-slate-900 max-w-[200px] truncate" title="${item.nombre}">${item.id} - ${item.nombre}</td>
+                      <td class="py-2 px-2 text-slate-500">${item.estado}</td>
+                      <td class="py-2 px-2 text-right font-mono text-slate-600">$${fmt(item.monto_partida_usd)}</td>
+                      <td class="py-2 px-2 text-right font-mono text-slate-600">$${fmt(item.costo_requerido_usd)}</td>
+                      <td class="py-2 px-2 text-right font-mono font-bold ${isDeficit ? 'text-rose-600' : 'text-emerald-600'}">
                         ${isDeficit ? `-$${fmt(item.deficit_usd)}` : `+$${fmt(item.superavit_usd)}`}
                       </td>
                     </tr>
@@ -3327,17 +3352,17 @@ const App = {
               </tbody>
             </table>
           </div>
-          <div class="text-[10px] text-slate-500 pt-1 mt-1 border-t border-slate-200 flex justify-between">
-            <span class="text-rose-700 font-bold">Rojo: Partida Corta (Requiere Ampliación)</span>
-            <span class="text-emerald-700 font-bold">Verde: Remanente Presupuestario Liberable</span>
+          <div class="text-[10px] text-slate-500 pt-2 mt-2 border-t border-slate-100 flex justify-between font-medium">
+            <span class="text-rose-700 font-bold flex items-center"><span class="w-2 h-2 rounded-full bg-rose-500 mr-1.5"></span>Déficit: Partida Corta (Ampliación requerida)</span>
+            <span class="text-emerald-700 font-bold flex items-center"><span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5"></span>Superávit: Remanente Liberable</span>
           </div>
         </div>
 
         <!-- PIE INSTITUCIONAL PÁGINA 1 -->
-        <div class="pt-3 mt-4 border-t-2 border-slate-900 flex flex-col sm:flex-row items-center justify-between text-[10px] text-slate-500 gap-3 report-page-card">
+        <div class="pt-4 mt-6 border-t-2 border-slate-900 flex flex-col sm:flex-row items-center justify-between text-[10px] text-slate-500 gap-3 report-page-card">
           <div class="flex items-center space-x-2">
             <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
-            <span>SIGO HIBA • Documento de auditoría oficial • Pág. 1 de 3: Resumen Ejecutivo</span>
+            <span class="font-medium">SIGO HIBA • Documento de auditoría oficial • Pág. 1 de 3: Resumen Ejecutivo</span>
           </div>
           <div class="flex items-center space-x-6 text-slate-700 font-semibold">
             <div class="border-t border-slate-400 pt-0.5 w-32 text-center text-[9px]">Dir. Infraestructura</div>
@@ -3353,22 +3378,24 @@ const App = {
       <!-- ========================================================================= -->
       <!-- PÁGINA 2: CASH FLOW OFICIAL DE OBRAS EN CURSO (01/04 A 31/03)              -->
       <!-- ========================================================================= -->
-      <div class="report-page report-page-2 bg-white p-5 sm:p-6 rounded-xl border border-slate-200 shadow-sm print:border-none print:shadow-none print:p-0">
+      <div class="report-page report-page-2 bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-md print:border-none print:shadow-none print:p-0">
         
         <!-- MEMBRETE OFICIAL PÁGINA 2 -->
-        <div class="border-b-2 border-slate-900 pb-3 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div class="flex items-center space-x-3.5">
-            <img src="img/logo-hospital-italiano-icon.png" alt="Hospital Italiano" class="w-12 h-12 object-contain shrink-0">
+        <div class="border-b-2 border-slate-900 pb-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-center space-x-4">
+            <div class="p-2 bg-slate-50 rounded-2xl border border-slate-200/80 shadow-xs shrink-0">
+              <img src="img/logo-hospital-italiano-icon.png" alt="Hospital Italiano" class="w-12 h-12 object-contain">
+            </div>
             <div>
-              <h1 class="text-base font-black text-slate-900 tracking-tight leading-none uppercase">Hospital Italiano de Buenos Aires</h1>
+              <h1 class="text-lg font-black text-slate-900 tracking-tight leading-none uppercase">Hospital Italiano de Buenos Aires</h1>
               <h2 class="text-xs font-bold text-blue-900 mt-1">Dirección de Finanzas & Dirección de Infraestructura</h2>
-              <div class="text-[10px] text-slate-500 font-mono mt-0.5">CASH FLOW OFICIAL DE OBRAS EN CURSO • EJERCICIO CONTABLE ${report.accountingInfo.label} (01/04/${report.accountingInfo.startYear} - 31/03/${report.accountingInfo.endYear})</div>
+              <div class="text-[10px] text-slate-500 font-mono mt-0.5 tracking-wide">CASH FLOW OFICIAL DE OBRAS EN CURSO • EJERCICIO CONTABLE ${report.accountingInfo.label} (01/04/${report.accountingInfo.startYear} - 31/03/${report.accountingInfo.endYear})</div>
             </div>
           </div>
           <div class="sm:text-right text-xs">
-            <div class="flex sm:justify-end items-center space-x-1.5 mb-0.5">
-              <span class="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">Flujo Oficial</span>
-              <span class="bg-teal-100 text-teal-900 text-[9px] font-bold px-2 py-0.5 rounded-full">Pág 2 de 3 • Cash Flow Contable</span>
+            <div class="flex sm:justify-end items-center space-x-2 mb-1">
+              <span class="bg-emerald-50 text-emerald-800 border border-emerald-200/80 text-[10px] font-extrabold px-3 py-0.5 rounded-full uppercase tracking-wider">Flujo Oficial</span>
+              <span class="bg-teal-50 text-teal-900 border border-teal-200/80 text-[10px] font-bold px-3 py-0.5 rounded-full">Pág 2 de 3 • Cash Flow Contable</span>
             </div>
             <div class="text-[11px] text-slate-700">Cartera: <strong>${report.cashflowEjecucion.totalObras} obras activas en curso</strong></div>
             <div class="text-[10px] text-slate-500">Excluye factibilidades y obras suspendidas</div>
@@ -3376,115 +3403,123 @@ const App = {
         </div>
 
         <!-- 4 KPIS FINANCIEROS DEL CASH FLOW -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4 report-page-card">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 report-page-card">
           
-          <div class="bg-gradient-to-br from-blue-50 to-indigo-50/70 border border-blue-200 rounded-xl p-3.5 shadow-2xs">
-            <div class="flex items-center justify-between text-blue-900 mb-1">
-              <span class="font-bold text-[10px] uppercase tracking-wider">Cartera en Ejecución</span>
-              <i data-lucide="activity" class="w-4 h-4 text-blue-600"></i>
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs">
+            <div class="flex items-center justify-between text-slate-700 mb-2">
+              <span class="font-bold text-[10px] text-slate-500 uppercase tracking-wider">Cartera en Ejecución</span>
+              <div class="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+                <i data-lucide="activity" class="w-4 h-4"></i>
+              </div>
             </div>
-            <div class="text-xl font-black text-slate-900">US$ ${fmt(report.cashflowEjecucion.totalCarteraUSD)}</div>
-            <div class="text-[10px] text-blue-700 font-semibold mt-1">${report.cashflowEjecucion.totalObras} contratos vigentes adjudicados</div>
+            <div class="text-xl font-black text-slate-900 font-mono">US$ ${fmt(report.cashflowEjecucion.totalCarteraUSD)}</div>
+            <div class="text-[10px] text-blue-700 font-semibold mt-2">${report.cashflowEjecucion.totalObras} contratos vigentes adjudicados</div>
           </div>
 
-          <div class="bg-gradient-to-br from-emerald-50 to-teal-50/70 border border-emerald-200 rounded-xl p-3.5 shadow-2xs">
-            <div class="flex items-center justify-between text-emerald-900 mb-1">
-              <span class="font-bold text-[10px] uppercase tracking-wider">Ejercicio ${report.accountingInfo.label} (01/04 - 31/03)</span>
-              <i data-lucide="calendar" class="w-4 h-4 text-emerald-600"></i>
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs">
+            <div class="flex items-center justify-between text-slate-700 mb-2">
+              <span class="font-bold text-[10px] text-slate-500 uppercase tracking-wider">Ejercicio ${report.accountingInfo.label} (01/04-31/03)</span>
+              <div class="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+                <i data-lucide="calendar" class="w-4 h-4"></i>
+              </div>
             </div>
-            <div class="text-xl font-black text-emerald-950">US$ ${fmt(report.cashflowEjecucion.totalEjercicioActualUSD)}</div>
-            <div class="text-[10px] text-emerald-800 font-semibold mt-1 flex justify-between">
-              <span>Pagado: <strong class="text-blue-800">$${fmt(report.cashflowEjecucion.totalYaPagadoUSD)}</strong></span>
-              <span>Proyectado: <strong class="text-teal-800">$${fmt(report.cashflowEjecucion.totalProyectadoUSD)}</strong></span>
+            <div class="text-xl font-black text-emerald-950 font-mono">US$ ${fmt(report.cashflowEjecucion.totalEjercicioActualUSD)}</div>
+            <div class="text-[10px] text-slate-600 font-semibold mt-2 flex justify-between">
+              <span>Pagado: <strong class="text-blue-700 font-mono">$${fmt(report.cashflowEjecucion.totalYaPagadoUSD)}</strong></span>
+              <span>Proyectado: <strong class="text-teal-700 font-mono">$${fmt(report.cashflowEjecucion.totalProyectadoUSD)}</strong></span>
             </div>
           </div>
 
-          <div class="bg-amber-50/60 border border-amber-200 rounded-xl p-3.5 shadow-2xs">
-            <div class="flex items-center justify-between text-amber-900 mb-1">
-              <span class="font-bold text-[10px] uppercase tracking-wider">Total Anticipos OC (Mes 1)</span>
-              <i data-lucide="badge-percent" class="w-4 h-4 text-amber-600"></i>
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs">
+            <div class="flex items-center justify-between text-slate-700 mb-2">
+              <span class="font-bold text-[10px] text-slate-500 uppercase tracking-wider">Anticipos OC (Mes 1)</span>
+              <div class="w-8 h-8 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600">
+                <i data-lucide="badge-percent" class="w-4 h-4"></i>
+              </div>
             </div>
-            <div class="text-xl font-black text-amber-950">US$ ${fmt(report.cashflowEjecucion.totalAnticiposUSD)}</div>
-            <div class="text-[10px] text-amber-700 font-medium mt-1">Saldo de $${fmt(report.cashflowEjecucion.totalSaldoUSD)} prorrateado en cuotas</div>
+            <div class="text-xl font-black text-amber-950 font-mono">US$ ${fmt(report.cashflowEjecucion.totalAnticiposUSD)}</div>
+            <div class="text-[10px] text-amber-800 font-medium mt-2">Saldo de $${fmt(report.cashflowEjecucion.totalSaldoUSD)} en cuotas</div>
           </div>
 
-          <div class="bg-purple-50/60 border border-purple-200 rounded-xl p-3.5 shadow-2xs">
-            <div class="flex items-center justify-between text-purple-900 mb-1">
-              <span class="font-bold text-[10px] uppercase tracking-wider">Arrastre Ejercicios Futuros</span>
-              <i data-lucide="fast-forward" class="w-4 h-4 text-purple-600"></i>
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs">
+            <div class="flex items-center justify-between text-slate-700 mb-2">
+              <span class="font-bold text-[10px] text-slate-500 uppercase tracking-wider">Arrastre Futuro</span>
+              <div class="w-8 h-8 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600">
+                <i data-lucide="fast-forward" class="w-4 h-4"></i>
+              </div>
             </div>
-            <div class="text-xl font-black text-purple-950">US$ ${fmt(report.cashflowEjecucion.totalEjerciciosSiguientesUSD)}</div>
-            <div class="text-[10px] text-purple-700 font-medium mt-1">Compromisos plurianuales post-31/03</div>
+            <div class="text-xl font-black text-purple-950 font-mono">US$ ${fmt(report.cashflowEjecucion.totalEjerciciosSiguientesUSD)}</div>
+            <div class="text-[10px] text-purple-700 font-medium mt-2">Compromisos plurianuales post-31/03</div>
           </div>
 
         </div>
 
-        <!-- GRÁFICO DE 12 BARRAS MENSUALES (ABRIL A MARZO) -->
-        <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50 mb-4 report-page-card">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-200">
+        <!-- GRÁFICO DE 12 BARRAS MENSUALES (CURVA DE CAÍDA DE GASTO) -->
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs mb-6 report-page-card">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 pb-3 border-b border-slate-100">
             <div class="flex items-center space-x-2">
-              <i data-lucide="bar-chart-3" class="w-4 h-4 text-blue-600"></i>
-              <span class="text-xs font-bold text-slate-800">Curva de Caída del Gasto de Inversiones • Ejercicio Contable ${report.accountingInfo.label} (12 Meses)</span>
+              <i data-lucide="bar-chart-3" class="w-4.5 h-4.5 text-blue-600"></i>
+              <span class="text-xs font-bold text-slate-900 uppercase tracking-wide">Curva de Caída del Gasto de Inversiones • Ejercicio ${report.accountingInfo.label} (12 Meses)</span>
             </div>
-            <div class="flex items-center space-x-3 text-[11px]">
-              <span class="inline-flex items-center space-x-1 text-blue-800 font-semibold">
-                <span class="w-2.5 h-2.5 rounded-xs bg-blue-600 inline-block"></span>
-                <span>Ya Pagado: <strong>US$ ${fmt(report.cashflowEjecucion.totalYaPagadoUSD)}</strong></span>
+            <div class="flex items-center space-x-4 text-[11px]">
+              <span class="inline-flex items-center space-x-1.5 text-blue-800 font-semibold bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200/60">
+                <span class="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block"></span>
+                <span>Pagado: <strong>US$ ${fmt(report.cashflowEjecucion.totalYaPagadoUSD)}</strong></span>
               </span>
-              <span class="inline-flex items-center space-x-1 text-teal-800 font-semibold">
-                <span class="w-2.5 h-2.5 rounded-xs bg-teal-500 inline-block"></span>
-                <span>Proyectado a Pagar: <strong>US$ ${fmt(report.cashflowEjecucion.totalProyectadoUSD)}</strong></span>
+              <span class="inline-flex items-center space-x-1.5 text-teal-800 font-semibold bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-200/60">
+                <span class="w-2.5 h-2.5 rounded-full bg-teal-500 inline-block"></span>
+                <span>Proyectado: <strong>US$ ${fmt(report.cashflowEjecucion.totalProyectadoUSD)}</strong></span>
               </span>
             </div>
           </div>
 
-          <div class="grid grid-cols-6 sm:grid-cols-12 gap-1.5 pt-1">
+          <div class="grid grid-cols-6 sm:grid-cols-12 gap-2 pt-2">
             ${report.accountingInfo.meses.map(m => {
               const val = report.cashflowEjecucion.mesesTotales[m.key] || 0;
               const pct = Math.min(100, Math.max(8, Math.round((val / maxMesVal) * 100)));
-              const barBg = m.isPast ? 'bg-blue-600' : 'bg-teal-500';
-              const badgeBg = m.isPast ? 'bg-blue-100 text-blue-800' : 'bg-teal-100 text-teal-800';
+              const barBg = m.isPast ? 'bg-gradient-to-t from-blue-700 to-blue-500' : 'bg-gradient-to-t from-teal-600 to-teal-400';
+              const badgeBg = m.isPast ? 'bg-blue-50 text-blue-800 border-blue-200/60' : 'bg-teal-50 text-teal-800 border-teal-200/60';
               const statusLabel = m.isPast ? 'Pagado' : 'Proy.';
 
               return `
-                <div class="flex flex-col items-center bg-white p-1.5 rounded-lg border border-slate-200/80 shadow-2xs">
-                  <span class="text-[10px] font-bold text-slate-700 uppercase">${m.label}</span>
+                <div class="flex flex-col items-center bg-slate-50/70 p-2 rounded-xl border border-slate-200/60 shadow-2xs hover:bg-white transition">
+                  <span class="text-[10px] font-extrabold text-slate-800 uppercase">${m.label}</span>
                   <span class="text-[8px] font-mono text-slate-400">${m.year}</span>
                   
-                  <div class="w-full bg-slate-100 rounded-sm h-14 flex items-end my-1 p-0.5">
-                    <div class="w-full ${barBg} rounded-xs transition-all duration-300" style="height: ${pct}%" title="${m.label} ${m.year}: US$ ${fmt(val)}"></div>
+                  <div class="w-full bg-slate-200/80 rounded-lg h-16 flex items-end my-1.5 p-0.5">
+                    <div class="w-full ${barBg} rounded-t-md transition-all duration-300" style="height: ${pct}%" title="${m.label} ${m.year}: US$ ${fmt(val)}"></div>
                   </div>
 
                   <span class="text-[9px] font-bold font-mono text-slate-900 leading-none">$${fmt(val)}</span>
-                  <span class="text-[7px] font-semibold px-1 rounded mt-1 ${badgeBg}">${statusLabel}</span>
+                  <span class="text-[7px] font-extrabold px-1.5 py-0.5 rounded-full mt-1 border ${badgeBg}">${statusLabel}</span>
                 </div>
               `;
             }).join('')}
           </div>
         </div>
 
-        <!-- TABLA DETALLADA DE CASH FLOW POR OBRA EN CURSO -->
-        <div class="border border-slate-200 rounded-xl p-3 bg-white report-page-card">
-          <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200">
-            <h3 class="font-black text-xs text-slate-900 flex items-center space-x-1.5">
+        <!-- TABLA DETALLADA DE CASH FLOW -->
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs report-page-card">
+          <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
+            <h3 class="font-black text-xs text-slate-900 flex items-center space-x-2 uppercase tracking-wide">
               <i data-lucide="layers" class="w-4 h-4 text-slate-600"></i>
               <span>Detalle Contractual y Flujo por Obra en Curso (${report.cashflowEjecucion.displayList.length} proyectos)</span>
             </h3>
-            <span class="text-[10px] text-slate-500">Anticipos absorbidos en Mes 1 • Saldo distribuido en meses restantes</span>
+            <span class="text-[10px] text-slate-500 font-medium">Anticipos absorbidos en Mes 1 • Saldo distribuido en meses restantes</span>
           </div>
 
-          <div class="overflow-x-auto max-h-[220px] overflow-y-auto">
+          <div class="overflow-x-auto max-h-[230px] overflow-y-auto">
             <table class="w-full text-left text-[11px] border-collapse">
-              <thead class="bg-slate-100 text-slate-700 font-semibold sticky top-0">
+              <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-[9px] tracking-wider sticky top-0 border-b border-slate-200/80">
                 <tr>
-                  <th class="py-1.5 px-2">Cód</th>
-                  <th class="py-1.5 px-2">Proyecto & Contratista</th>
-                  <th class="py-1.5 px-2">Sede</th>
-                  <th class="py-1.5 px-2 text-right">Monto OC</th>
-                  <th class="py-1.5 px-2 text-center">Anticipo OC</th>
-                  <th class="py-1.5 px-2 text-center">Plazo</th>
-                  <th class="py-1.5 px-2 text-right">Ejercicio ${report.accountingInfo.label}</th>
-                  <th class="py-1.5 px-2 text-right">Ej. Siguientes</th>
+                  <th class="py-2 px-2">Cód</th>
+                  <th class="py-2 px-2">Proyecto & Contratista</th>
+                  <th class="py-2 px-2">Sede</th>
+                  <th class="py-2 px-2 text-right">Monto OC</th>
+                  <th class="py-2 px-2 text-center">Anticipo OC</th>
+                  <th class="py-2 px-2 text-center">Plazo</th>
+                  <th class="py-2 px-2 text-right">Ejercicio ${report.accountingInfo.label}</th>
+                  <th class="py-2 px-2 text-right">Ej. Siguientes</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100">
@@ -3492,27 +3527,27 @@ const App = {
                   const x = entry.item;
                   const cf = entry.cf;
                   return `
-                    <tr class="hover:bg-slate-50 transition">
-                      <td class="py-1 px-2 font-mono font-bold text-blue-700">${x.id}</td>
-                      <td class="py-1 px-2">
-                        <div class="font-bold text-slate-800 max-w-[180px] truncate" title="${x.nombre}">${x.nombre}</div>
-                        <div class="text-[9px] text-slate-500 font-medium">${x.proveedor || 'Sin contratista registrado'}</div>
+                    <tr class="hover:bg-slate-50/80 transition">
+                      <td class="py-2 px-2 font-mono font-bold text-blue-700">${x.id}</td>
+                      <td class="py-2 px-2">
+                        <div class="font-bold text-slate-900 max-w-[180px] truncate" title="${x.nombre}">${x.nombre}</div>
+                        <div class="text-[9px] text-slate-400 font-medium">${x.proveedor || 'Sin contratista registrado'}</div>
                       </td>
-                      <td class="py-1 px-2 text-slate-600">${x.sede}</td>
-                      <td class="py-1 px-2 text-right font-mono font-bold text-slate-900">$${fmt(cf.montoTotalUSD)}</td>
-                      <td class="py-1 px-2 text-center">
-                        <span class="bg-amber-100 text-amber-900 font-bold px-1.5 py-0.5 rounded text-[9px]">
+                      <td class="py-2 px-2 text-slate-600 font-medium">${x.sede}</td>
+                      <td class="py-2 px-2 text-right font-mono font-bold text-slate-900">$${fmt(cf.montoTotalUSD)}</td>
+                      <td class="py-2 px-2 text-center">
+                        <span class="bg-amber-50 text-amber-900 border border-amber-200/80 font-bold px-2 py-0.5 rounded-full text-[9px]">
                           ${cf.anticipoPct}% ($${fmt(cf.anticipoUSD)})
                         </span>
                       </td>
-                      <td class="py-1 px-2 text-center font-medium text-slate-700">
+                      <td class="py-2 px-2 text-center font-bold text-slate-700">
                         ${cf.duracionMeses} m
                       </td>
-                      <td class="py-1 px-2 text-right font-mono font-bold text-slate-900">
+                      <td class="py-2 px-2 text-right font-mono font-bold text-slate-900">
                         <div>$${fmt(cf.ejercicioActualUSD)}</div>
-                        <div class="text-[9px] font-normal text-slate-500">Pag: $${fmt(cf.ejercicioActualPagadoUSD)} | Proy: $${fmt(cf.ejercicioActualProyectadoUSD)}</div>
+                        <div class="text-[9px] font-normal text-slate-400">Pag: $${fmt(cf.ejercicioActualPagadoUSD)} | Proy: $${fmt(cf.ejercicioActualProyectadoUSD)}</div>
                       </td>
-                      <td class="py-1 px-2 text-right font-mono font-bold text-purple-700">
+                      <td class="py-2 px-2 text-right font-mono font-bold text-purple-700">
                         ${cf.ejerciciosSiguientesUSD > 0 ? `$${fmt(cf.ejerciciosSiguientesUSD)}` : '-'}
                       </td>
                     </tr>
@@ -3520,27 +3555,27 @@ const App = {
                 }).join('')}
               </tbody>
               <tfoot>
-                <tr class="bg-slate-100 font-bold text-slate-900 border-t border-slate-200">
-                  <td colspan="3" class="py-2 px-2 uppercase text-[10px]">TOTALES OFICIALES (${report.cashflowEjecucion.totalObras} obras)</td>
-                  <td class="py-2 px-2 text-right font-black">$${fmt(report.cashflowEjecucion.totalCarteraUSD)}</td>
-                  <td class="py-2 px-2 text-center text-amber-900 font-black">$${fmt(report.cashflowEjecucion.totalAnticiposUSD)}</td>
-                  <td class="py-2 px-2 text-center text-slate-500 text-[10px]">Saldo: $${fmt(report.cashflowEjecucion.totalSaldoUSD)}</td>
-                  <td class="py-2 px-2 text-right font-black text-emerald-900">$${fmt(report.cashflowEjecucion.totalEjercicioActualUSD)}</td>
-                  <td class="py-2 px-2 text-right font-black text-purple-900">$${fmt(report.cashflowEjecucion.totalEjerciciosSiguientesUSD)}</td>
+                <tr class="bg-slate-50 font-bold text-slate-900 border-t-2 border-slate-200">
+                  <td colspan="3" class="py-2.5 px-2 uppercase text-[10px] font-black">TOTALES OFICIALES (${report.cashflowEjecucion.totalObras} obras)</td>
+                  <td class="py-2.5 px-2 text-right font-black font-mono">$${fmt(report.cashflowEjecucion.totalCarteraUSD)}</td>
+                  <td class="py-2.5 px-2 text-center text-amber-900 font-black font-mono">$${fmt(report.cashflowEjecucion.totalAnticiposUSD)}</td>
+                  <td class="py-2.5 px-2 text-center text-slate-500 text-[10px]">Saldo: $${fmt(report.cashflowEjecucion.totalSaldoUSD)}</td>
+                  <td class="py-2.5 px-2 text-right font-black text-emerald-900 font-mono">$${fmt(report.cashflowEjecucion.totalEjercicioActualUSD)}</td>
+                  <td class="py-2.5 px-2 text-right font-black text-purple-900 font-mono">$${fmt(report.cashflowEjecucion.totalEjerciciosSiguientesUSD)}</td>
                 </tr>
               </tfoot>
             </table>
           </div>
           ${report.cashflowEjecucion.displayList.length > 8 ? `
-            <div class="text-[10px] text-slate-400 text-right pt-1 mt-1 border-t border-slate-200">Mostrando 8 de ${report.cashflowEjecucion.displayList.length} obras en ejecución. Detalle completo disponible en el módulo interactivo y XLSX.</div>
+            <div class="text-[10px] text-slate-400 text-right pt-2 mt-2 border-t border-slate-100">Mostrando 8 de ${report.cashflowEjecucion.displayList.length} obras en ejecución. Detalle completo disponible en el módulo interactivo y XLSX.</div>
           ` : ''}
         </div>
 
         <!-- PIE INSTITUCIONAL PÁGINA 2 -->
-        <div class="pt-3 mt-4 border-t-2 border-slate-900 flex flex-col sm:flex-row items-center justify-between text-[10px] text-slate-500 gap-3 report-page-card">
+        <div class="pt-4 mt-6 border-t-2 border-slate-900 flex flex-col sm:flex-row items-center justify-between text-[10px] text-slate-500 gap-3 report-page-card">
           <div class="flex items-center space-x-2">
             <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
-            <span>SIGO HIBA • Período Contable 01/04 - 31/03 • Pág. 2 de 3: Cash Flow Oficial</span>
+            <span class="font-medium">SIGO HIBA • Período Contable 01/04 - 31/03 • Pág. 2 de 3: Cash Flow Oficial</span>
           </div>
           <div class="flex items-center space-x-6 text-slate-700 font-semibold">
             <div class="border-t border-slate-400 pt-0.5 w-32 text-center text-[9px]">Dir. Finanzas</div>
@@ -3556,22 +3591,24 @@ const App = {
       <!-- ========================================================================= -->
       <!-- PÁGINA 3: PLANIFICACIÓN PLURIANUAL, ANÁLISIS TERRITORIAL Y FIRMAS          -->
       <!-- ========================================================================= -->
-      <div class="report-page report-page-3 bg-white p-5 sm:p-6 rounded-xl border border-slate-200 shadow-sm print:border-none print:shadow-none print:p-0">
+      <div class="report-page report-page-3 bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-md print:border-none print:shadow-none print:p-0">
         
         <!-- MEMBRETE OFICIAL PÁGINA 3 -->
-        <div class="border-b-2 border-slate-900 pb-3 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div class="flex items-center space-x-3.5">
-            <img src="img/logo-hospital-italiano-icon.png" alt="Hospital Italiano" class="w-12 h-12 object-contain shrink-0">
+        <div class="border-b-2 border-slate-900 pb-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-center space-x-4">
+            <div class="p-2 bg-slate-50 rounded-2xl border border-slate-200/80 shadow-xs shrink-0">
+              <img src="img/logo-hospital-italiano-icon.png" alt="Hospital Italiano" class="w-12 h-12 object-contain">
+            </div>
             <div>
-              <h1 class="text-base font-black text-slate-900 tracking-tight leading-none uppercase">Hospital Italiano de Buenos Aires</h1>
+              <h1 class="text-lg font-black text-slate-900 tracking-tight leading-none uppercase">Hospital Italiano de Buenos Aires</h1>
               <h2 class="text-xs font-bold text-blue-900 mt-1">Comité Directivo • Auditoría y Control de Gestión</h2>
-              <div class="text-[10px] text-slate-500 font-mono mt-0.5">PLANIFICACIÓN PLURIANUAL, ANÁLISIS TERRITORIAL Y DICTAMEN DE CERTIFICACIÓN</div>
+              <div class="text-[10px] text-slate-500 font-mono mt-0.5 tracking-wide">PLANIFICACIÓN PLURIANUAL, ANÁLISIS TERRITORIAL Y DICTAMEN DE CERTIFICACIÓN</div>
             </div>
           </div>
           <div class="sm:text-right text-xs">
-            <div class="flex sm:justify-end items-center space-x-1.5 mb-0.5">
-              <span class="bg-indigo-100 text-indigo-900 border border-indigo-300 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">Auditoría Final</span>
-              <span class="bg-purple-100 text-purple-900 text-[9px] font-bold px-2 py-0.5 rounded-full">Pág 3 de 3 • Certificación</span>
+            <div class="flex sm:justify-end items-center space-x-2 mb-1">
+              <span class="bg-indigo-50 text-indigo-900 border border-indigo-200/80 text-[10px] font-extrabold px-3 py-0.5 rounded-full uppercase tracking-wider">Auditoría Final</span>
+              <span class="bg-purple-50 text-purple-900 border border-purple-200/80 text-[10px] font-bold px-3 py-0.5 rounded-full">Pág 3 de 3 • Certificación</span>
             </div>
             <div class="text-[11px] text-slate-700">Estado de Cartera: <strong>Consolidada</strong></div>
             <div class="text-[10px] text-slate-500">Dictamen con validez ejecutiva</div>
@@ -3579,30 +3616,30 @@ const App = {
         </div>
 
         <!-- 4 BLOQUES DE ANÁLISIS ESTRATÉGICO -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 report-page-card">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6 report-page-card">
 
           <!-- BLOQUE 1: ANÁLISIS TERRITORIAL (SEDES) -->
-          <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50">
-            <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200">
-              <h3 class="font-black text-xs text-slate-900 flex items-center space-x-1.5">
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs">
+            <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
+              <h3 class="font-black text-xs text-slate-900 flex items-center space-x-2 uppercase tracking-wide">
                 <i data-lucide="map-pin" class="w-4 h-4 text-blue-600"></i>
                 <span>Distribución Territorial por Sede (En Ejecución)</span>
               </h3>
-              <span class="text-[10px] font-bold text-slate-500">100% Cartera</span>
+              <span class="text-[10px] font-bold text-slate-400">100% Cartera</span>
             </div>
 
-            <div class="space-y-2.5 pt-1">
+            <div class="space-y-3 pt-1">
               ${['Central', 'San Justo', 'Periféricos'].map(s => {
                 const val = report.desgloseSedes[s] || 0;
                 const pct = Math.round((val / totCartera) * 100);
                 return `
                   <div>
-                    <div class="flex justify-between text-[11px] mb-0.5 font-bold">
+                    <div class="flex justify-between text-[11px] mb-1 font-bold">
                       <span class="text-slate-700">Sede ${s}</span>
                       <span class="text-slate-900 font-mono">US$ ${fmt(val)} <span class="text-slate-400 font-normal">(${pct}%)</span></span>
                     </div>
-                    <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
-                      <div class="bg-blue-600 h-2 rounded-full" style="width: ${pct}%"></div>
+                    <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                      <div class="bg-blue-600 h-2.5 rounded-full" style="width: ${pct}%"></div>
                     </div>
                   </div>
                 `;
@@ -3611,30 +3648,30 @@ const App = {
           </div>
 
           <!-- BLOQUE 2: ESPECIALIDAD / MÓDULO -->
-          <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50">
-            <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200">
-              <h3 class="font-black text-xs text-slate-900 flex items-center space-x-1.5">
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs">
+            <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
+              <h3 class="font-black text-xs text-slate-900 flex items-center space-x-2 uppercase tracking-wide">
                 <i data-lucide="layers" class="w-4 h-4 text-purple-600"></i>
                 <span>Distribución por Especialidad / Módulo</span>
               </h3>
-              <span class="text-[10px] font-bold text-slate-500">Civil vs Infra</span>
+              <span class="text-[10px] font-bold text-slate-400">Civil vs Infra</span>
             </div>
 
-            <div class="space-y-2.5 pt-1">
+            <div class="space-y-3 pt-1">
               ${[
                 { label: 'Obras Civiles (Edilicias / Arquitectura)', key: 'Obra Civil', color: 'bg-blue-600' },
-                { label: 'Infraestructura (Electromecánica / Gases / Redes)', key: 'Infraestructura', color: 'bg-purple-600' }
+                { label: 'Infraestructura (Electromecánica / Redes)', key: 'Infraestructura', color: 'bg-purple-600' }
               ].map(m => {
                 const val = report.desgloseModulos[m.key] || 0;
                 const pct = Math.round((val / totCartera) * 100);
                 return `
                   <div>
-                    <div class="flex justify-between text-[11px] mb-0.5 font-bold">
+                    <div class="flex justify-between text-[11px] mb-1 font-bold">
                       <span class="text-slate-700">${m.label}</span>
                       <span class="text-slate-900 font-mono">US$ ${fmt(val)} <span class="text-slate-400 font-normal">(${pct}%)</span></span>
                     </div>
-                    <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
-                      <div class="${m.color} h-2 rounded-full" style="width: ${pct}%"></div>
+                    <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                      <div class="${m.color} h-2.5 rounded-full" style="width: ${pct}%"></div>
                     </div>
                   </div>
                 `;
@@ -3643,56 +3680,56 @@ const App = {
           </div>
 
           <!-- BLOQUE 3: CONTROL DE SEMÁFOROS Y PLAZOS CONTRACTUALES -->
-          <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50">
-            <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200">
-              <h3 class="font-black text-xs text-slate-900 flex items-center space-x-1.5">
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs">
+            <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
+              <h3 class="font-black text-xs text-slate-900 flex items-center space-x-2 uppercase tracking-wide">
                 <i data-lucide="clock" class="w-4 h-4 text-amber-600"></i>
                 <span>Semáforos de Plazos Contractuales</span>
               </h3>
-              <span class="text-[10px] text-slate-500">Alerta 15% final</span>
+              <span class="text-[10px] text-slate-400 font-medium">Alerta 15% final</span>
             </div>
 
-            <div class="grid grid-cols-3 gap-2 pt-1 text-center">
-              <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-2">
-                <span class="text-[10px] font-bold text-emerald-800 uppercase block">En Plazo</span>
-                <span class="text-lg font-black text-emerald-950">${report.semaforos.en_plazo}</span>
-                <span class="text-[9px] text-emerald-600 block">Cronograma OK</span>
+            <div class="grid grid-cols-3 gap-2.5 pt-1 text-center">
+              <div class="bg-emerald-50 border border-emerald-200/80 rounded-xl p-2.5">
+                <span class="text-[10px] font-extrabold text-emerald-800 uppercase block">En Plazo</span>
+                <span class="text-xl font-black text-emerald-950 font-mono">${report.semaforos.en_plazo}</span>
+                <span class="text-[9px] text-emerald-700 font-medium block mt-0.5">Cronograma OK</span>
               </div>
-              <div class="bg-amber-50 border border-amber-200 rounded-lg p-2">
-                <span class="text-[10px] font-bold text-amber-800 uppercase block">Por Vencer</span>
-                <span class="text-lg font-black text-amber-950">${report.semaforos.por_vencer}</span>
-                <span class="text-[9px] text-amber-700 block">Último 15% plazo</span>
+              <div class="bg-amber-50 border border-amber-200/80 rounded-xl p-2.5">
+                <span class="text-[10px] font-extrabold text-amber-800 uppercase block">Por Vencer</span>
+                <span class="text-xl font-black text-amber-950 font-mono">${report.semaforos.por_vencer}</span>
+                <span class="text-[9px] text-amber-800 font-medium block mt-0.5">Último 15% plazo</span>
               </div>
-              <div class="bg-rose-50 border border-rose-200 rounded-lg p-2">
-                <span class="text-[10px] font-bold text-rose-800 uppercase block">Vencidos</span>
-                <span class="text-lg font-black text-rose-950">${report.semaforos.vencido}</span>
-                <span class="text-[9px] text-rose-700 block">Excedieron fecha</span>
+              <div class="bg-rose-50 border border-rose-200/80 rounded-xl p-2.5">
+                <span class="text-[10px] font-extrabold text-rose-800 uppercase block">Vencidos</span>
+                <span class="text-xl font-black text-rose-950 font-mono">${report.semaforos.vencido}</span>
+                <span class="text-[9px] text-rose-700 font-medium block mt-0.5">Excedieron fecha</span>
               </div>
             </div>
           </div>
 
           <!-- BLOQUE 4: IMPACTO PLURIANUAL DE LA CARTERA -->
-          <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50">
-            <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200">
-              <h3 class="font-black text-xs text-slate-900 flex items-center space-x-1.5">
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs">
+            <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
+              <h3 class="font-black text-xs text-slate-900 flex items-center space-x-2 uppercase tracking-wide">
                 <i data-lucide="trending-up" class="w-4 h-4 text-emerald-600"></i>
                 <span>Impacto Plurianual de Inversiones</span>
               </h3>
-              <span class="text-[10px] font-bold text-slate-500">Ejercicio vs Arrastre</span>
+              <span class="text-[10px] font-bold text-slate-400">Ejercicio vs Arrastre</span>
             </div>
 
-            <div class="space-y-2 pt-1 text-[11px]">
+            <div class="space-y-2.5 pt-1 text-[11px]">
               <div class="flex justify-between font-bold">
                 <span class="text-slate-700">Ejercicio Actual (${report.accountingInfo.label}):</span>
                 <span class="text-emerald-800 font-mono">US$ ${fmt(report.cashflowEjecucion.totalEjercicioActualUSD)} (${Math.round((report.cashflowEjecucion.totalEjercicioActualUSD / totCartera) * 100)}%)</span>
               </div>
               <div class="flex justify-between font-bold">
-                <span class="text-slate-700">Arrastre Ejercicios Siguientes (Post-31/03):</span>
+                <span class="text-slate-700">Arrastre Siguientes (Post-31/03):</span>
                 <span class="text-purple-800 font-mono">US$ ${fmt(report.cashflowEjecucion.totalEjerciciosSiguientesUSD)} (${Math.round((report.cashflowEjecucion.totalEjerciciosSiguientesUSD / totCartera) * 100)}%)</span>
               </div>
-              <div class="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden flex mt-2">
-                <div class="bg-emerald-600 h-2.5" style="width: ${Math.round((report.cashflowEjecucion.totalEjercicioActualUSD / totCartera) * 100)}%"></div>
-                <div class="bg-purple-600 h-2.5" style="width: ${Math.round((report.cashflowEjecucion.totalEjerciciosSiguientesUSD / totCartera) * 100)}%"></div>
+              <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden flex mt-2.5 p-0.5 border border-slate-200/60">
+                <div class="bg-emerald-600 h-2 rounded-full" style="width: ${Math.round((report.cashflowEjecucion.totalEjercicioActualUSD / totCartera) * 100)}%"></div>
+                <div class="bg-purple-600 h-2 rounded-full" style="width: ${Math.round((report.cashflowEjecucion.totalEjerciciosSiguientesUSD / totCartera) * 100)}%"></div>
               </div>
             </div>
           </div>
@@ -3700,40 +3737,40 @@ const App = {
         </div>
 
         <!-- DICTAMEN FORMAL DE CERTIFICACIÓN INSTITUCIONAL -->
-        <div class="border-2 border-slate-800 rounded-xl p-4 bg-slate-50 mb-4 report-page-card">
-          <div class="flex items-center space-x-2 text-slate-900 font-black text-xs mb-1 uppercase tracking-wider">
+        <div class="border-2 border-slate-900 rounded-2xl p-5 bg-slate-50/70 mb-6 report-page-card">
+          <div class="flex items-center space-x-2 text-slate-900 font-black text-xs mb-1.5 uppercase tracking-wider">
             <i data-lucide="award" class="w-4 h-4 text-blue-700"></i>
             <span>Dictamen Oficial de Auditoría y Certificación de Inversiones</span>
           </div>
-          <p class="text-[11px] text-slate-700 leading-relaxed text-justify">
+          <p class="text-[11px] text-slate-700 leading-relaxed text-justify font-medium">
             Se certifica formalmente que el presente informe de 3 páginas emitido por el <strong>Sistema Integral de Gestión de Obras (SIGO HIBA)</strong> consolida fielmente la totalidad de obras activas en curso valuadas en <strong>US$ ${fmt(report.cashflowEjecucion.totalCarteraUSD)}</strong>, con una afectación financiera para el ejercicio contable oficial <strong>${report.accountingInfo.label}</strong> (01/04 al 31/03) por <strong>US$ ${fmt(report.cashflowEjecucion.totalEjercicioActualUSD)}</strong>, y un arrastre para ejercicios subsiguientes por <strong>US$ ${fmt(report.cashflowEjecucion.totalEjerciciosSiguientesUSD)}</strong>. Los anticipos pactados en órdenes de compra y los saldos mensuales fueron distribuidos según las pautas contractuales de la Institución.
           </p>
         </div>
 
         <!-- CASILLEROS DE FIRMAS FORMALES -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 pb-2 report-page-card">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-4 pb-2 report-page-card">
           <div class="border-t-2 border-slate-700 pt-2 text-center">
             <div class="text-xs font-bold text-slate-900">Control Presupuestario & Partidas</div>
             <div class="text-[10px] text-slate-500">Dirección de Infraestructura</div>
-            <div class="text-[9px] text-slate-400 font-mono mt-2">Firma y Sello</div>
+            <div class="text-[9px] text-slate-400 font-mono mt-3">Firma y Sello</div>
           </div>
           <div class="border-t-2 border-slate-700 pt-2 text-center">
             <div class="text-xs font-bold text-slate-900">Dirección de Compras & Contrataciones</div>
             <div class="text-[10px] text-slate-500">Administración General</div>
-            <div class="text-[9px] text-slate-400 font-mono mt-2">Firma y Sello</div>
+            <div class="text-[9px] text-slate-400 font-mono mt-3">Firma y Sello</div>
           </div>
           <div class="border-t-2 border-slate-700 pt-2 text-center">
             <div class="text-xs font-bold text-slate-900">Dirección General / Consejo Directivo</div>
             <div class="text-[10px] text-slate-500">Hospital Italiano de Buenos Aires</div>
-            <div class="text-[9px] text-slate-400 font-mono mt-2">Firma y Sello</div>
+            <div class="text-[9px] text-slate-400 font-mono mt-3">Firma y Sello</div>
           </div>
         </div>
 
         <!-- PIE INSTITUCIONAL PÁGINA 3 -->
-        <div class="pt-3 mt-4 border-t-2 border-slate-900 flex flex-col sm:flex-row items-center justify-between text-[10px] text-slate-500 gap-3 report-page-card">
+        <div class="pt-4 mt-6 border-t-2 border-slate-900 flex flex-col sm:flex-row items-center justify-between text-[10px] text-slate-500 gap-3 report-page-card">
           <div class="flex items-center space-x-2">
             <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i>
-            <span>SIGO HIBA • Documento oficial auditado • Pág. 3 de 3: Planificación, Auditoría y Firmas</span>
+            <span class="font-medium">SIGO HIBA • Documento oficial auditado • Pág. 3 de 3: Planificación, Auditoría y Firmas</span>
           </div>
           <div class="text-[9px] text-slate-400 font-mono">
             ID Emisión: HIBA-DIR-${report.accountingInfo.startYear}-${new Date().getTime().toString().slice(-6)}
