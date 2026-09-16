@@ -233,15 +233,10 @@
         <span class="hidden md:inline">Backups (30 días)</span>
       </button>
 
-      <!-- Botón Login con Google -->
-      <button onclick="App.openGoogleLoginModal()" class="bg-white hover:bg-slate-100 text-slate-800 px-3 py-1.5 rounded-lg font-semibold text-xs flex items-center space-x-1.5 shadow-2xs transition">
-        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24">
-          <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
-          <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24z"/>
-          <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
-          <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-        </svg>
-        <span class="hidden md:inline">Gmail</span>
+      <!-- Botón Configuración de Supabase Cloud -->
+      <button id="btnSettingsTop" onclick="App.openSettingsModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-semibold flex items-center space-x-1.5 transition shadow-2xs cursor-pointer" title="Configurar Conexión con Supabase Cloud">
+        <span id="cloudStatusIndicator" class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+        <span id="cloudStatusText" class="hidden md:inline">Modo Local</span>
       </button>
 
       <!-- Botón + Nueva Obra (Abre Factibilidad) -->
@@ -1866,6 +1861,42 @@
             <span>Guardar Modificaciones</span>
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: CONFIGURAR SUPABASE ================= -->
+  <div id="modalSettings" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white rounded-xl shadow-xl max-w-lg w-full overflow-hidden border border-slate-100 text-xs">
+      <div class="bg-slate-900 text-white px-5 py-3 flex items-center justify-between font-bold">
+        <span>⚙️ Conexión con Supabase Cloud (Sincronización Multi-PC)</span>
+        <button onclick="App.closeSettingsModal()"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <div class="p-5 space-y-4">
+        <p class="text-slate-500">Ingresa las credenciales de tu proyecto en Supabase Cloud para sincronizar automáticamente todas las obras, factividades y cambios en tiempo real entre múltiples PCs y usuarios.</p>
+        
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-blue-900 space-y-1">
+          <div class="font-bold flex items-center space-x-1.5 text-blue-950">
+            <i data-lucide="cloud" class="w-4 h-4 text-blue-600"></i>
+            <span>Sincronización Automática Multi-PC</span>
+          </div>
+          <p class="text-[11px] leading-relaxed text-blue-800">
+            Al conectar Supabase Cloud, cualquier obra o cambio registrado desde una PC se actualizará automáticamente en todas las PCs de todos los usuarios. Usa únicamente la clave pública <code class="bg-blue-100 text-blue-950 px-1 py-0.5 rounded font-mono font-bold">anon public</code>.
+          </p>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Project URL de Supabase</label>
+          <input type="text" id="inputSupabaseUrl" placeholder="https://xyzcompany.supabase.co" class="w-full border border-slate-300 rounded-lg p-2 font-mono">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">API Key Anónima (<span class="font-mono text-emerald-700">anon public</span>)</label>
+          <input type="password" id="inputSupabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5..." class="w-full border border-slate-300 rounded-lg p-2 font-mono">
+        </div>
+      </div>
+      <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-end space-x-2">
+        <button onclick="App.closeSettingsModal()" class="px-3 py-1.5 border border-slate-300 rounded font-semibold text-slate-600">Cerrar</button>
+        <button onclick="App.saveSettingsModal()" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold">Guardar y Conectar</button>
       </div>
     </div>
   </div>

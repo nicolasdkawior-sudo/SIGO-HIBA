@@ -5401,12 +5401,48 @@ const App = {
   },
 
   openSettingsModal() {
-    console.info("Configuración de base de datos desacoplada de la interfaz; gestionada a nivel de backend.");
+    const creds = SupabaseManager.getCredentials();
+    const urlEl = document.getElementById('inputSupabaseUrl');
+    const keyEl = document.getElementById('inputSupabaseKey');
+    if (urlEl) urlEl.value = creds.url || '';
+    if (keyEl) keyEl.value = creds.key || '';
+    const m = document.getElementById('modalSettings');
+    if (m) m.classList.remove('hidden');
   },
 
-  saveSettingsModal() {},
+  async saveSettingsModal() {
+    const url = document.getElementById('inputSupabaseUrl')?.value || '';
+    const key = document.getElementById('inputSupabaseKey')?.value || '';
 
-  closeSettingsModal() {},
+    const res = SupabaseManager.setCredentials(url, key);
+    if (!res.success && res.error) {
+      alert(res.error);
+      return;
+    }
+
+    this.updateCloudStatusUI();
+    const m = document.getElementById('modalSettings');
+    if (m) m.classList.add('hidden');
+
+    if (res.isConfigured) {
+      this.showToast('🎉 Supabase Cloud conectado correctamente. Sincronizando datos...');
+      const cloudUpdated = await DataStore.syncWithCloud();
+      if (DataStore.items.length > 0) {
+        for (const item of DataStore.items) {
+          await SupabaseManager.upsertObraInCloud(item);
+        }
+        await DataStore.syncWithCloud();
+      }
+      this.refreshAllViews();
+    } else {
+      this.showToast('Modo Local / Demo activo.');
+    }
+  },
+
+  closeSettingsModal() {
+    const m = document.getElementById('modalSettings');
+    if (m) m.classList.add('hidden');
+  },
 
   updateCloudStatusUI() {
     const indicator = document.getElementById('cloudStatusIndicator');
