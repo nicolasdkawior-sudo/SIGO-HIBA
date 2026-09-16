@@ -5657,10 +5657,21 @@ const App = {
     this.downloadBackupJSON(todayStr);
   },
 
-  downloadBackupJSON(dateStr) {
+  async downloadBackupJSON(dateStr) {
     if (!this.isUserNicolas()) {
       alert("⛔ Acceso Denegado: Exclusivo para perfil Nicolás.");
       return;
+    }
+    // Sincronizar estado en tiempo real desde Supabase Cloud antes de generar la descarga
+    if (typeof SupabaseManager !== 'undefined' && SupabaseManager.isConfigured && typeof SupabaseManager.fetchAllObrasFromCloud === 'function') {
+      try {
+        const cloudData = await SupabaseManager.fetchAllObrasFromCloud();
+        if (cloudData && Array.isArray(cloudData) && cloudData.length > 0) {
+          DataStore.items = cloudData;
+        }
+      } catch (e) {
+        console.warn("No se pudo obtener el último snapshot de Supabase antes del backup, usando estado local:", e);
+      }
     }
     const kpis = DataStore.getKPIs();
     const payload = {
@@ -5694,7 +5705,7 @@ const App = {
     this.showToast(`📥 Backup "${a.download}" descargado correctamente.`);
   },
 
-  restoreBackupFromModal(dateStr) {
+  async restoreBackupFromModal(dateStr) {
     if (!this.isUserNicolas()) {
       alert("⛔ Acceso Denegado: Exclusivo para perfil Nicolás.");
       return;
@@ -5714,9 +5725,12 @@ const App = {
       detalle: `Restauración de base de datos ejecutada desde el historial de backup fecha '${dateStr}_1500.json' por Nicolás Kawior.`
     });
 
-    DataStore.persist();
+    DataStore.persist(true);
+    if (typeof SupabaseManager !== 'undefined' && SupabaseManager.isConfigured && typeof SupabaseManager.pushAllObrasToCloud === 'function') {
+      await SupabaseManager.pushAllObrasToCloud(DataStore.items);
+    }
     this.render();
-    this.showToast(`✅ Base de datos restaurada exitosamente a la copia del ${dateStr} (15:00 hs)`);
+    this.showToast(`✅ Base de datos restaurada y sincronizada a la nube exitosamente (${dateStr} 15:00 hs)`);
   },
 
   handleImportBackupFile(e) {
@@ -5742,7 +5756,10 @@ const App = {
           estado_obra: 'Importación',
           detalle: `Importación local exitosa del archivo de respaldo '${file.name}' con ${res.count} proyectos.`
         });
-        DataStore.persist();
+        DataStore.persist(true);
+        if (typeof SupabaseManager !== 'undefined' && SupabaseManager.isConfigured && typeof SupabaseManager.pushAllObrasToCloud === 'function') {
+          SupabaseManager.pushAllObrasToCloud(DataStore.items);
+        }
         this.closeBackupsModal();
         this.render();
         alert(`✅ Copia de respaldo '${file.name}' importada exitosamente. ${res.count} proyectos cargados.`);

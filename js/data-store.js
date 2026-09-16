@@ -818,7 +818,7 @@ const DataStore = {
     return false;
   },
 
-  persist(pushToCloud = false) {
+  persist(pushToCloud = true) {
     try {
       localStorage.setItem('sigo_obras_data', JSON.stringify(this.items));
       localStorage.setItem('sigo_canonical_version', this.CANONICAL_VERSION);
@@ -1055,7 +1055,10 @@ const DataStore = {
         this.persistAuditLogs();
       }
 
-      this.persist();
+      this.persist(true);
+      if (typeof SupabaseManager !== 'undefined' && SupabaseManager.isConfigured && typeof SupabaseManager.pushAllObrasToCloud === 'function') {
+        SupabaseManager.pushAllObrasToCloud(this.items);
+      }
       if (typeof broadcastDataChange === 'function') {
         broadcastDataChange('DATABASE_RESTORED');
       }
