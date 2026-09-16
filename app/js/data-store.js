@@ -801,6 +801,9 @@ const DataStore = {
       if (typeof broadcastDataChange === 'function') {
         broadcastDataChange('DATA_PERSISTED');
       }
+      if (typeof SupabaseManager !== 'undefined' && SupabaseManager.isConfigured && typeof SupabaseManager.pushAllObrasToCloud === 'function') {
+        SupabaseManager.pushAllObrasToCloud(this.items);
+      }
     } catch (e) {
       console.error("Error persistiendo datos:", e);
     }

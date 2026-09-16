@@ -2291,7 +2291,7 @@ const App = {
     if (typeof window !== 'undefined') {
       setInterval(() => {
         doSync();
-      }, 15000);
+      }, 5000);
 
       window.addEventListener('focus', () => {
         doSync();
