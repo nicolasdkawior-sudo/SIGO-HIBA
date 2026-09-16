@@ -1,1 +1,1 @@
-{"obras": [{"id": "TEST-REPO-01", "nombre": "Obra Repo Test"}]}
+{"obras": [{"id": "TEST-REPO-01", "nombre": "Obra Repo Test"}, {"id": "OBRA-CLIENT-1", "nombre": "Nueva Obra desde PC 1", "estado": "Estudio de Factibilidad"}], "updated_at": "2026-09-16T17:00:00Z"}
