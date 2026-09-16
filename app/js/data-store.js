@@ -776,8 +776,24 @@ const DataStore = {
       try {
         const cloudData = await SupabaseManager.fetchObrasFromCloud();
         if (cloudData && Array.isArray(cloudData) && cloudData.length > 0) {
-          const cloudItems = cloudData.map(row => SupabaseManager.mapCloudRowToObra(row)).filter(Boolean);
+          let cloudItems = cloudData.map(row => SupabaseManager.mapCloudRowToObra(row)).filter(Boolean);
           if (cloudItems.length > 0) {
+            if (window.INITIAL_DATA && (window.INITIAL_DATA.obras || window.INITIAL_DATA.infraestructura)) {
+              const initList = [...(window.INITIAL_DATA.obras || []), ...(window.INITIAL_DATA.infraestructura || [])];
+              const cloudIds = new Set(cloudItems.map(x => x.id));
+              let addedAny = false;
+              initList.forEach(initItem => {
+                if (!cloudIds.has(initItem.id)) {
+                  cloudItems.push(JSON.parse(JSON.stringify(initItem)));
+                  cloudIds.add(initItem.id);
+                  addedAny = true;
+                }
+              });
+              if (addedAny) {
+                SupabaseManager.pushAllObrasToCloud(cloudItems);
+              }
+            }
+
             const currentStr = JSON.stringify(this.items || []);
             const cloudStr = JSON.stringify(cloudItems);
             if (currentStr !== cloudStr) {
