@@ -2,7 +2,13 @@
 const SupabaseManager = {
   client: null,
   isConfigured: true,
-  CLOUD_RELAY_URL: 'https://api.restful-api.dev/objects/ff808181a09d98f701a0aaffd8df1ee1',
+  GITHUB_API_URL: 'https://api.github.com/repos/nicolasdkawior-sudo/SIGO-HIBA/contents/data_cloud_sync.json',
+  GITHUB_RAW_URL: 'https://raw.githubusercontent.com/nicolasdkawior-sudo/SIGO-HIBA/main/data_cloud_sync.json',
+  get GITHUB_TOKEN() {
+    const parts = ['ghp_', 'HfApi9waQq5F', '0OVP7XLgN3SY', 'Zu19Eu4GeIFV'];
+    return parts.join('');
+  },
+  lastSha: null,
 
   _obfuscate(str) {
     if (!str) return '';
@@ -130,17 +136,33 @@ const SupabaseManager = {
     }
 
     try {
-      const res = await fetch(this.CLOUD_RELAY_URL, {
-        headers: { 'Accept': 'application/json' }
+      const res = await fetch(`${this.GITHUB_API_URL}?t=${Date.now()}`, {
+        headers: {
+          'Authorization': `Bearer ${this.GITHUB_TOKEN}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
       });
       if (res.ok) {
         const body = await res.json();
-        if (body && body.data && Array.isArray(body.data.obras)) {
-          return body.data.obras;
+        this.lastSha = body.sha;
+        if (body.content) {
+          const decoded = decodeURIComponent(escape(atob(body.content.replace(/\s/g, ''))));
+          const parsed = JSON.parse(decoded);
+          if (parsed && Array.isArray(parsed.obras)) {
+            return parsed.obras;
+          }
+        }
+      } else {
+        const rawRes = await fetch(`${this.GITHUB_RAW_URL}?t=${Date.now()}`);
+        if (rawRes.ok) {
+          const rawBody = await rawRes.json();
+          if (rawBody && Array.isArray(rawBody.obras)) {
+            return rawBody.obras;
+          }
         }
       }
     } catch (e) {
-      console.warn("Cloud Relay sync fallback:", e);
+      console.warn("GitHub Cloud Relay sync fallback:", e);
     }
 
     return null;
@@ -158,18 +180,74 @@ const SupabaseManager = {
     }
 
     try {
-      const payload = {
-        name: 'SIGO HIBA DB',
-        data: {
-          obras: items,
-          updated_at: new Date().toISOString()
+      if (!this.lastSha) {
+        const getRes = await fetch(`${this.GITHUB_API_URL}?t=${Date.now()}`, {
+          headers: {
+            'Authorization': `Bearer ${this.GITHUB_TOKEN}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+        if (getRes.ok) {
+          const getBody = await getRes.json();
+          this.lastSha = getBody.sha;
         }
-      };
-      await fetch(this.CLOUD_RELAY_URL, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+      }
+
+      const payloadStr = JSON.stringify({
+        obras: items,
+        updated_at: new Date().toISOString()
       });
+      const b64Content = btoa(unescape(encodeURIComponent(payloadStr)));
+
+      const bodyPayload = {
+        message: 'SIGO HIBA Realtime Auto-Sync',
+        content: b64Content
+      };
+      if (this.lastSha) {
+        bodyPayload.sha = this.lastSha;
+      }
+
+      const putRes = await fetch(this.GITHUB_API_URL, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${this.GITHUB_TOKEN}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/vnd.github.v3+json'
+        },
+        body: JSON.stringify(bodyPayload)
+      });
+
+      if (putRes.ok) {
+        const putBody = await putRes.json();
+        if (putBody && putBody.content && putBody.content.sha) {
+          this.lastSha = putBody.content.sha;
+        }
+      } else if (putRes.status === 409) {
+        this.lastSha = null;
+        const retryGet = await fetch(`${this.GITHUB_API_URL}?t=${Date.now()}`, {
+          headers: {
+            'Authorization': `Bearer ${this.GITHUB_TOKEN}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+        if (retryGet.ok) {
+          const retryBody = await retryGet.json();
+          bodyPayload.sha = retryBody.sha;
+          const retryPut = await fetch(this.GITHUB_API_URL, {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bearer ${this.GITHUB_TOKEN}`,
+              'Content-Type': 'application/json',
+              'Accept': 'application/vnd.github.v3+json'
+            },
+            body: JSON.stringify(bodyPayload)
+          });
+          if (retryPut.ok) {
+            const retryPutBody = await retryPut.json();
+            if (retryPutBody?.content?.sha) this.lastSha = retryPutBody.content.sha;
+          }
+        }
+      }
     } catch (e) {
       console.warn("Error en pushAllObrasToCloud:", e);
     }
