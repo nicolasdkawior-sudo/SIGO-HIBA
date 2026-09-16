@@ -794,9 +794,15 @@ const DataStore = {
               }
             }
 
-            const currentStr = JSON.stringify(this.items || []);
-            const cloudStr = JSON.stringify(cloudItems);
-            if (currentStr !== cloudStr) {
+            const getFingerprint = (arr) => {
+              if (!Array.isArray(arr)) return '';
+              return arr.map(x => `${x.id}:${x.estado}:${x.partida || ''}:${x.monto_total_usd || 0}:${x.responsable || ''}:${x.nombre || ''}:${x.fecha_fin_etapa || ''}`).sort().join('|');
+            };
+
+            const currentFp = getFingerprint(this.items);
+            const cloudFp = getFingerprint(cloudItems);
+
+            if (currentFp !== cloudFp || (this.items && this.items.length !== cloudItems.length)) {
               this.items = cloudItems;
               this.persist(false);
               return true;

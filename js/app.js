@@ -513,6 +513,7 @@ const App = {
           }
         }],
         options: {
+          animation: { duration: 0 },
           responsive: true,
           maintainAspectRatio: false,
           layout: {
@@ -646,6 +647,7 @@ const App = {
           }
         ],
         options: {
+          animation: { duration: 0 },
           responsive: true,
           maintainAspectRatio: false,
           cutout: '60%',
