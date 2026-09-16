@@ -1557,6 +1557,7 @@ const App = {
 
     const nombre = document.getElementById('factNombre').value.trim();
     const sede = document.getElementById('factSede').value;
+    const tipo = document.getElementById('factTipo')?.value || 'Obra Civil';
     const sector = document.getElementById('factSector').value.trim();
     const motivo = document.getElementById('factMotivo').value.trim();
     const req = document.getElementById('factRequerimiento').value.trim();
