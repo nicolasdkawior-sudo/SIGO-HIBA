@@ -2220,14 +2220,6 @@ const DataStore = {
     }
 
     const uDep = this.normalizeDependencia(u.dependencia || '').trim().toLowerCase();
-    const isSanJustoUser = uDep.includes('san justo') || (u.sede && u.sede.toLowerCase() === 'san justo');
-
-    // Si la obra está en etapa de licitación y el usuario es proyectista / técnico departamental:
-    // La obra le cae al comprador y desaparece temporalmente del panel del proyectista hasta que se adjudique.
-    // Para el equipo de San Justo, se mantiene visible la totalidad de obras en consulta departamental.
-    if (item.estado === 'En licitación' && !isSanJustoUser) {
-      return false;
-    }
 
     // 4. Si la obra está en Estudio de Factibilidad y fue creada por este usuario:
     // Quien la presentó tiene que tenerla visible en factibilidad para saber qué presentó y tenerla representada
@@ -2313,9 +2305,9 @@ const DataStore = {
       return false;
     }
 
-    // En etapa licitatoria, el comprador puede editar fechas y plazos de compulsa
-    if (item.estado === 'En licitación' && this.currentUser.rol === 'licitaciones') {
-      return true;
+    // En etapa licitatoria, solo el comprador (rol 'licitaciones') o Admin pueden modificar. Para el resto de PMs es solo lectura.
+    if (item.estado === 'En licitación') {
+      return this.currentUser.rol === 'licitaciones' || this.isAdmin();
     }
 
     // Solo pueden editar aquellas obras dentro de su departamento que tienen asignadas a su nombre
