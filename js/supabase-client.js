@@ -183,13 +183,84 @@ const SupabaseManager = {
     }
   },
 
+  mapCloudRowToObra(row) {
+    if (!row) return null;
+    let item = null;
+    if (row.datos_json) {
+      try {
+        item = typeof row.datos_json === 'string' ? JSON.parse(row.datos_json) : row.datos_json;
+      } catch (e) {
+        item = null;
+      }
+    }
+    if (!item) {
+      item = {
+        id: row.codigo_interno || row.id,
+        tipo: row.tipo === 'infraestructura' ? 'Infraestructura' : 'Obra Civil',
+        dependencia: row.dependencia || 'Departamento de Mantenimiento Central',
+        partida: row.partida || '',
+        nombre: row.nombre || '',
+        sede: row.sede_nombre || 'Central',
+        sector_solicitante: row.sector_solicitante || '',
+        motivo: row.motivo || '',
+        requerimiento_minimo: row.requerimiento_minimo || '',
+        estado: this.mapEnumToEstado(row.estado),
+        monto_obra_usd: parseFloat(row.monto_obra_usd) || 0,
+        monto_equipamiento_usd: parseFloat(row.monto_equipamiento_usd) || 0,
+        monto_total_usd: (parseFloat(row.monto_obra_usd) || 0) + (parseFloat(row.monto_equipamiento_usd) || 0),
+        monto_partida_usd: parseFloat(row.monto_partida_usd) || (parseFloat(row.monto_obra_usd) || 0),
+        prioridad_tecnica: parseInt(row.prioridad_tecnica) || 3,
+        prioridad_medica: parseInt(row.prioridad_medica) || null,
+        prioridad_final: parseInt(row.prioridad_final) || 3,
+        responsable: row.responsable || 'Sin Asignar',
+        responsable_id: row.responsable_id || null,
+        creado_por: row.creado_por || 'Sistema HIBA',
+        categoria: row.categoria || 'Obra Civil',
+        clasificacion: row.clasificacion || 'Nueva Solicitud',
+        observaciones: row.observaciones || '',
+        fecha_inicio_etapa: row.fecha_inicio_etapa || null,
+        fecha_fin_etapa: row.fecha_fin_etapa || null,
+        fecha_fin_obra: row.fecha_fin_obra || null,
+        cashflow: row.cashflow || { monto_total: (parseFloat(row.monto_obra_usd) || 0), cashflow_2026: (parseFloat(row.monto_obra_usd) || 0), cashflow_2027: 0, cashflow_2028: 0, cashflow_2029: 0 },
+        historial: row.historial || []
+      };
+    } else {
+      if (row.codigo_interno) item.id = row.codigo_interno;
+      if (row.nombre) item.nombre = row.nombre;
+      if (row.partida !== undefined) item.partida = row.partida;
+      if (row.estado) item.estado = this.mapEnumToEstado(row.estado);
+      if (row.monto_obra_usd !== undefined) item.monto_obra_usd = parseFloat(row.monto_obra_usd) || 0;
+      if (row.monto_equipamiento_usd !== undefined) item.monto_equipamiento_usd = parseFloat(row.monto_equipamiento_usd) || 0;
+      item.monto_total_usd = (item.monto_obra_usd || 0) + (item.monto_equipamiento_usd || 0);
+      if (row.sede_nombre) item.sede = row.sede_nombre;
+      if (row.responsable) item.responsable = row.responsable;
+      if (row.tipo) item.tipo = row.tipo === 'infraestructura' ? 'Infraestructura' : 'Obra Civil';
+    }
+    return item;
+  },
+
+  mapEnumToEstado(estado) {
+    if (!estado) return 'Estudio de Factibilidad';
+    const e = String(estado).toLowerCase();
+    if (e === 'factibilidad') return 'Estudio de Factibilidad';
+    if (e === 'anteproyecto') return 'Estudio de Factibilidad';
+    if (e === 'proyecto_licitar') return 'Proyecto';
+    if (e === 'licitacion') return 'Licitación';
+    if (e === 'proyecto') return 'Proyecto';
+    if (e === 'en_curso') return 'Obras en Curso';
+    if (e === 'finalizada') return 'Obras Finalizadas';
+    if (e === 'suspendida') return 'Suspendida';
+    if (e === 'asignacion_partida') return 'Estudio de Factibilidad';
+    return estado;
+  },
+
   async upsertObraInCloud(obra) {
     if (!this.isConfigured) return null;
     try {
       const payload = {
         codigo_interno: obra.id,
         tipo: obra.tipo === 'Infraestructura' ? 'infraestructura' : 'obra_civil',
-        partida: obra.partida,
+        partida: obra.partida || '',
         nombre: obra.nombre,
         sede_nombre: obra.sede,
         estado: this.mapEstadoToEnum(obra.estado),
@@ -200,27 +271,79 @@ const SupabaseManager = {
         prioridad_tecnica: obra.prioridad_tecnica || 1,
         prioridad_medica: obra.prioridad_medica || 1,
         prioridad_final: obra.prioridad_final || 1,
-        proveedor: obra.proveedor,
-        responsable: obra.responsable,
-        clasificacion: obra.clasificacion,
-        categoria: obra.categoria,
-        motivo: obra.motivo,
-        observaciones: obra.observaciones,
+        proveedor: obra.proveedor || '',
+        responsable: obra.responsable || 'Sin Asignar',
+        clasificacion: obra.clasificacion || '',
+        categoria: obra.categoria || '',
+        motivo: obra.motivo || '',
+        observaciones: obra.observaciones || '',
         fecha_inicio_etapa: obra.fecha_inicio_etapa || null,
         fecha_fin_etapa: obra.fecha_fin_etapa || null,
         fecha_fin_obra: obra.fecha_fin_obra || null,
         updated_at: new Date().toISOString()
       };
 
-      const { data, error } = await this.client
+      try {
+        payload.datos_json = JSON.stringify(obra);
+      } catch (err) {}
+
+      let { data, error } = await this.client
         .from('proyectos_obras')
         .upsert(payload, { onConflict: 'codigo_interno' })
         .select();
+
+      if (error && error.message && error.message.includes('datos_json')) {
+        delete payload.datos_json;
+        const res = await this.client
+          .from('proyectos_obras')
+          .upsert(payload, { onConflict: 'codigo_interno' })
+          .select();
+        data = res.data;
+        error = res.error;
+      }
 
       if (error) throw error;
       return data;
     } catch (e) {
       console.error("Error upserting in Supabase:", e);
+      return null;
+    }
+  },
+
+  async deleteObraInCloud(itemId) {
+    if (!this.isConfigured) return null;
+    try {
+      const { data, error } = await this.client
+        .from('proyectos_obras')
+        .delete()
+        .eq('codigo_interno', itemId);
+      if (error) throw error;
+      return data;
+    } catch (e) {
+      console.error("Error deleting in Supabase:", e);
+      return null;
+    }
+  },
+
+  subscribeToRealtime(onChangeCallback) {
+    if (!this.isConfigured || !this.client) return null;
+    try {
+      const channel = this.client
+        .channel('table-db-changes')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'proyectos_obras' },
+          (payload) => {
+            console.log('⚡ Supabase Realtime cambio detectado:', payload.eventType);
+            if (typeof onChangeCallback === 'function') {
+              onChangeCallback(payload);
+            }
+          }
+        )
+        .subscribe();
+      return channel;
+    } catch (e) {
+      console.error("Error al suscribir Supabase Realtime:", e);
       return null;
     }
   },

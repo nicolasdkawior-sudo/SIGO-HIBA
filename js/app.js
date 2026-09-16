@@ -2265,6 +2265,43 @@ const App = {
         }
       });
     }
+
+    this.initCloudAutoSync();
+  },
+
+  initCloudAutoSync() {
+    const doSync = async () => {
+      if (typeof SupabaseManager !== 'undefined' && SupabaseManager.isConfigured) {
+        const updated = await DataStore.syncWithCloud();
+        if (updated && DataStore.currentUser) {
+          console.log("🔄 Sincronización automática multi-PC completada");
+          this.refreshAllViews();
+        }
+      }
+    };
+
+    doSync();
+
+    if (typeof SupabaseManager !== 'undefined' && SupabaseManager.isConfigured && typeof SupabaseManager.subscribeToRealtime === 'function') {
+      SupabaseManager.subscribeToRealtime(() => {
+        doSync();
+      });
+    }
+
+    if (typeof window !== 'undefined') {
+      setInterval(() => {
+        doSync();
+      }, 15000);
+
+      window.addEventListener('focus', () => {
+        doSync();
+      });
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+          doSync();
+        }
+      });
+    }
   },
 
   refreshAllViews() {

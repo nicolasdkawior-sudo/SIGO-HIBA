@@ -765,6 +765,33 @@ const DataStore = {
     }
 
     console.log(`DataStore v2.2 inicializado: ${this.items.length} proyectos. Usuario activo: ${this.currentUser ? this.currentUser.nombre : 'Ninguno (Requiere Login)'}`);
+    
+    if (typeof SupabaseManager !== 'undefined' && SupabaseManager.isConfigured) {
+      this.syncWithCloud().catch(e => console.error(e));
+    }
+  },
+
+  async syncWithCloud() {
+    if (typeof SupabaseManager !== 'undefined' && SupabaseManager.isConfigured) {
+      try {
+        const cloudData = await SupabaseManager.fetchObrasFromCloud();
+        if (cloudData && Array.isArray(cloudData) && cloudData.length > 0) {
+          const cloudItems = cloudData.map(row => SupabaseManager.mapCloudRowToObra(row)).filter(Boolean);
+          if (cloudItems.length > 0) {
+            const currentStr = JSON.stringify(this.items || []);
+            const cloudStr = JSON.stringify(cloudItems);
+            if (currentStr !== cloudStr) {
+              this.items = cloudItems;
+              this.persist();
+              return true;
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Error en syncWithCloud:", e);
+      }
+    }
+    return false;
   },
 
   persist() {
