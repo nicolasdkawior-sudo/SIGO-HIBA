@@ -205,17 +205,23 @@ body {
   }
   @page {
     size: A4 landscape;
-    margin: 6mm 8mm;
+    margin: 4mm 6mm;
   }
   .report-page {
-    page-break-after: always;
-    break-after: page;
-    min-height: 185mm;
-    box-sizing: border-box;
+    height: auto !important;
+    min-height: auto !important;
+    margin: 0 !important;
+    padding: 6mm 8mm !important;
+    box-sizing: border-box !important;
   }
-  .report-page:last-child {
-    page-break-after: auto;
-    break-after: auto;
+  .report-page-1,
+  .report-page-2 {
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+  .report-page-3 {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 }
 
@@ -224,14 +230,24 @@ body {
 }
 
 .report-page-card {
-  page-break-inside: avoid;
-  break-inside: avoid;
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+}
+
+.report-page table {
+  page-break-inside: auto;
+  break-inside: auto;
+}
+
+.report-page tr,
+.report-page thead {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
 }
 
 .html2pdf__page-break {
   height: 0;
-  page-break-before: always;
-  break-before: page;
+  display: none !important;
 }
 
 /* Protección de layout responsivo en móviles */
