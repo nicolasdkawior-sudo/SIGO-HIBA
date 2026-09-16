@@ -1536,7 +1536,30 @@ const App = {
     }
 
     const respInput = document.getElementById('factResponsable');
-    if (respInput) respInput.value = u.nombre;
+    const respSelect = document.getElementById('factResponsableSelect');
+    const isAdmin = DataStore.isAdmin();
+
+    if (isAdmin) {
+      if (respInput) respInput.classList.add('hidden');
+      if (respSelect) {
+        respSelect.classList.remove('hidden');
+        const activeUsers = (DataStore.users || []).filter(usr => usr.activo !== false);
+        respSelect.innerHTML = activeUsers.map(usr => `<option value="${usr.nombre}">${usr.nombre} (${usr.rol.toUpperCase()})</option>`).join('');
+        const currentMatch = activeUsers.find(usr => usr.id === u.id || usr.nombre === u.nombre);
+        if (currentMatch) {
+          respSelect.value = currentMatch.nombre;
+        } else if (activeUsers.length > 0) {
+          respSelect.value = activeUsers[0].nombre;
+        }
+      }
+    } else {
+      if (respSelect) respSelect.classList.add('hidden');
+      if (respInput) {
+        respInput.classList.remove('hidden');
+        respInput.value = u ? u.nombre : '';
+        respInput.readOnly = true;
+      }
+    }
 
     document.getElementById('modalNuevaFactibilidad').classList.remove('hidden');
     if (window.lucide) lucide.createIcons();
@@ -1544,6 +1567,10 @@ const App = {
 
   closeNewObraModal() {
     document.getElementById('modalNuevaFactibilidad').classList.add('hidden');
+  },
+
+  closeFactibilidadModal() {
+    this.closeNewObraModal();
   },
 
   handleCreateFactibilidadSubmit(e) {
@@ -1562,7 +1589,18 @@ const App = {
     const motivo = document.getElementById('factMotivo').value.trim();
     const req = document.getElementById('factRequerimiento').value.trim();
     const monto = DataStore.parseCurrency(document.getElementById('factMonto').value) || 0;
-    const responsable = document.getElementById('factResponsable').value.trim();
+
+    const isAdmin = DataStore.isAdmin();
+    let responsable = '';
+    if (isAdmin) {
+      const selEl = document.getElementById('factResponsableSelect');
+      responsable = (selEl ? selEl.value : '').trim();
+    }
+    if (!responsable) {
+      const inpEl = document.getElementById('factResponsable');
+      responsable = (inpEl ? inpEl.value : u.nombre).trim();
+    }
+
     const prioridad = document.getElementById('factPrioridad').value;
 
     if (!nombre) {
