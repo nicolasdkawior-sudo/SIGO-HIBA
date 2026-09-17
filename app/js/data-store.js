@@ -585,9 +585,11 @@ const DataStore = {
           }
         }
 
-        // Sincronizar SIEMPRE credenciales maestras y datos de identidad desde DEFAULT_USERS para prevenir hashes antiguos o corruptos en localStorage
-        existing.salt = defU.salt;
-        existing.password_hash = defU.password_hash;
+        // Sincronizar credenciales: Preservar credenciales personalizadas/creadas en localStorage o asignar defU si faltan
+        if (!existing.salt || !existing.password_hash) {
+          existing.salt = defU.salt;
+          existing.password_hash = defU.password_hash;
+        }
 
         // Permisos por defecto
         if (existing.puede_avanzar === undefined) existing.puede_avanzar = defU.puede_avanzar;
