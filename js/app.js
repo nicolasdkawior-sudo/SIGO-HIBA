@@ -3094,7 +3094,7 @@ const App = {
               <div class="flex items-center space-x-2">
                 <h1 class="text-base font-black text-slate-900 tracking-tight leading-none uppercase">Hospital Italiano de Buenos Aires</h1>
               </div>
-              <h2 class="text-xs font-bold text-blue-900 mt-0.5">Dirección de Infraestructura y Obras • Dirección General</h2>
+              <h2 class="text-xs font-bold text-blue-900 mt-0.5">Dirección de gestión & vicedirección de infraestructura</h2>
               <div class="text-[9px] text-slate-500 font-mono tracking-wide">SISTEMA INTEGRAL DE GESTIÓN DE OBRAS E INVERSIONES (SIGO HIBA)</div>
             </div>
           </div>
