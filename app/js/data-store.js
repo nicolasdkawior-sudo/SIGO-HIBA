@@ -3081,11 +3081,11 @@ const DataStore = {
   // ================= USUARIOS & AUTENTICACIÓN SEGURA =================
   addUser(userData) {
     const salt = generateSalt();
-    const tempPassword = (userData.tempPassword || 'Hiba2025!').trim();
-    const username = (userData.username || (userData.email ? userData.email.split('@')[0] : `user_${Date.now()}`)).trim().toLowerCase();
+    const tempPassword = (userData.tempPassword || userData.password || 'Hiba2025!').toString().trim();
+    const username = (userData.username || (userData.email ? userData.email.split('@')[0] : `user_${Date.now()}`)).toString().trim().toLowerCase();
 
     // Validar nombre de usuario duplicado
-    if (this.users.some(u => (u.username || '').toLowerCase() === username)) {
+    if (this.users.some(u => (u.username || '').toLowerCase().trim() === username)) {
       throw new Error(`El usuario "${username}" ya se encuentra registrado. Elige otro nombre de usuario.`);
     }
 
@@ -3096,12 +3096,12 @@ const DataStore = {
     } catch (e) {
       deletedList = [];
     }
-    const identifiersToRemove = [username, (userData.email || '').toLowerCase()].filter(Boolean);
+    const identifiersToRemove = [username, (userData.email || '').toString().trim().toLowerCase()].filter(Boolean);
     deletedList = deletedList.filter(item => !identifiersToRemove.includes(item));
     localStorage.setItem('sigo_deleted_usernames', JSON.stringify(deletedList));
 
-    const apellido = (userData.apellido || '').trim();
-    const nombre = userData.nombre.trim();
+    const apellido = (userData.apellido || '').toString().trim();
+    const nombre = (userData.nombre || '').toString().trim();
     const fullNombre = apellido && !nombre.includes(apellido) ? `${nombre} ${apellido}` : nombre;
 
     const uniqueSuffix = Math.random().toString(36).substring(2, 7);
@@ -3112,7 +3112,7 @@ const DataStore = {
       nombre_pila: nombre,
       apellido: apellido,
       dependencia: this.normalizeDependencia(userData.dependencia || 'Departamento de Proyectos Central'),
-      email: (userData.email || `${username}@hospitalitaliano.org.ar`).trim().toLowerCase(),
+      email: (userData.email || `${username}@hospitalitaliano.org.ar`).toString().trim().toLowerCase(),
       salt: salt,
       password_hash: hashPassword(tempPassword, salt),
       debe_cambiar_clave: true, // Forzar cambio en el primer login
