@@ -66,7 +66,7 @@ REGLAS DE SEGURIDAD ESTRICTAS:
       parts: [{ text: message }]
     });
 
-    // Consulta a la API de Gemini (gemini-2.5-flash con fallback a gemini-2.0-flash)
+    // Consulta a la API de Gemini (gemini-2.5-flash)
     const primaryUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
     let response = await fetch(primaryUrl, {
@@ -76,7 +76,7 @@ REGLAS DE SEGURIDAD ESTRICTAS:
     });
 
     if (!response.ok) {
-      const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+      const fallbackUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
       response = await fetch(fallbackUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
