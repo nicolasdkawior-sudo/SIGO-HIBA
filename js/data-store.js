@@ -477,7 +477,7 @@ const DataStore = {
   },
 
   init() {
-    // 1. Cargar Usuarios
+    // 1. Cargar Usuarios con Fallback Offline Robusto
     let deletedList = [];
     try {
       deletedList = JSON.parse(localStorage.getItem('sigo_deleted_usernames') || '[]');
@@ -486,84 +486,90 @@ const DataStore = {
     }
     const isBlacklisted = (identifier) => {
       if (!identifier) return false;
-      return deletedList.includes(identifier.toLowerCase());
+      return deletedList.includes(identifier.toString().trim().toLowerCase());
     };
 
     const localUsers = localStorage.getItem('sigo_users_list');
     if (localUsers) {
       try {
-        this.users = JSON.parse(localUsers);
-        // Filtrar inmediatamente cualquier usuario que haya sido eliminado previamente
-        this.users = this.users.filter(u => 
-          !isBlacklisted(u.id) && !isBlacklisted(u.username) && !isBlacklisted(u.email)
-        );
-
-        // Garantizar que los usuarios maestros obligatorios existan ÚNICAMENTE si no fueron eliminados
-        DEFAULT_USERS.forEach(defU => {
-          if (isBlacklisted(defU.id) || isBlacklisted(defU.username) || isBlacklisted(defU.email)) {
-            return; // Usuario fue expresamente eliminado por el usuario, JAMÁS restaurar
-          }
-          const existing = this.users.find(u => 
-            (u.id && u.id.toLowerCase() === defU.id.toLowerCase()) ||
-            (u.username && u.username.toLowerCase() === defU.username.toLowerCase()) ||
-            (u.email && u.email.toLowerCase() === defU.email.toLowerCase())
-          );
-          if (!existing) {
-            this.users.push({ ...defU });
-          } else {
-            // Sincronizar datos e identidad
-            existing.id = defU.id;
-            existing.username = defU.username;
-            existing.nombre = existing.nombre || defU.nombre;
-            existing.email = existing.email || defU.email;
-            existing.sede = existing.sede || defU.sede;
-            existing.dependencia = existing.dependencia || defU.dependencia;
-            existing.rol = existing.rol || defU.rol;
-            if (existing.activo === undefined) existing.activo = true;
-
-            // Migración automática de Cossano si arrastra datos obsoletos de Periféricos en localStorage
-            if (existing.id === 'usr-cossano') {
-              if (existing.dependencia === 'Departamento de Centros Periféricos' || 
-                  existing.sede === 'Periféricos' || 
-                  (existing.nombre && existing.nombre.includes('Periféricos'))) {
-                existing.dependencia = 'Departamento de Mantenimiento y Proyectos San Justo';
-                existing.sede = 'San Justo';
-                existing.nombre = 'Arq. Ana Cossano (PM San Justo)';
-                existing.email = 'ana.cossano@hospitalitaliano.org.ar';
-              }
-            }
-
-            // Sincronizar SIEMPRE credenciales maestras si no cambió voluntariamente la clave
-            if (!existing.debe_cambiar_clave) {
-              existing.salt = defU.salt;
-              existing.password_hash = defU.password_hash;
-            } else {
-              if (!existing.salt) existing.salt = defU.salt;
-              if (!existing.password_hash) existing.password_hash = defU.password_hash;
-            }
-
-            // Permisos por defecto
-            if (existing.puede_avanzar === undefined) existing.puede_avanzar = defU.puede_avanzar;
-            if (existing.puede_crear === undefined) existing.puede_crear = defU.puede_crear;
-            if (existing.puede_priorizar_medica === undefined) existing.puede_priorizar_medica = defU.puede_priorizar_medica;
-            if (existing.puede_asignar_partida === undefined) existing.puede_asignar_partida = defU.puede_asignar_partida;
-            if (existing.solo_lectura === undefined) existing.solo_lectura = defU.solo_lectura;
-          }
-        });
+        const parsedUsers = JSON.parse(localUsers);
+        if (Array.isArray(parsedUsers) && parsedUsers.length > 0) {
+          this.users = parsedUsers;
+        } else {
+          this.users = [];
+        }
       } catch (e) {
-        this.users = DEFAULT_USERS.filter(defU => 
-          !isBlacklisted(defU.id) && !isBlacklisted(defU.username) && !isBlacklisted(defU.email)
-        ).map(u => ({ ...u }));
+        console.warn("[OFFLINE FALLBACK] Error al leer sigo_users_list de localStorage. Inicializando desde catálogo por defecto.", e);
+        this.users = [];
       }
-    } else {
-      this.users = DEFAULT_USERS.filter(defU => 
-        !isBlacklisted(defU.id) && !isBlacklisted(defU.username) && !isBlacklisted(defU.email)
-      ).map(u => ({ ...u }));
     }
+
+    // Fallback de seguridad: si no existen usuarios cargados, usar DEFAULT_USERS
+    if (!Array.isArray(this.users) || this.users.length === 0) {
+      this.users = DEFAULT_USERS.map(u => ({ ...u }));
+    }
+
+    // Filtrar inmediatamente cualquier usuario que haya sido eliminado previamente
+    this.users = this.users.filter(u => 
+      !isBlacklisted(u.id) && !isBlacklisted(u.username) && !isBlacklisted(u.email)
+    );
+
+    // Garantizar que los usuarios maestros obligatorios existan ÚNICAMENTE si no fueron eliminados
+    DEFAULT_USERS.forEach(defU => {
+      if (isBlacklisted(defU.id) || isBlacklisted(defU.username) || isBlacklisted(defU.email)) {
+        return; // Usuario fue expresamente eliminado por el usuario, JAMÁS restaurar
+      }
+      const existing = this.users.find(u => 
+        (u.id && u.id.toString().trim().toLowerCase() === defU.id.toLowerCase()) ||
+        (u.username && u.username.toString().trim().toLowerCase() === defU.username.toLowerCase()) ||
+        (u.email && u.email.toString().trim().toLowerCase() === defU.email.toLowerCase())
+      );
+      if (!existing) {
+        this.users.push({ ...defU });
+      } else {
+        // Sincronizar datos e identidad
+        existing.id = defU.id;
+        existing.username = defU.username;
+        existing.nombre = existing.nombre || defU.nombre;
+        existing.email = existing.email || defU.email;
+        existing.sede = existing.sede || defU.sede;
+        existing.dependencia = existing.dependencia || defU.dependencia;
+        existing.rol = existing.rol || defU.rol;
+        if (existing.activo === undefined) existing.activo = true;
+
+        // Migración automática de Cossano si arrastra datos obsoletos de Periféricos en localStorage
+        if (existing.id === 'usr-cossano') {
+          if (existing.dependencia === 'Departamento de Centros Periféricos' || 
+              existing.sede === 'Periféricos' || 
+              (existing.nombre && existing.nombre.includes('Periféricos'))) {
+            existing.dependencia = 'Departamento de Mantenimiento y Proyectos San Justo';
+            existing.sede = 'San Justo';
+            existing.nombre = 'Arq. Ana Cossano (PM San Justo)';
+            existing.email = 'ana.cossano@hospitalitaliano.org.ar';
+          }
+        }
+
+        // Sincronizar SIEMPRE credenciales maestras si no cambió voluntariamente la clave
+        if (!existing.debe_cambiar_clave) {
+          existing.salt = defU.salt;
+          existing.password_hash = defU.password_hash;
+        } else {
+          if (!existing.salt) existing.salt = defU.salt;
+          if (!existing.password_hash) existing.password_hash = defU.password_hash;
+        }
+
+        // Permisos por defecto
+        if (existing.puede_avanzar === undefined) existing.puede_avanzar = defU.puede_avanzar;
+        if (existing.puede_crear === undefined) existing.puede_crear = defU.puede_crear;
+        if (existing.puede_priorizar_medica === undefined) existing.puede_priorizar_medica = defU.puede_priorizar_medica;
+        if (existing.puede_asignar_partida === undefined) existing.puede_asignar_partida = defU.puede_asignar_partida;
+        if (existing.solo_lectura === undefined) existing.solo_lectura = defU.solo_lectura;
+      }
+    });
 
     // Asegurar que ningún usuario de la lista quede sin hash ni username
     this.users.forEach(u => {
-      if (!u.username) u.username = (u.email ? u.email.split('@')[0] : `user_${u.id}`).toLowerCase();
+      if (!u.username) u.username = (u.email ? u.email.split('@')[0] : `user_${u.id}`).toLowerCase().trim();
       // Si falta salt o hash, asignar credencial maestra válida
       if (!u.salt) u.salt = DEFAULT_SALT;
       if (!u.password_hash) u.password_hash = DEFAULT_ADMIN_HASH;
@@ -775,6 +781,10 @@ const DataStore = {
   },
 
   async syncWithCloud() {
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      console.warn('[OFFLINE FALLBACK] Modo offline/sin red detectado. Operando 100% con datos locales guardados.');
+      return false;
+    }
     if (typeof SupabaseManager !== 'undefined' && SupabaseManager.isConfigured) {
       try {
         const cloudData = await SupabaseManager.fetchObrasFromCloud();
@@ -815,7 +825,7 @@ const DataStore = {
           SupabaseManager.pushAllObrasToCloud(this.items);
         }
       } catch (e) {
-        console.error("Error en syncWithCloud:", e);
+        console.warn("[OFFLINE FALLBACK] Sincronización remota omitida (Modo offline / Sin conexión a internet).", e.message || e);
       }
     }
     return false;
@@ -3236,18 +3246,26 @@ const DataStore = {
     }
 
     const rawInput = usernameOrEmail.toString().trim();
-    const cleanInput = rawInput.replace(/^@/, '').toLowerCase();
+    const cleanInput = rawInput.replace(/^@/, '').toLowerCase().trim();
+    const cleanPrefix = cleanInput.includes('@') ? cleanInput.split('@')[0] : cleanInput;
 
     console.log(`[LOGIN DEBUG] ==========================================`);
     console.log(`[LOGIN DEBUG] 1. Username ingresado: "${rawInput}" (Normalizado: "${cleanInput}")`);
 
-    // Búsqueda flexible por username, email o id
+    // Búsqueda ultrarrobusta y flexible por username, email, id o prefijo de email
     const user = this.users.find(u => {
       if (!u) return false;
-      const uUsername = (u.username || '').replace(/^@/, '').toLowerCase();
-      const uEmail = (u.email || '').toLowerCase();
-      const uId = (u.id || '').toLowerCase();
-      return uUsername === cleanInput || uEmail === cleanInput || uId === cleanInput;
+      const uUsername = (u.username || '').replace(/^@/, '').toLowerCase().trim();
+      const uEmail = (u.email || '').toLowerCase().trim();
+      const uId = (u.id || '').toLowerCase().trim();
+      const uEmailPrefix = uEmail.includes('@') ? uEmail.split('@')[0] : uEmail;
+
+      return uUsername === cleanInput || 
+             uEmail === cleanInput || 
+             uId === cleanInput ||
+             uUsername === cleanPrefix ||
+             uEmailPrefix === cleanInput ||
+             uEmailPrefix === cleanPrefix;
     });
 
     if (!user) {
