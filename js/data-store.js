@@ -209,6 +209,42 @@ const DEFAULT_USERS = [
     solo_lectura: false
   },
   {
+    id: 'usr-zabala',
+    username: 'zabala',
+    nombre: 'Arq. Zabala (PM Obras)',
+    email: 'zabala.obras@hospitalitaliano.org.ar',
+    salt: DEFAULT_SALT,
+    password_hash: DEFAULT_ADMIN_HASH,
+    debe_cambiar_clave: false,
+    sede: 'Central',
+    dependencia: 'Departamento de Proyectos Central',
+    rol: 'pm_obra',
+    activo: true,
+    puede_crear: true,
+    puede_avanzar: true,
+    puede_priorizar_medica: false,
+    puede_asignar_partida: false,
+    solo_lectura: false
+  },
+  {
+    id: 'usr-zabalam',
+    username: 'zabalam',
+    nombre: 'Arq. Zabala M. (PM Obras)',
+    email: 'zabalam@hospitalitaliano.org.ar',
+    salt: DEFAULT_SALT,
+    password_hash: DEFAULT_ADMIN_HASH,
+    debe_cambiar_clave: false,
+    sede: 'Central',
+    dependencia: 'Departamento de Proyectos Central',
+    rol: 'pm_obra',
+    activo: true,
+    puede_crear: true,
+    puede_avanzar: true,
+    puede_priorizar_medica: false,
+    puede_asignar_partida: false,
+    solo_lectura: false
+  },
+  {
     id: 'usr-waldemar',
     username: 'waldemar',
     nombre: 'Ing. Waldemar (PM San Justo)',
@@ -3288,34 +3324,10 @@ const DataStore = {
       }
     }
 
-    // 3. Fallback de emergencia temporal: si el usuario no existe en la base actual, crearlo dinámicamente
     if (!user) {
-      console.warn(`[LOGIN DEBUG] ⚠️ Usuario "${cleanInput}" no encontrado en registro activo. Generando usuario de emergencia temporal.`);
-      const trimmedPassword = password.toString().trim();
-      const userSalt = DEFAULT_SALT;
-      user = {
-        id: `usr-auto-${cleanPrefix}`,
-        username: cleanPrefix,
-        nombre: `Usuario ${cleanPrefix} (Auto-generado)`,
-        email: cleanInput.includes('@') ? cleanInput : `${cleanPrefix}@hospitalitaliano.org.ar`,
-        salt: userSalt,
-        password_hash: hashPassword(trimmedPassword, userSalt),
-        debe_cambiar_clave: false,
-        sede: 'Central',
-        dependencia: 'Departamento de Proyectos Central',
-        rol: 'pm_obra',
-        activo: true,
-        puede_crear: true,
-        puede_avanzar: true,
-        puede_priorizar_medica: false,
-        puede_asignar_partida: false,
-        solo_lectura: false,
-        origen: 'auto_emergencia'
-      };
-
-      this.users.push(user);
-      this.persistUsers();
-      console.log(`[LOGIN DEBUG] ➕ Usuario de emergencia registrado con éxito: "${user.username}" (ID: ${user.id})`);
+      console.error(`[LOGIN DEBUG] ❌ 4. MOTIVO DE FALLO: El usuario "${cleanInput}" NO ESTÁ REGISTRADO en la base oficial.`);
+      console.log(`[LOGIN DEBUG] ==========================================`);
+      return { success: false, msg: '⛔ Usuario no registrado. Verifica tus datos de ingreso o contacta al Administrador.' };
     }
 
     console.log(`[LOGIN DEBUG] 1. Username almacenado en registro: "${user.username}" | ID: "${user.id}" | Email: "${user.email}" | Nombre: "${user.nombre}"`);
