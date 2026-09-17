@@ -3,13 +3,12 @@
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function callGeminiWithRetriesAndFallbacks(contents, apiKey) {
-  // Modelos ordenados prioritariamente desde la versión recomendada a modelos alternativos y más ligeros
+  // Modelos ligeros de alta disponibilidad, baja latencia y amplia cuota
   const candidateUrls = [
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-    `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`
+    `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`
   ];
 
   let lastError = null;
@@ -36,17 +35,17 @@ async function callGeminiWithRetriesAndFallbacks(contents, apiKey) {
         const msg = errData.error?.message || `Error HTTP ${response.status}`;
         lastError = new Error(msg);
 
-        // Si es rate limit (429) o saturación/servidor (503, 500), se reintenta con backoff
+        // Si es rate limit (429) o saturación/servidor (503, 500), reintentar con backoff
         if (response.status === 429 || response.status === 503 || response.status >= 500) {
-          await sleep(700 * attempt);
+          await sleep(800 * attempt);
           continue;
         } else {
-          // Si el modelo no está disponible o da error 4xx cliente, probamos el siguiente modelo
+          // Si la versión o modelo no está disponible, pasar de inmediato al siguiente modelo ligero
           break;
         }
       } catch (err) {
         lastError = err;
-        await sleep(700 * attempt);
+        await sleep(800 * attempt);
       }
     }
   }
@@ -68,9 +67,9 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Método no permitido. Utilizar POST.' });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = (process.env.GEMINI_API_KEY || process.env.GEMINI_KEY || '').trim();
   if (!apiKey) {
-    return res.status(500).json({ error: 'La API Key de Gemini (GEMINI_API_KEY) no está configurada en las variables de entorno del servidor.' });
+    return res.status(500).json({ error: 'La API Key de Gemini (GEMINI_API_KEY) no está configurada o está vacía en las variables de entorno del servidor.' });
   }
 
   try {
@@ -84,11 +83,11 @@ module.exports = async function handler(req, res) {
 
 REGLAS DE SEGURIDAD ESTRICTAS:
 1. Responde con números concretos, precisión contable y tono ejecutivo directo.
-2. Si la consulta del usuario NO está directamente relacionada con los proyectos, obras, finanzas o infraestructura de SIGO HIBA (por ejemplo: preguntas generales, clima, recetas, traducción ajena, redacción externa o programación general), DEBES responder exactamente:
+2. Si la consulta del usuario NO está directamente relacionada con los proyectos, obras, finanzas o infraestructura de SIGO HIBA, DEBES responder exactamente:
 "Solo estoy autorizado a responder consultas operativas, analíticas y financieras sobre los proyectos y obras de SIGO HIBA."
 3. Basa tus respuestas únicamente en los datos provistos en el JSON de contexto; no inventes información.`;
 
-    const contextText = context ? `\n--- DATOS ACTUALES DE OBRAS Y PROYECTOS SIGO HIBA ---\n${JSON.stringify(context, null, 2)}\n--- FIN DATOS CONTEXTO ---\n` : '';
+    const contextText = context ? `\n--- DATOS ACTUALES DE OBRAS Y PROYECTOS SIGO HIBA ---\n${JSON.stringify(context)}\n--- FIN DATOS CONTEXTO ---\n` : '';
 
     const contents = [];
 
@@ -105,7 +104,7 @@ REGLAS DE SEGURIDAD ESTRICTAS:
 
     // Historial previo de la conversación si existiera
     if (Array.isArray(history)) {
-      history.forEach(h => {
+      history.slice(-4).forEach(h => {
         if (h.role && h.text) {
           contents.push({
             role: h.role === 'user' ? 'user' : 'model',

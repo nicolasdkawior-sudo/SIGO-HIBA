@@ -199,25 +199,19 @@ const AIAssistant = {
       return {
         id: item.id,
         nombre: item.nombre || item.nombreObra || item.titulo || 'Sin nombre',
-        dependencia: item.dependencia || '',
         sede: item.sede || '',
+        dependencia: item.dependencia || '',
         tipo: item.tipo || 'Obra Civil',
-        estadoEtapa: item.estado || 'Proyecto',
-        porcentajeAvance: item.porcentaje_avance || item.porcentajeAvance || 0,
+        etapa: item.estado || 'Proyecto',
+        avance: (item.porcentaje_avance || item.porcentajeAvance || 0) + '%',
         montoTotalUSD: mTotal,
         montoObraUSD: mObra,
         montoEquipUSD: mEquip,
-        montoPartidaUSD: item.monto_partida_usd || 0,
-        montoAdjudicadoUSD: item.monto_adjudicado_usd || 0,
         m2: m2Val,
-        usdPerM2: Math.round(usdM2 * 100) / 100,
+        usdM2: Math.round(usdM2 * 100) / 100,
         responsable: item.responsable || item.pm || 'Sin Asignar',
         contratista: item.empresa_adjudicada || item.empresaAdjudicada || item.contratista || 'No adjudicado',
-        partidaPresupuestaria: item.partida || item.partidaPresupuestaria || 'Sin partida',
-        fechaInicio: item.fecha_inicio || item.fechaInicio || item.fechaFactibilidad || '',
-        fechaFinTarget: item.fecha_fin_target || item.fecha_fin_etapa || item.fechaFinTarget || item.fechaEstimadaFinal || '',
-        diasAlerta: item.diasAlerta || item.dias_alerta || 0,
-        observaciones: item.observaciones || ''
+        diasAlerta: item.diasAlerta || item.dias_alerta || 0
       };
     });
   },
