@@ -239,6 +239,12 @@
         <span id="cloudStatusText" class="hidden md:inline">Modo Local</span>
       </button>
 
+      <!-- Botón Asistente IA (Exclusivo Dirección y Admin) -->
+      <button id="btnAiAssistantTop" onclick="AIAssistant.openModal()" class="hidden bg-purple-900 hover:bg-purple-800 text-purple-200 border border-purple-700 font-bold text-xs px-3.5 py-1.5 rounded-lg flex items-center space-x-1.5 shadow-xs transition cursor-pointer" title="Auditor Ejecutivo IA">
+        <i data-lucide="sparkles" class="w-4 h-4 text-purple-300"></i>
+        <span>Auditor IA</span>
+      </button>
+
       <!-- Botón + Nueva Obra (Abre Factibilidad) -->
       <button id="btnNuevaObraTop" onclick="App.openNewObraModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg flex items-center space-x-1 shadow-sm transition">
         <i data-lucide="plus" class="w-4 h-4"></i>
@@ -2277,5 +2283,6 @@
   <script src="js/supabase-client.js"></script>
   <script src="js/data-store.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/ai-assistant.js"></script>
 </body>
 </html>
