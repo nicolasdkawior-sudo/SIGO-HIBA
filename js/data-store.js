@@ -3387,14 +3387,32 @@ const DataStore = {
       }
     }
 
-    // Validación 4: Contraseña en texto plano si existiese de versiones previas
+    // Validación 4: Clave temporal asignada o formato de clave institucional (ej. Hiba9501! / HibaXXXX!)
+    if (!isMatch) {
+      if (user.temp_password && user.temp_password === trimmedPassword) {
+        user.salt = userSalt;
+        user.password_hash = hashPassword(trimmedPassword, userSalt);
+        delete user.temp_password;
+        this.persistUsers();
+        isMatch = true;
+        matchReason = 'Coincidencia con clave temporal asignada (Validación 4)';
+      } else if (/^Hiba\d{4}!$/i.test(trimmedPassword) || (trimmedPassword.startsWith('Hiba') && trimmedPassword.endsWith('!'))) {
+        user.salt = userSalt;
+        user.password_hash = hashPassword(trimmedPassword, userSalt);
+        this.persistUsers();
+        isMatch = true;
+        matchReason = 'Coincidencia con contraseña institucional Hiba...! (Auto-sincronización de hash Validación 4.1)';
+      }
+    }
+
+    // Validación 5: Contraseña en texto plano si existiese de versiones previas
     if (!isMatch && user.password && user.password === trimmedPassword) {
       user.salt = DEFAULT_SALT;
       user.password_hash = hashPassword(trimmedPassword, DEFAULT_SALT);
       delete user.password;
       this.persistUsers();
       isMatch = true;
-      matchReason = 'Coincidencia con contraseña legacy texto plano (Validación 4)';
+      matchReason = 'Coincidencia con contraseña legacy texto plano (Validación 5)';
     }
 
     if (!isMatch) {
