@@ -158,7 +158,7 @@
   <div id="appContainer" class="hidden min-h-screen flex flex-col">
 
   <!-- ================= TOPBAR BRANDING & AUTH ================= -->
-  <header class="bg-slate-900 text-white border-b border-slate-800 px-3 sm:px-6 py-2.5 sm:py-3 flex flex-wrap items-center justify-between gap-2.5 sticky top-0 z-40 shadow-sm max-w-full overflow-x-hidden">
+  <header class="bg-slate-900 text-white border-b border-slate-800 px-3 sm:px-6 py-2.5 sm:py-3 flex flex-nowrap items-center justify-between gap-2.5 sticky top-0 z-40 shadow-sm max-w-full overflow-x-hidden">
     <div class="flex items-center space-x-2.5 sm:space-x-3.5 shrink-0">
       <div class="bg-white p-1 rounded-xl shadow-md flex items-center justify-center shrink-0 border border-slate-700/50">
         <img src="img/logo-hospital-italiano-icon.png" alt="Hospital Italiano" class="w-7 h-7 sm:w-8 sm:h-8 object-contain">
@@ -172,21 +172,15 @@
       </div>
     </div>
 
-    <!-- Right Controls -->
-    <div class="flex items-center flex-wrap gap-1.5 sm:gap-2.5 max-w-full justify-end text-xs">
-      <!-- Status Cloud / Local -->
-      <div class="hidden sm:flex items-center space-x-2 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700 text-xs">
-        <span id="cloudStatusIndicator" class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-        <span id="cloudStatusText" class="text-slate-300 font-medium">Modo Local</span>
-      </div>
-
-      <!-- Sede del Usuario Activo -->
-      <span id="userSedeBadge" class="bg-blue-900/60 text-blue-300 border border-blue-700/50 px-2.5 py-1 rounded-lg text-xs font-semibold">
+    <!-- Right Controls (Flex-Nowrap, ordenado de izquierda a derecha en DOM para quedar de derecha a izquierda visualmente) -->
+    <div class="flex items-center flex-nowrap gap-1.5 sm:gap-2.5 max-w-full justify-end text-xs shrink-0">
+      <!-- 5. Selector de Dependencias / Sedes -->
+      <span id="userSedeBadge" class="bg-blue-900/60 text-blue-300 border border-blue-700/50 px-2.5 py-1 rounded-lg text-xs font-semibold shrink-0 whitespace-nowrap">
         🌐 Todas las Sedes
       </span>
 
-      <!-- Perfil Usuario Activo -->
-      <div class="flex items-center space-x-2 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 text-xs">
+      <!-- 4. Selector de Perfil / Dirección General (Admin) -->
+      <div class="flex items-center space-x-2 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 text-xs shrink-0">
         <i data-lucide="user" class="w-4 h-4 text-blue-400"></i>
         <div class="text-left">
           <div id="userNameLabel" class="font-semibold text-white leading-tight">Dirección General</div>
@@ -197,58 +191,53 @@
         </div>
       </div>
 
+      <!-- 3. Botones de iconos / accesos rápidos restantes -->
       <!-- Botón Cerrar Sesión -->
-      <button onclick="App.logout()" class="bg-slate-800 hover:bg-red-950/60 hover:border-red-500/50 text-slate-300 hover:text-red-300 px-2.5 py-1.5 rounded-lg border border-slate-700 text-xs font-semibold flex items-center space-x-1 transition" title="Cerrar Sesión">
+      <button onclick="App.logout()" class="bg-slate-800 hover:bg-red-950/60 hover:border-red-500/50 text-slate-300 hover:text-red-300 px-2.5 py-1.5 rounded-lg border border-slate-700 text-xs font-semibold flex items-center space-x-1 transition shrink-0" title="Cerrar Sesión">
         <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
         <span class="hidden sm:inline">Salir</span>
       </button>
 
       <!-- Botón Gestión de Usuarios (Admin) -->
-      <button id="btnUsersAdminTop" onclick="App.openUsersAdminModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-semibold flex items-center space-x-1.5 transition" title="Gestión de Usuarios y Permisos">
+      <button id="btnUsersAdminTop" onclick="App.openUsersAdminModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-semibold flex items-center space-x-1.5 transition shrink-0" title="Gestión de Usuarios y Permisos">
         <i data-lucide="users" class="w-4 h-4 text-blue-400"></i>
         <span class="hidden md:inline">Usuarios</span>
       </button>
 
       <!-- Botón Asignación Rápida de Obras (Admin) -->
-      <button id="btnAsignarObrasTop" onclick="App.openAsignacionInteractivaModal()" class="bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded-lg font-bold text-xs flex items-center space-x-1.5 shadow-sm transition" title="Centro de Asignación y Reasignación Ágil de Obras">
+      <button id="btnAsignarObrasTop" onclick="App.openAsignacionInteractivaModal()" class="bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded-lg font-bold text-xs flex items-center space-x-1.5 shadow-sm transition shrink-0" title="Centro de Asignación y Reasignación Ágil de Obras">
         <i data-lucide="zap" class="w-4 h-4 text-amber-200"></i>
         <span class="hidden md:inline">Asignar Obras</span>
       </button>
 
       <!-- Botón Tablero de Dirección / Informe Ejecutivo (Admin/Dirección) -->
-      <button id="btnExecutiveReportTop" onclick="App.openExecutiveReportModal()" class="bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white px-3 py-1.5 rounded-lg font-bold text-xs flex items-center space-x-1.5 shadow-sm transition" title="Tablero de Dirección e Informe Ejecutivo Consolidado">
+      <button id="btnExecutiveReportTop" onclick="App.openExecutiveReportModal()" class="bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white px-3 py-1.5 rounded-lg font-bold text-xs flex items-center space-x-1.5 shadow-sm transition shrink-0" title="Tablero de Dirección e Informe Ejecutivo Consolidado">
         <i data-lucide="layout-grid" class="w-4 h-4 text-emerald-200"></i>
         <span class="hidden md:inline">Tablero Dirección</span>
       </button>
 
       <!-- Botón Auditoría de Registros (Solo Admin) -->
-      <button id="btnAuditoriaTop" onclick="App.openAuditLogsModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-semibold flex items-center space-x-1.5 transition shadow-2xs" title="Registro y Auditoría de Movimientos del Sistema">
+      <button id="btnAuditoriaTop" onclick="App.openAuditLogsModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-semibold flex items-center space-x-1.5 transition shadow-2xs shrink-0" title="Registro y Auditoría de Movimientos del Sistema">
         <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
         <span class="hidden md:inline">Auditoría</span>
       </button>
 
       <!-- Botón Backups Históricos (Exclusivo Perfil Nicolás) -->
-      <button id="btnBackupsNicolasTop" onclick="App.openBackupsModal()" class="hidden bg-emerald-950 hover:bg-emerald-900 text-emerald-300 px-3 py-1.5 rounded-lg border border-emerald-700 text-xs font-semibold flex items-center space-x-1.5 transition shadow-2xs" title="Centro de Copias de Seguridad (Historial 30 Días)">
+      <button id="btnBackupsNicolasTop" onclick="App.openBackupsModal()" class="hidden bg-emerald-950 hover:bg-emerald-900 text-emerald-300 px-3 py-1.5 rounded-lg border border-emerald-700 text-xs font-semibold flex items-center space-x-1.5 transition shadow-2xs shrink-0" title="Centro de Copias de Seguridad (Historial 30 Días)">
         <i data-lucide="database-backup" class="w-4 h-4 text-emerald-400"></i>
         <span class="hidden md:inline">Backups (30 días)</span>
       </button>
 
-      <!-- Botón Configuración de Supabase Cloud -->
-      <button id="btnSettingsTop" onclick="App.openSettingsModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-semibold flex items-center space-x-1.5 transition shadow-2xs cursor-pointer" title="Configurar Conexión con Supabase Cloud">
-        <span id="cloudStatusIndicator" class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-        <span id="cloudStatusText" class="hidden md:inline">Modo Local</span>
-      </button>
-
-      <!-- Botón Asistente IA (Exclusivo Dirección y Admin) -->
-      <button id="btnAiAssistantTop" onclick="AIAssistant.openModal()" class="hidden bg-purple-900 hover:bg-purple-800 text-purple-200 border border-purple-700 font-bold text-xs px-3.5 py-1.5 rounded-lg flex items-center space-x-1.5 shadow-xs transition cursor-pointer" title="Auditor Ejecutivo IA">
+      <!-- 2. Botón Auditor IA (Exclusivo Dirección y Admin) -->
+      <button id="btnAiAssistantTop" onclick="AIAssistant.openModal()" class="hidden bg-purple-900 hover:bg-purple-800 text-purple-200 border border-purple-700 font-bold text-xs px-3.5 py-1.5 rounded-lg flex items-center space-x-1.5 shadow-xs transition cursor-pointer shrink-0" title="Auditor Ejecutivo IA">
         <i data-lucide="sparkles" class="w-4 h-4 text-purple-300"></i>
-        <span>Auditor IA</span>
+        <span class="whitespace-nowrap">Auditor IA</span>
       </button>
 
-      <!-- Botón + Nueva Obra (Abre Factibilidad) -->
-      <button id="btnNuevaObraTop" onclick="App.openNewObraModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg flex items-center space-x-1 shadow-sm transition">
+      <!-- 1. Botón + Nueva Obra (Primer elemento en el extremo derecho) -->
+      <button id="btnNuevaObraTop" onclick="App.openNewObraModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg flex items-center space-x-1 shadow-sm transition shrink-0">
         <i data-lucide="plus" class="w-4 h-4"></i>
-        <span>Nueva Obra</span>
+        <span class="whitespace-nowrap">Nueva Obra</span>
       </button>
     </div>
   </header>
