@@ -159,6 +159,11 @@ const App = {
       this.render();
     });
 
+    document.getElementById('filterResponsable')?.addEventListener('change', (e) => {
+      this.filters.responsable = e.target.value;
+      this.render();
+    });
+
     document.getElementById('filterTipo')?.addEventListener('change', (e) => {
       this.filters.tipo = e.target.value;
       this.render();
@@ -241,6 +246,8 @@ const App = {
     if (selDep) selDep.value = userDep;
     const selSede = document.getElementById('filterSede');
     if (selSede) selSede.value = userSede;
+    const selResp = document.getElementById('filterResponsable');
+    if (selResp) selResp.value = 'TODOS';
     const selTipo = document.getElementById('filterTipo');
     if (selTipo) selTipo.value = 'TODOS';
     const selAsign = document.getElementById('filterAsignacion');
@@ -325,6 +332,7 @@ const App = {
   },
 
   render() {
+    this.populateResponsableFilter();
     const kpis = DataStore.getKPIs(this.filters);
     this.renderKPIs(kpis);
     this.renderMedicalAlert();
@@ -2825,6 +2833,25 @@ const App = {
     const modal = document.getElementById('modalAsignacionInteractiva');
     if (modal) modal.classList.add('hidden');
     this.render(); // Actualiza tablero y vistas generales
+  },
+
+  populateResponsableFilter() {
+    const select = document.getElementById('filterResponsable');
+    if (!select) return;
+    const currentVal = this.filters.responsable || 'TODOS';
+    const responsablesSet = new Set();
+    (DataStore.items || []).forEach(item => {
+      if (item.responsable && typeof item.responsable === 'string' && item.responsable.trim() !== '' && item.responsable !== 'Sin Asignar' && item.responsable !== 'S/D') {
+        responsablesSet.add(item.responsable.trim());
+      }
+    });
+    const sorted = Array.from(responsablesSet).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+    let html = `<option value="TODOS">Todos los Responsables</option>`;
+    sorted.forEach(resp => {
+      html += `<option value="${resp}">${resp}</option>`;
+    });
+    select.innerHTML = html;
+    select.value = currentVal;
   },
 
   populateAsignacionFiltros() {
