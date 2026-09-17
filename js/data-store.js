@@ -3238,6 +3238,9 @@ const DataStore = {
     const rawInput = usernameOrEmail.toString().trim();
     const cleanInput = rawInput.replace(/^@/, '').toLowerCase();
 
+    console.log(`[LOGIN DEBUG] ==========================================`);
+    console.log(`[LOGIN DEBUG] 1. Username ingresado: "${rawInput}" (Normalizado: "${cleanInput}")`);
+
     // Búsqueda flexible por username, email o id
     const user = this.users.find(u => {
       if (!u) return false;
@@ -3248,12 +3251,16 @@ const DataStore = {
     });
 
     if (!user) {
-      console.warn(`[AUTH DIAGNOSTIC] Login fallido: usuario "${cleanInput}" no encontrado.`);
+      console.error(`[LOGIN DEBUG] ❌ 4. MOTIVO DE FALLO: El usuario "${cleanInput}" NO EXISTE en el registro activo (Total usuarios: ${this.users.length}).`);
+      console.log(`[LOGIN DEBUG] ==========================================`);
       return { success: false, msg: '⛔ Usuario o contraseña incorrectos. Verifica tus datos de ingreso.' };
     }
 
+    console.log(`[LOGIN DEBUG] 1. Username almacenado en registro: "${user.username}" | ID: "${user.id}" | Email: "${user.email}" | Nombre: "${user.nombre}"`);
+
     if (user.activo === false) {
-      console.warn(`[AUTH DIAGNOSTIC] Login bloqueado: usuario "${user.username}" (ID: ${user.id}) está inactivo.`);
+      console.error(`[LOGIN DEBUG] ❌ 4. MOTIVO DE FALLO: El usuario "${user.username}" (ID: ${user.id}) existe pero su cuenta está INACTIVA (activo: false).`);
+      console.log(`[LOGIN DEBUG] ==========================================`);
       return { 
         success: false, 
         msg: `⛔ Acceso Denegado: El acceso para "${user.nombre}" ha sido revocado. Contacta al Administrador para su habilitación.` 
@@ -3263,26 +3270,30 @@ const DataStore = {
     const trimmedPassword = password.toString().trim();
     const userSalt = user.salt || DEFAULT_SALT;
     const computedHash = hashPassword(trimmedPassword, userSalt);
+    const storedHash = user.password_hash || null;
+    const hasStoredPassword = Boolean(user.password_hash || user.password);
 
-    console.log(`[AUTH DIAGNOSTIC] Intentando autenticar usuario: "${user.username}" (ID: ${user.id})`);
-    console.log(`[AUTH DIAGNOSTIC] Salt usado: "${userSalt}" | Hash guardado: "${user.password_hash}" | Hash calculado: "${computedHash}"`);
+    console.log(`[LOGIN DEBUG] 2. Hash calculado en tiempo real: "${computedHash}" (Salt: "${userSalt}")`);
+    console.log(`[LOGIN DEBUG] 3. Hash exacto almacenado en base de datos: "${storedHash}"`);
+    console.log(`[LOGIN DEBUG] 3.1. ¿Existe campo de contraseña/hash en JSON?: ${hasStoredPassword ? 'SÍ' : 'NO (Falta campo de contraseña en el objeto de usuario)'}`);
 
     let isMatch = false;
+    let matchReason = '';
 
     // Validación 1: Hash con el salt guardado
-    if (user.password_hash && computedHash === user.password_hash) {
-      console.log(`[AUTH DIAGNOSTIC] ✅ Éxito Validación 1: Hash coincide exactamente con salt guardado.`);
+    if (storedHash && computedHash === storedHash) {
       isMatch = true;
+      matchReason = 'Coincidencia exacta de hash con salt guardado (Validación 1)';
     }
 
     // Validación 2: Auto-reparación si salt difiere de DEFAULT_SALT pero el hash almacenado corresponde a DEFAULT_SALT
-    if (!isMatch && user.password_hash) {
+    if (!isMatch && storedHash) {
       const defaultSaltHash = hashPassword(trimmedPassword, DEFAULT_SALT);
-      if (defaultSaltHash === user.password_hash) {
-        console.log(`[AUTH DIAGNOSTIC] ✅ Éxito Validación 2: Coincide usando DEFAULT_SALT. Actualizando salt del usuario.`);
+      if (defaultSaltHash === storedHash) {
         user.salt = DEFAULT_SALT;
         this.persistUsers();
         isMatch = true;
+        matchReason = 'Coincidencia usando DEFAULT_SALT (Auto-reparación Validación 2)';
       }
     }
 
@@ -3293,34 +3304,42 @@ const DataStore = {
         (def.email && def.email.toLowerCase() === cleanInput) ||
         def.id === user.id
       );
-      if (isDefUser || !user.debe_cambiar_clave || user.password_hash === DEFAULT_ADMIN_HASH) {
-        console.log(`[AUTH DIAGNOSTIC] ✅ Éxito Validación 3: Acceso por clave maestra 'Admin2025!'. Reseteando credenciales.`);
+      if (isDefUser || !user.debe_cambiar_clave || storedHash === DEFAULT_ADMIN_HASH) {
         user.salt = DEFAULT_SALT;
         user.password_hash = DEFAULT_ADMIN_HASH;
         this.persistUsers();
         isMatch = true;
+        matchReason = 'Acceso por clave maestra Admin2025! (Validación 3)';
       }
     }
 
     // Validación 4: Contraseña en texto plano si existiese de versiones previas
     if (!isMatch && user.password && user.password === trimmedPassword) {
-      console.log(`[AUTH DIAGNOSTIC] ✅ Éxito Validación 4: Contraseña coincide en texto plano legacy. Migrando a hash.`);
       user.salt = DEFAULT_SALT;
       user.password_hash = hashPassword(trimmedPassword, DEFAULT_SALT);
       delete user.password;
       this.persistUsers();
       isMatch = true;
+      matchReason = 'Coincidencia con contraseña legacy texto plano (Validación 4)';
     }
 
     if (!isMatch) {
-      console.error(`[AUTH DIAGNOSTIC] ❌ Fallo de autenticación para "${user.username}". Ninguna regla de hash/contraseña coincidió.`);
+      let failureDetail = '';
+      if (!hasStoredPassword) {
+        failureDetail = 'Falta el campo de contraseña (password_hash o password) en el JSON del usuario.';
+      } else {
+        failureDetail = `El hash calculado ("${computedHash}") NO coincide con el hash guardado ("${storedHash}").`;
+      }
+      console.error(`[LOGIN DEBUG] ❌ 4. MOTIVO EXACTO DE FALLO: ${failureDetail}`);
+      console.log(`[LOGIN DEBUG] ==========================================`);
       return { success: false, msg: '⛔ Usuario o contraseña incorrectos. Verifica tus datos de ingreso.' };
     }
 
     // Autenticación correcta
     this.currentUser = user;
     localStorage.setItem('sigo_active_user_id', user.id);
-    console.log(`[AUTH DIAGNOSTIC] 🎉 Sesión iniciada con éxito para "${user.username}".`);
+    console.log(`[LOGIN DEBUG] 🎉 4. ÉXITO: Login autenticado correctamente. Motivo: ${matchReason}`);
+    console.log(`[LOGIN DEBUG] ==========================================`);
 
     return { 
       success: true, 
