@@ -3474,49 +3474,8 @@ const App = {
 
         </div>
 
-        <!-- GRÁFICO DE 12 BARRAS MENSUALES (CURVA DE CAÍDA DE GASTO) -->
-        <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-xs mb-4 report-page-card">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-100">
-            <div class="flex items-center space-x-1.5">
-              <i data-lucide="bar-chart-3" class="w-4 h-4 text-blue-600"></i>
-              <span class="text-xs font-bold text-slate-900 uppercase tracking-wide">Curva de Caída del Gasto de Inversiones • Ejercicio ${accountingLabel} (12 Meses)</span>
-            </div>
-            <div class="flex items-center space-x-3 text-[10px]">
-              <span class="inline-flex items-center space-x-1 text-blue-800 font-semibold bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200/60">
-                <span class="w-2 h-2 rounded-full bg-blue-600 inline-block"></span>
-                <span>Pagado: <strong>US$ ${fmt(report.cashflowEjecucion.totalYaPagadoUSD)}</strong></span>
-              </span>
-              <span class="inline-flex items-center space-x-1 text-teal-800 font-semibold bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200/60">
-                <span class="w-2 h-2 rounded-full bg-teal-500 inline-block"></span>
-                <span>Proyectado: <strong>US$ ${fmt(report.cashflowEjecucion.totalProyectadoUSD)}</strong></span>
-              </span>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-6 sm:grid-cols-12 gap-1.5 pt-1">
-            ${(report.accountingInfo ? report.accountingInfo.meses : []).map(m => {
-              const val = report.cashflowEjecucion.mesesTotales[m.key] || 0;
-              const pct = Math.min(100, Math.max(8, Math.round((val / maxMesVal) * 100)));
-              const barBg = m.isPast ? 'bg-gradient-to-t from-blue-700 to-blue-500' : 'bg-gradient-to-t from-teal-600 to-teal-400';
-              const badgeBg = m.isPast ? 'bg-blue-50 text-blue-800 border-blue-200/60' : 'bg-teal-50 text-teal-800 border-teal-200/60';
-              const statusLabel = m.isPast ? 'Pagado' : 'Proy.';
-
-              return `
-                <div class="flex flex-col items-center bg-slate-50/70 p-1.5 rounded-lg border border-slate-200/60 shadow-2xs hover:bg-white transition">
-                  <span class="text-[9px] font-extrabold text-slate-800 uppercase">${m.label || m.shortLabel}</span>
-                  <span class="text-[7px] font-mono text-slate-400">${m.year || ''}</span>
-                  
-                  <div class="w-full bg-slate-200/80 rounded-md h-12 flex items-end my-1 p-0.5">
-                    <div class="w-full ${barBg} rounded-t-sm transition-all duration-300" style="height: ${pct}%" title="${m.label} ${m.year}: US$ ${fmt(val)}"></div>
-                  </div>
-
-                  <span class="text-[8px] font-bold font-mono text-slate-900 leading-none">$${fmt(val)}</span>
-                  <span class="text-[6.5px] font-extrabold px-1 py-0.2 rounded-full mt-0.5 border ${badgeBg}">${statusLabel}</span>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
+        <!-- GRÁFICO AISLADO CONTINUO (CURVA DE CAÍDA DE GASTO) -->
+        ${typeof ExecutiveCurveChart !== 'undefined' ? ExecutiveCurveChart.renderHTML(report) : ''}
 
         <!-- TABLA DETALLADA DE CASH FLOW -->
         <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-xs report-page-card mb-4">
@@ -3801,6 +3760,9 @@ const App = {
     `;
 
     container.innerHTML = html;
+    if (typeof ExecutiveCurveChart !== 'undefined') {
+      ExecutiveCurveChart.renderChart(report);
+    }
     if (window.lucide) lucide.createIcons();
   },
 
