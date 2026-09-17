@@ -186,34 +186,97 @@ const AIAssistant = {
     }
   },
 
-  getObrasContext() {
-    if (typeof DataStore === 'undefined' || !DataStore.items) return [];
+  getObrasContext(userMessage = '') {
+    if (typeof DataStore === 'undefined' || !DataStore.items || DataStore.items.length === 0) return {};
 
-    return DataStore.items.map(item => {
-      const mObra = typeof item.monto_obra_usd === 'number' ? item.monto_obra_usd : (parseFloat(item.monto_obra_usd) || parseFloat(item.montoObraUSD) || parseFloat(item.monto_obra) || 0);
-      const mEquip = typeof item.monto_equipamiento_usd === 'number' ? item.monto_equipamiento_usd : (parseFloat(item.monto_equipamiento_usd) || parseFloat(item.monto_equip_usd) || parseFloat(item.montoEquipUSD) || 0);
-      const mTotal = typeof item.monto_total_usd === 'number' ? item.monto_total_usd : (parseFloat(item.monto_total_usd) || parseFloat(item.monto_partida_usd) || parseFloat(item.monto_adjudicado_usd) || parseFloat(item.presupuestoUSD) || (mObra + mEquip) || (item.cashflow ? parseFloat(item.cashflow.monto_total) : 0) || 0);
-      const m2Val = parseFloat(item.m2) || 0;
-      const usdM2 = m2Val > 0 ? (mTotal / m2Val) : (parseFloat(item.usd_per_m2) || parseFloat(item.usdPerM2) || 0);
+    const items = DataStore.items;
+    const msg = (userMessage || '').toLowerCase();
 
-      return {
-        id: item.id,
-        nombre: item.nombre || item.nombreObra || item.titulo || 'Sin nombre',
-        sede: item.sede || '',
-        dependencia: item.dependencia || '',
-        tipo: item.tipo || 'Obra Civil',
-        etapa: item.estado || 'Proyecto',
-        avance: (item.porcentaje_avance || item.porcentajeAvance || 0) + '%',
-        montoTotalUSD: mTotal,
-        montoObraUSD: mObra,
-        montoEquipUSD: mEquip,
-        m2: m2Val,
-        usdM2: Math.round(usdM2 * 100) / 100,
-        responsable: item.responsable || item.pm || 'Sin Asignar',
-        contratista: item.empresa_adjudicada || item.empresaAdjudicada || item.contratista || 'No adjudicado',
-        diasAlerta: item.diasAlerta || item.dias_alerta || 0
-      };
+    // 1. Si la consulta nombra una obra específica o código, filtrar y enviar solo esa obra
+    const specificObra = items.find(item => {
+      const nameMatch = item.nombre && item.nombre.length > 5 && msg.includes(item.nombre.toLowerCase().slice(0, 15));
+      const codeMatch = item.id && msg.includes(item.id.toLowerCase());
+      return nameMatch || codeMatch;
     });
+
+    if (specificObra) {
+      const mObra = parseFloat(specificObra.monto_obra_usd || specificObra.montoObraUSD) || 0;
+      const mEquip = parseFloat(specificObra.monto_equipamiento_usd || specificObra.montoEquipUSD) || 0;
+      const mTotal = parseFloat(specificObra.monto_total_usd || specificObra.monto_partida_usd) || (mObra + mEquip);
+      return {
+        tipoContexto: 'OBRA_ESPECIFICA',
+        obra: {
+          id: specificObra.id,
+          nombre: specificObra.nombre,
+          sede: specificObra.sede,
+          dependencia: specificObra.dependencia,
+          etapa: specificObra.estado,
+          avance: (specificObra.porcentaje_avance || 0) + '%',
+          montoTotalUSD: mTotal,
+          montoObraUSD: mObra,
+          montoEquipUSD: mEquip,
+          responsable: specificObra.responsable || 'Sin Asignar',
+          contratista: specificObra.empresa_adjudicada || 'No adjudicado',
+          diasAlerta: specificObra.diasAlerta || specificObra.dias_alerta || 0
+        }
+      };
+    }
+
+    // 2. Resumen Ultra-Light Consolidado por Sede (~800 tokens)
+    const porSede = {};
+    let totalInversionUSD = 0;
+
+    items.forEach(item => {
+      const sede = item.sede || 'Sin Sede';
+      const mObra = parseFloat(item.monto_obra_usd || item.montoObraUSD) || 0;
+      const mEquip = parseFloat(item.monto_equipamiento_usd || item.montoEquipUSD) || 0;
+      const mTotal = parseFloat(item.monto_total_usd || item.monto_partida_usd) || (mObra + mEquip);
+
+      totalInversionUSD += mTotal;
+
+      if (!porSede[sede]) {
+        porSede[sede] = { obras: 0, montoTotalUSD: 0 };
+      }
+      porSede[sede].obras += 1;
+      porSede[sede].montoTotalUSD += mTotal;
+    });
+
+    // Redondear montos por sede
+    Object.keys(porSede).forEach(s => {
+      porSede[s].montoTotalUSD = Math.round(porSede[s].montoTotalUSD);
+    });
+
+    // 3. Top 10 Obras Críticas (por días de alerta o inversión mayor)
+    const topObras = [...items]
+      .sort((a, b) => {
+        const alertA = a.diasAlerta || a.dias_alerta || 0;
+        const alertB = b.diasAlerta || b.dias_alerta || 0;
+        if (alertB !== alertA) return alertB - alertA;
+        const totalA = parseFloat(a.monto_total_usd) || 0;
+        const totalB = parseFloat(b.monto_total_usd) || 0;
+        return totalB - totalA;
+      })
+      .slice(0, 10)
+      .map(item => ({
+        id: item.id,
+        nombre: item.nombre,
+        sede: item.sede,
+        etapa: item.estado,
+        avance: (item.porcentaje_avance || 0) + '%',
+        montoTotalUSD: Math.round(parseFloat(item.monto_total_usd || item.monto_partida_usd) || 0),
+        contratista: item.empresa_adjudicada || 'No adjudicado',
+        diasAlerta: item.diasAlerta || item.dias_alerta || 0
+      }));
+
+    return {
+      tipoContexto: 'RESUMEN_EJECUTIVO_CONSOLIDADO',
+      totalesGeneral: {
+        totalObras: items.length,
+        inversionTotalUSD: Math.round(totalInversionUSD)
+      },
+      resumenPorSede: porSede,
+      top10ObrasCriticas: topObras
+    };
   },
 
   sendQuickQuery(queryText) {
@@ -240,7 +303,7 @@ const AIAssistant = {
     this.setLoading(true);
 
     try {
-      const context = this.getObrasContext();
+      const context = this.getObrasContext(message);
 
       const response = await fetch('/api/ai-assistant', {
         method: 'POST',
@@ -248,14 +311,17 @@ const AIAssistant = {
         body: JSON.stringify({
           message: message,
           context: context,
-          history: this.chatHistory.slice(-6)
+          history: this.chatHistory.slice(-4)
         })
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
       if (!response.ok || data.error) {
-        throw new Error(data.error || 'Error al comunicarse con la IA.');
+        const status = response.status || data.statusCode || 500;
+        const errorMsg = data.error || `Error HTTP ${status}`;
+        console.error('[AI Assistant API Diagnostic]:', status, data);
+        throw new Error(`[HTTP ${status}]: ${errorMsg}`);
       }
 
       const replyText = data.reply || 'Sin respuesta.';

@@ -3,80 +3,89 @@
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function callGeminiWithRetriesAndFallbacks(contents, apiKey) {
-  // Modelos ligeros de alta disponibilidad, baja latencia y amplia cuota
+  // Modelos ligeros de alta disponibilidad ordenados por prioridad
   const candidateUrls = [
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-    `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${apiKey}`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`
+    { name: 'gemini-1.5-flash (v1beta)', url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}` },
+    { name: 'gemini-1.5-flash (v1)', url: `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}` },
+    { name: 'gemini-1.5-flash-8b (v1beta)', url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${apiKey}` },
+    { name: 'gemini-2.0-flash (v1beta)', url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}` }
   ];
 
-  let lastError = null;
+  let lastErrorDetail = null;
 
-  for (const url of candidateUrls) {
-    // Hasta 2 intentos con reintento y retardo incremental (exponential backoff)
+  for (const candidate of candidateUrls) {
     for (let attempt = 1; attempt <= 2; attempt++) {
       try {
-        const response = await fetch(url, {
+        const response = await fetch(candidate.url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ contents })
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (replyText && replyText.trim() !== '') {
-            return replyText;
-          }
+        const errData = await response.json().catch(() => ({}));
+
+        if (response.ok && errData.candidates?.[0]?.content?.parts?.[0]?.text) {
+          return errData.candidates[0].content.parts[0].text;
         }
 
-        const errData = await response.json().catch(() => ({}));
-        const msg = errData.error?.message || `Error HTTP ${response.status}`;
-        lastError = new Error(msg);
+        const providerMsg = errData.error?.message || `HTTP ${response.status} ${response.statusText}`;
+        lastErrorDetail = {
+          status: response.status,
+          model: candidate.name,
+          message: providerMsg
+        };
 
-        // Si es rate limit (429) o saturación/servidor (503, 500), reintentar con backoff
         if (response.status === 429 || response.status === 503 || response.status >= 500) {
-          await sleep(800 * attempt);
+          await sleep(700 * attempt);
           continue;
         } else {
-          // Si la versión o modelo no está disponible, pasar de inmediato al siguiente modelo ligero
+          // Si es un error de cliente (401, 403, 404), intentamos el siguiente endpoint
           break;
         }
       } catch (err) {
-        lastError = err;
-        await sleep(800 * attempt);
+        lastErrorDetail = {
+          status: 500,
+          model: candidate.name,
+          message: err.message || 'Error de red o conexión'
+        };
+        await sleep(700 * attempt);
       }
     }
   }
 
-  throw lastError || new Error('Servicio de IA saturado o no disponible.');
+  const err = new Error(lastErrorDetail ? `[Gemini ${lastErrorDetail.status}] (${lastErrorDetail.model}): ${lastErrorDetail.message}` : 'Error de comunicación con IA');
+  err.statusCode = lastErrorDetail ? lastErrorDetail.status : 502;
+  err.detail = lastErrorDetail;
+  throw err;
 }
 
 module.exports = async function handler(req, res) {
-  // Manejo de CORS preflight
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
   if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     return res.status(200).end();
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Método no permitido. Utilizar POST.' });
+    return res.status(405).json({ statusCode: 405, error: 'Método no permitido. Utilizar POST.' });
   }
 
   const apiKey = (process.env.GEMINI_API_KEY || process.env.GEMINI_KEY || '').trim();
   if (!apiKey) {
-    return res.status(500).json({ error: 'La API Key de Gemini (GEMINI_API_KEY) no está configurada o está vacía en las variables de entorno del servidor.' });
+    return res.status(500).json({
+      statusCode: 500,
+      error: 'La variable GEMINI_API_KEY no está configurada o está vacía en las variables de entorno de Vercel (Production).'
+    });
   }
 
   try {
     const { message, context, history } = req.body || {};
 
     if (!message || typeof message !== 'string' || message.trim() === '') {
-      return res.status(400).json({ error: 'Mensaje requerido.' });
+      return res.status(400).json({ statusCode: 400, error: 'Mensaje requerido.' });
     }
 
     const systemPrompt = `Eres el Auditor Ejecutivo y Asistente de Control de Gestión de SIGO HIBA (Hospital Italiano de Buenos Aires). Tu función exclusiva es analizar, auditar y responder dudas sobre las obras, inversiones, presupuestos, contratistas, plazos y desvíos recibidos en el contexto.
@@ -87,22 +96,19 @@ REGLAS DE SEGURIDAD ESTRICTAS:
 "Solo estoy autorizado a responder consultas operativas, analíticas y financieras sobre los proyectos y obras de SIGO HIBA."
 3. Basa tus respuestas únicamente en los datos provistos en el JSON de contexto; no inventes información.`;
 
-    const contextText = context ? `\n--- DATOS ACTUALES DE OBRAS Y PROYECTOS SIGO HIBA ---\n${JSON.stringify(context)}\n--- FIN DATOS CONTEXTO ---\n` : '';
+    const contextText = context ? `\n--- RESUMEN Y CONTEXTO COMPRIMIDO SIGO HIBA ---\n${JSON.stringify(context)}\n--- FIN CONTEXTO ---\n` : '';
 
-    const contents = [];
+    const contents = [
+      {
+        role: 'user',
+        parts: [{ text: `${systemPrompt}\n\n${contextText}` }]
+      },
+      {
+        role: 'model',
+        parts: [{ text: 'Entendido. Listo para auditar los datos consolidados de obras de SIGO HIBA.' }]
+      }
+    ];
 
-    // Instrucción de sistema y contexto inicial
-    contents.push({
-      role: 'user',
-      parts: [{ text: `${systemPrompt}\n\n${contextText}` }]
-    });
-
-    contents.push({
-      role: 'model',
-      parts: [{ text: 'Entendido. Estoy listo para auditar los datos de las obras y proyectos de SIGO HIBA según las reglas e información recibidas.' }]
-    });
-
-    // Historial previo de la conversación si existiera
     if (Array.isArray(history)) {
       history.slice(-4).forEach(h => {
         if (h.role && h.text) {
@@ -114,7 +120,6 @@ REGLAS DE SEGURIDAD ESTRICTAS:
       });
     }
 
-    // Consulta actual del usuario
     contents.push({
       role: 'user',
       parts: [{ text: message }]
@@ -123,9 +128,12 @@ REGLAS DE SEGURIDAD ESTRICTAS:
     const replyText = await callGeminiWithRetriesAndFallbacks(contents, apiKey);
     return res.status(200).json({ reply: replyText });
   } catch (err) {
-    console.error('Error/Saturación en /api/ai-assistant:', err);
-    return res.status(503).json({
-      error: 'El servicio de Inteligencia Artificial se encuentra actualmente con alta demanda o saturación temporal. Por favor, reintenta tu consulta en unos momentos.'
+    const code = err.statusCode || 500;
+    console.error(`[AI Assistant Handler Error ${code}]:`, err.message, err.detail);
+    return res.status(code).json({
+      statusCode: code,
+      error: err.message,
+      detail: err.detail || null
     });
   }
 };
