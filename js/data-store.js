@@ -585,14 +585,9 @@ const DataStore = {
           }
         }
 
-        // Sincronizar SIEMPRE credenciales maestras si no cambió voluntariamente la clave
-        if (!existing.debe_cambiar_clave) {
-          existing.salt = defU.salt;
-          existing.password_hash = defU.password_hash;
-        } else {
-          if (!existing.salt) existing.salt = defU.salt;
-          if (!existing.password_hash) existing.password_hash = defU.password_hash;
-        }
+        // Sincronizar SIEMPRE credenciales maestras y datos de identidad desde DEFAULT_USERS para prevenir hashes antiguos o corruptos en localStorage
+        existing.salt = defU.salt;
+        existing.password_hash = defU.password_hash;
 
         // Permisos por defecto
         if (existing.puede_avanzar === undefined) existing.puede_avanzar = defU.puede_avanzar;
