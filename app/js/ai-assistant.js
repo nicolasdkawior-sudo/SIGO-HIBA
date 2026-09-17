@@ -189,27 +189,37 @@ const AIAssistant = {
   getObrasContext() {
     if (typeof DataStore === 'undefined' || !DataStore.items) return [];
 
-    return DataStore.items.map(item => ({
-      id: item.id,
-      nombre: item.nombreObra || item.nombre,
-      dependencia: item.dependencia,
-      sede: item.sede,
-      tipo: item.tipo,
-      estadoEtapa: item.estado,
-      porcentajeAvance: item.porcentajeAvance || 0,
-      montoTotalUSD: item.presupuestoUSD || item.montoTotalUSD || ((item.montoObraUSD || 0) + (item.montoEquipUSD || 0)),
-      montoObraUSD: item.montoObraUSD || 0,
-      montoEquipUSD: item.montoEquipUSD || 0,
-      m2: item.m2 || 0,
-      usdPerM2: item.usdPerM2 || 0,
-      responsable: item.responsable || 'Sin Asignar',
-      contratista: item.empresaAdjudicada || item.contratista || 'No adjudicado',
-      partidaPresupuestaria: item.partidaPresupuestaria || 'Sin partida',
-      fechaInicio: item.fechaInicio || item.fechaFactibilidad,
-      fechaFinTarget: item.fechaFinTarget || item.fechaEstimadaFinal,
-      diasAlerta: item.diasAlerta || 0,
-      observaciones: item.observaciones || ''
-    }));
+    return DataStore.items.map(item => {
+      const mObra = typeof item.monto_obra_usd === 'number' ? item.monto_obra_usd : (parseFloat(item.monto_obra_usd) || parseFloat(item.montoObraUSD) || parseFloat(item.monto_obra) || 0);
+      const mEquip = typeof item.monto_equipamiento_usd === 'number' ? item.monto_equipamiento_usd : (parseFloat(item.monto_equipamiento_usd) || parseFloat(item.monto_equip_usd) || parseFloat(item.montoEquipUSD) || 0);
+      const mTotal = typeof item.monto_total_usd === 'number' ? item.monto_total_usd : (parseFloat(item.monto_total_usd) || parseFloat(item.monto_partida_usd) || parseFloat(item.monto_adjudicado_usd) || parseFloat(item.presupuestoUSD) || (mObra + mEquip) || (item.cashflow ? parseFloat(item.cashflow.monto_total) : 0) || 0);
+      const m2Val = parseFloat(item.m2) || 0;
+      const usdM2 = m2Val > 0 ? (mTotal / m2Val) : (parseFloat(item.usd_per_m2) || parseFloat(item.usdPerM2) || 0);
+
+      return {
+        id: item.id,
+        nombre: item.nombre || item.nombreObra || item.titulo || 'Sin nombre',
+        dependencia: item.dependencia || '',
+        sede: item.sede || '',
+        tipo: item.tipo || 'Obra Civil',
+        estadoEtapa: item.estado || 'Proyecto',
+        porcentajeAvance: item.porcentaje_avance || item.porcentajeAvance || 0,
+        montoTotalUSD: mTotal,
+        montoObraUSD: mObra,
+        montoEquipUSD: mEquip,
+        montoPartidaUSD: item.monto_partida_usd || 0,
+        montoAdjudicadoUSD: item.monto_adjudicado_usd || 0,
+        m2: m2Val,
+        usdPerM2: Math.round(usdM2 * 100) / 100,
+        responsable: item.responsable || item.pm || 'Sin Asignar',
+        contratista: item.empresa_adjudicada || item.empresaAdjudicada || item.contratista || 'No adjudicado',
+        partidaPresupuestaria: item.partida || item.partidaPresupuestaria || 'Sin partida',
+        fechaInicio: item.fecha_inicio || item.fechaInicio || item.fechaFactibilidad || '',
+        fechaFinTarget: item.fecha_fin_target || item.fecha_fin_etapa || item.fechaFinTarget || item.fechaEstimadaFinal || '',
+        diasAlerta: item.diasAlerta || item.dias_alerta || 0,
+        observaciones: item.observaciones || ''
+      };
+    });
   },
 
   sendQuickQuery(queryText) {
