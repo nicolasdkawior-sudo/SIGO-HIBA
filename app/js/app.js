@@ -1366,52 +1366,8 @@ const App = {
       return;
     }
 
-    // 5.1 Gráfico Mensual de Barras (12 Meses: Abr a Mar)
-    const maxMesVal = Math.max(...Object.values(summary.mesesTotales), 1);
-    let barGraphHtml = `
-      <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 pb-2 border-b border-slate-200">
-          <div class="flex items-center space-x-2">
-            <i data-lucide="bar-chart-3" class="w-4 h-4 text-blue-600"></i>
-            <span class="text-xs font-bold text-slate-800">Distribución Mensual del Gasto • Ejercicio Contable ${summary.accountingInfo.label} (01/04 al 31/03)</span>
-          </div>
-          <div class="flex items-center space-x-3 text-[11px]">
-            <span class="inline-flex items-center space-x-1 text-blue-800 font-semibold">
-              <span class="w-2.5 h-2.5 rounded-sm bg-blue-600 inline-block"></span>
-              <span>Ya Pagado: <strong>${DataStore.formatUSD(summary.totalYaPagadoUSD)}</strong></span>
-            </span>
-            <span class="inline-flex items-center space-x-1 text-teal-800 font-semibold">
-              <span class="w-2.5 h-2.5 rounded-sm bg-teal-500 inline-block"></span>
-              <span>Proyectado: <strong>${DataStore.formatUSD(summary.totalProyectadoUSD)}</strong></span>
-            </span>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-6 sm:grid-cols-12 gap-1.5 pt-2">
-          ${summary.accountingInfo.meses.map(m => {
-            const val = summary.mesesTotales[m.key] || 0;
-            const pct = Math.min(100, Math.max(8, Math.round((val / maxMesVal) * 100)));
-            const barBg = m.isPast ? 'bg-blue-600' : 'bg-teal-500';
-            const badgeBg = m.isPast ? 'bg-blue-100 text-blue-800' : 'bg-teal-100 text-teal-800';
-            const statusLabel = m.isPast ? 'Pagado' : 'Proy.';
-
-            return `
-              <div class="flex flex-col items-center bg-white p-2 rounded-lg border border-slate-200/80 shadow-2xs">
-                <span class="text-[10px] font-bold text-slate-700 uppercase">${m.label}</span>
-                <span class="text-[8px] font-mono text-slate-400">${m.year}</span>
-                
-                <div class="w-full bg-slate-100 rounded-sm h-14 flex items-end my-1 p-0.5">
-                  <div class="w-full ${barBg} rounded-xs transition-all duration-300" style="height: ${pct}%" title="${m.label} ${m.year}: ${DataStore.formatUSD(val)}"></div>
-                </div>
-
-                <span class="text-[9px] font-bold font-mono text-slate-900 leading-none">${DataStore.formatUSD(val)}</span>
-                <span class="text-[8px] font-semibold px-1 rounded mt-1 ${badgeBg}">${statusLabel}</span>
-              </div>
-            `;
-          }).join('')}
-        </div>
-      </div>
-    `;
+    // 5.1 Proyección Financiera Plurianual (48 Meses: 01/04 al 31/03 en 4 Ejercicios)
+    const barGraphHtml = (typeof CashflowProjection48M !== 'undefined') ? CashflowProjection48M.renderHTML(summary) : '';
 
     let html = barGraphHtml + `
       <div class="overflow-x-auto">
@@ -1523,6 +1479,9 @@ const App = {
     `;
 
     cashflowContainer.innerHTML = html;
+    if (typeof CashflowProjection48M !== 'undefined') {
+      CashflowProjection48M.renderChart(summary);
+    }
     if (window.lucide) lucide.createIcons();
   },
 
