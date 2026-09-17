@@ -34,20 +34,23 @@ function sha256(ascii) {
   let result = '';
   const words = [];
   const asciiBitLength = ascii[lengthProperty] * 8;
-  let hash = sha256.h = sha256.h || [];
-  const k = sha256.k = sha256.k || [];
-  let primeCounter = k[lengthProperty];
-
-  const isComposite = {};
-  for (let candidate = 2; primeCounter < 64; candidate++) {
-    if (!isComposite[candidate]) {
-      for (i = 0; i < 313; i += candidate) {
-        isComposite[i] = candidate;
+  if (!sha256.h) {
+    sha256.h = [];
+    sha256.k = [];
+    let primeCounter = 0;
+    const isComposite = {};
+    for (let candidate = 2; primeCounter < 64; candidate++) {
+      if (!isComposite[candidate]) {
+        for (i = 0; i < 313; i += candidate) {
+          isComposite[i] = candidate;
+        }
+        sha256.h[primeCounter] = (mathPow(candidate, .5) * maxWord) | 0;
+        sha256.k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;
       }
-      hash[primeCounter] = (mathPow(candidate, .5) * maxWord) | 0;
-      k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;
     }
   }
+  let hash = sha256.h.slice(0);
+  const k = sha256.k;
 
   ascii += '\x80';
   while (ascii[lengthProperty] % 64 - 56) ascii += '\x00';
@@ -3245,10 +3248,12 @@ const DataStore = {
     });
 
     if (!user) {
+      console.warn(`[AUTH DIAGNOSTIC] Login fallido: usuario "${cleanInput}" no encontrado.`);
       return { success: false, msg: '⛔ Usuario o contraseña incorrectos. Verifica tus datos de ingreso.' };
     }
 
     if (user.activo === false) {
+      console.warn(`[AUTH DIAGNOSTIC] Login bloqueado: usuario "${user.username}" (ID: ${user.id}) está inactivo.`);
       return { 
         success: false, 
         msg: `⛔ Acceso Denegado: El acceso para "${user.nombre}" ha sido revocado. Contacta al Administrador para su habilitación.` 
@@ -3257,17 +3262,24 @@ const DataStore = {
 
     const trimmedPassword = password.toString().trim();
     const userSalt = user.salt || DEFAULT_SALT;
+    const computedHash = hashPassword(trimmedPassword, userSalt);
+
+    console.log(`[AUTH DIAGNOSTIC] Intentando autenticar usuario: "${user.username}" (ID: ${user.id})`);
+    console.log(`[AUTH DIAGNOSTIC] Salt usado: "${userSalt}" | Hash guardado: "${user.password_hash}" | Hash calculated: "${computedHash}"`);
 
     let isMatch = false;
 
     // Validación 1: Hash con el salt guardado
-    if (user.password_hash && hashPassword(trimmedPassword, userSalt) === user.password_hash) {
+    if (user.password_hash && computedHash === user.password_hash) {
+      console.log(`[AUTH DIAGNOSTIC] ✅ Éxito Validación 1: Hash coincide exactamente con salt guardado.`);
       isMatch = true;
     }
 
     // Validación 2: Auto-reparación si salt difiere de DEFAULT_SALT pero el hash almacenado corresponde a DEFAULT_SALT
     if (!isMatch && user.password_hash) {
-      if (hashPassword(trimmedPassword, DEFAULT_SALT) === user.password_hash) {
+      const defaultSaltHash = hashPassword(trimmedPassword, DEFAULT_SALT);
+      if (defaultSaltHash === user.password_hash) {
+        console.log(`[AUTH DIAGNOSTIC] ✅ Éxito Validación 2: Coincide usando DEFAULT_SALT. Actualizando salt del usuario.`);
         user.salt = DEFAULT_SALT;
         this.persistUsers();
         isMatch = true;
@@ -3282,6 +3294,7 @@ const DataStore = {
         def.id === user.id
       );
       if (isDefUser || !user.debe_cambiar_clave || user.password_hash === DEFAULT_ADMIN_HASH) {
+        console.log(`[AUTH DIAGNOSTIC] ✅ Éxito Validación 3: Acceso por clave maestra 'Admin2025!'. Reseteando credenciales.`);
         user.salt = DEFAULT_SALT;
         user.password_hash = DEFAULT_ADMIN_HASH;
         this.persistUsers();
@@ -3291,6 +3304,7 @@ const DataStore = {
 
     // Validación 4: Contraseña en texto plano si existiese de versiones previas
     if (!isMatch && user.password && user.password === trimmedPassword) {
+      console.log(`[AUTH DIAGNOSTIC] ✅ Éxito Validación 4: Contraseña coincide en texto plano legacy. Migrando a hash.`);
       user.salt = DEFAULT_SALT;
       user.password_hash = hashPassword(trimmedPassword, DEFAULT_SALT);
       delete user.password;
@@ -3299,12 +3313,14 @@ const DataStore = {
     }
 
     if (!isMatch) {
+      console.error(`[AUTH DIAGNOSTIC] ❌ Fallo de autenticación para "${user.username}". Ninguna regla de hash/contraseña coincidió.`);
       return { success: false, msg: '⛔ Usuario o contraseña incorrectos. Verifica tus datos de ingreso.' };
     }
 
     // Autenticación correcta
     this.currentUser = user;
     localStorage.setItem('sigo_active_user_id', user.id);
+    console.log(`[AUTH DIAGNOSTIC] 🎉 Sesión iniciada con éxito para "${user.username}".`);
 
     return { 
       success: true, 
