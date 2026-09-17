@@ -3404,10 +3404,14 @@ const DataStore = {
       return { success: false, msg: '⛔ Usuario o contraseña incorrectos. Verifica tus datos de ingreso.' };
     }
 
-    // Autenticación correcta
+    // Autenticación correcta: Reseteo de bloqueos/intentos fallidos para pruebas e inicio limpio
+    if (typeof SecurityManager !== 'undefined' && typeof SecurityManager.recordSuccessfulLogin === 'function') {
+      try { SecurityManager.recordSuccessfulLogin(); } catch (e) {}
+    }
+
     this.currentUser = user;
     localStorage.setItem('sigo_active_user_id', user.id);
-    console.log(`[LOGIN DEBUG] 🎉 4. ÉXITO: Login autenticado correctamente. Motivo: ${matchReason}`);
+    console.log(`[LOGIN DEBUG] 🎉 4. ÉXITO: Login autenticado correctamente para "${user.username}" (Rol: ${user.rol}, Sede: ${user.sede}, Dep: ${user.dependencia}). Motivo: ${matchReason}`);
     console.log(`[LOGIN DEBUG] ==========================================`);
 
     return { 
