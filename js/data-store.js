@@ -3455,11 +3455,25 @@ const DataStore = {
     if (!this.isAdmin()) {
       return { success: false, msg: '⛔ Acceso Denegado: Solo el Administrador General puede borrar obras del sistema.' };
     }
-    const idx = this.items.findIndex(x => x.id === itemId);
-    if (idx === -1) {
-      return { success: false, msg: 'Obra no encontrada.' };
+    const targetId = (itemId || '').toString().trim();
+    if (!targetId) {
+      return { success: false, msg: 'ID de obra inválido.' };
     }
+
+    const cleanTargetId = targetId.toLowerCase();
+    const idx = this.items.findIndex(x => {
+      const xId = (x.id || '').toString().trim().toLowerCase();
+      const xCodigo = (x.codigo || '').toString().trim().toLowerCase();
+      return xId === cleanTargetId || (xCodigo && xCodigo === cleanTargetId);
+    });
+
+    if (idx === -1) {
+      return { success: false, msg: `Obra ${targetId} no encontrada.` };
+    }
+
     const item = this.items[idx];
+    const realId = item.id || targetId;
+    const realCodigo = item.codigo || item.id || targetId;
     const totalUSD = (item.monto_obra_usd || 0) + (item.monto_equipamiento_usd || 0);
 
     // Registrar en el libro de auditoría institucional
@@ -3467,18 +3481,33 @@ const DataStore = {
       tipo: 'BORRADO_OBRA',
       tipo_label: 'Baja Definitiva de Obra',
       nivel: 'critico',
-      obra_id: item.id,
+      obra_id: realId,
       obra_nombre: item.nombre,
       monto_usd: totalUSD,
       estado_obra: item.estado,
-      detalle: `ELIMINACIÓN DEFINITIVA de la obra '${item.nombre}' (${item.id}) en estadio '${item.estado}', sede ${item.sede}, por monto de ${this.formatUSD(totalUSD)}. Confirmación obligatoria BORRAR ejecutada.`
+      detalle: `ELIMINACIÓN DEFINITIVA de la obra '${item.nombre}' (${realId}) en estadio '${item.estado}', sede ${item.sede}, por monto de ${this.formatUSD(totalUSD)}. Confirmación obligatoria BORRAR ejecutada.`
     });
 
     const deletedItem = this.items.splice(idx, 1)[0];
     this.persist(true);
 
-    if (typeof SupabaseManager !== 'undefined' && SupabaseManager.isConfigured && typeof SupabaseManager.deleteObraInCloud === 'function') {
-      SupabaseManager.deleteObraInCloud(itemId);
+    // Sincronizar de forma asíncrona con el backend remoto / Supabase
+    if (typeof SupabaseManager !== 'undefined' && SupabaseManager.isConfigured) {
+      (async () => {
+        try {
+          if (typeof SupabaseManager.deleteObraInCloud === 'function') {
+            await SupabaseManager.deleteObraInCloud(realId);
+            if (realCodigo && realCodigo !== realId) {
+              await SupabaseManager.deleteObraInCloud(realCodigo);
+            }
+          }
+          if (typeof SupabaseManager.pushAllObrasToCloud === 'function') {
+            await SupabaseManager.pushAllObrasToCloud(this.items);
+          }
+        } catch (errCloud) {
+          console.warn("[CLOUD SYNC WARNING] Error al eliminar o sincronizar en servidor remoto:", errCloud);
+        }
+      })();
     }
 
     return { success: true, item: deletedItem };
