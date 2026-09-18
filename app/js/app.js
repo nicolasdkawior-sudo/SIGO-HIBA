@@ -606,6 +606,9 @@ const App = {
 
       if (isComprador) {
         // ================= PERFIL COMPRAS & LICITACIONES: TIEMPOS PROMEDIO DE ADJUDICACIÓN =================
+        const legendContainer = document.getElementById('rightWidgetLegend');
+        if (legendContainer) legendContainer.innerHTML = '';
+
         if (headerContainer) {
           headerContainer.innerHTML = `
             <div>
@@ -822,35 +825,12 @@ const App = {
             datasets: [{
               data: dataUsd,
               backgroundColor: ['#2563eb', '#10b981', '#f59e0b'],
-              borderWidth: 2,
-              borderColor: '#ffffff'
+              borderWidth: 3,
+              borderColor: '#ffffff',
+              hoverOffset: 6
             }]
           },
           plugins: [
-            {
-              id: 'doughnutSliceLabels',
-              afterDatasetsDraw(chart) {
-                const { ctx } = chart;
-                const meta = chart.getDatasetMeta(0);
-                if (!meta || !meta.data) return;
-                meta.data.forEach((arc, index) => {
-                  const val = dataUsd[index] || 0;
-                  if (val <= 0) return;
-                  const center = (typeof arc.getCenterPoint === 'function') ? arc.getCenterPoint() : null;
-                  if (!center) return;
-                  const text = DataStore.formatMillionsUSD(val);
-                  ctx.save();
-                  ctx.textAlign = 'center';
-                  ctx.textBaseline = 'middle';
-                  ctx.font = 'bold 11px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-                  ctx.fillStyle = '#ffffff';
-                  ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
-                  ctx.shadowBlur = 3;
-                  ctx.fillText(text, center.x, center.y);
-                  ctx.restore();
-                });
-              }
-            },
             {
               id: 'centerTextDoughnut',
               beforeDraw(chart) {
@@ -862,55 +842,38 @@ const App = {
                 ctx.save();
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.font = 'bold 13px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                ctx.font = 'bold 15px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
                 ctx.fillStyle = '#0f172a';
-                ctx.fillText(DataStore.formatMillionsUSD(totalSedesUsd), centerX, centerY - 7);
-                ctx.font = 'bold 9px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                ctx.fillText(DataStore.formatMillionsUSD(totalSedesUsd), centerX, centerY - 6);
+                ctx.font = 'bold 10px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
                 ctx.fillStyle = '#64748b';
-                ctx.fillText('TOTAL INVERSIÓN', centerX, centerY + 10);
+                ctx.fillText('TOTAL INVERSIÓN', centerX, centerY + 11);
                 ctx.restore();
               }
             }
           ],
           options: {
-            animation: { duration: 0 },
+            animation: { duration: 250 },
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '60%',
+            cutout: '68%',
             plugins: {
-              legend: { 
-                position: 'bottom',
-                labels: {
-                  boxWidth: 12,
-                  font: { size: 11, weight: 'bold' },
-                  generateLabels: function(chart) {
-                    const data = chart.data;
-                    if (data.labels.length && data.datasets.length) {
-                      return data.labels.map((label, i) => {
-                        const val = data.datasets[0].data[i] || 0;
-                        const fill = data.datasets[0].backgroundColor[i];
-                        return {
-                          text: `${label}: ${DataStore.formatMillionsUSD(val)}`,
-                          fillStyle: fill,
-                          strokeStyle: fill,
-                          lineWidth: 1,
-                          hidden: isNaN(data.datasets[0].data[i]) || chart.getDatasetMeta(0).data[i]?.hidden,
-                          index: i
-                        };
-                      });
-                    }
-                    return [];
-                  }
-                }
-              },
+              legend: { display: false },
               tooltip: {
+                backgroundColor: '#0f172a',
+                titleFont: { size: 12, weight: 'bold' },
+                bodyFont: { size: 11 },
+                padding: 10,
+                cornerRadius: 8,
                 callbacks: {
                   label: function(ctx) {
                     const val = ctx.raw || 0;
                     const sName = labels[ctx.dataIndex];
                     const c = kpis?.sedesCount[sName]?.count || 0;
+                    const pct = totalSedesUsd > 0 ? ((val / totalSedesUsd) * 100).toFixed(1) : '0.0';
                     return [
-                      ` ${sName}: ${DataStore.formatMillionsUSD(val)} (${DataStore.formatUSD(val)})`,
+                      ` Inversión: ${DataStore.formatMillionsUSD(val)} (${pct}%)`,
+                      ` Total exacto: ${DataStore.formatUSD(val)}`,
                       ` Obras asignadas: ${c}`
                     ];
                   }
@@ -919,6 +882,35 @@ const App = {
             }
           }
         });
+
+        // Leyenda lateral / inferior moderna con tarjetas compactas
+        const legendContainer = document.getElementById('rightWidgetLegend');
+        if (legendContainer) {
+          const colorMap = {
+            'Central': { bg: 'bg-blue-600', text: 'text-blue-700', border: 'border-blue-100' },
+            'San Justo': { bg: 'bg-emerald-500', text: 'text-emerald-700', border: 'border-emerald-100' },
+            'Periféricos': { bg: 'bg-amber-500', text: 'text-amber-700', border: 'border-amber-100' }
+          };
+          let html = '<div class="mt-3 border-t border-slate-100 pt-3 grid grid-cols-3 gap-2">';
+          labels.forEach((sede, idx) => {
+            const val = dataUsd[idx] || 0;
+            const pct = totalSedesUsd > 0 ? ((val / totalSedesUsd) * 100).toFixed(1) : '0.0';
+            const cInfo = colorMap[sede] || { bg: 'bg-slate-500', text: 'text-slate-700', border: 'border-slate-100' };
+            const formatted = DataStore.formatMillionsUSD ? DataStore.formatMillionsUSD(val) : `USD ${(val/1e6).toFixed(2)}M`;
+            html += `
+              <div class="bg-slate-50/80 p-2 rounded-lg border ${cInfo.border} text-center hover:bg-slate-100/90 transition-all shadow-2xs">
+                <div class="flex items-center justify-center space-x-1.5 mb-1">
+                  <span class="w-2.5 h-2.5 rounded-full ${cInfo.bg} inline-block shadow-xs"></span>
+                  <span class="text-xs font-bold text-slate-800 truncate">${sede}</span>
+                </div>
+                <div class="text-xs font-extrabold text-slate-900 font-mono tracking-tight">${formatted}</div>
+                <div class="text-[10px] font-bold ${cInfo.text} mt-0.5">${pct}% del total</div>
+              </div>
+            `;
+          });
+          html += '</div>';
+          legendContainer.innerHTML = html;
+        }
 
       } else {
         // ================= RESTO DE USUARIOS / PERFILES ESTÁNDAR: INVERSIÓN EN SU SEDE ASIGNADA =================
@@ -935,6 +927,7 @@ const App = {
 
         const labels = ['Central', 'San Justo', 'Periféricos'];
         const dataUsd = labels.map(s => kpis?.sedesCount[s]?.usd || 0);
+        const totalSedesUsd = dataUsd.reduce((a, b) => a + b, 0);
         const userSedeIndex = labels.indexOf(userSede) >= 0 ? labels.indexOf(userSede) : 0;
         const userSedeUsd = dataUsd[userSedeIndex] || 0;
 
@@ -947,8 +940,9 @@ const App = {
             datasets: [{
               data: dataUsd,
               backgroundColor: bgColors,
-              borderWidth: 2,
-              borderColor: '#ffffff'
+              borderWidth: 3,
+              borderColor: '#ffffff',
+              hoverOffset: 6
             }]
           },
           plugins: [
@@ -963,37 +957,38 @@ const App = {
                 ctx.save();
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.font = 'bold 13px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                ctx.font = 'bold 15px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
                 ctx.fillStyle = '#0f172a';
-                ctx.fillText(DataStore.formatMillionsUSD(userSedeUsd), centerX, centerY - 7);
-                ctx.font = 'bold 9px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                ctx.fillText(DataStore.formatMillionsUSD(userSedeUsd), centerX, centerY - 6);
+                ctx.font = 'bold 10px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
                 ctx.fillStyle = '#64748b';
-                ctx.fillText(`SEDE ${userSede.toUpperCase()}`, centerX, centerY + 10);
+                ctx.fillText(`SEDE ${userSede.toUpperCase()}`, centerX, centerY + 11);
                 ctx.restore();
               }
             }
           ],
           options: {
-            animation: { duration: 0 },
+            animation: { duration: 250 },
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '60%',
+            cutout: '68%',
             plugins: {
-              legend: { 
-                position: 'bottom',
-                labels: {
-                  boxWidth: 12,
-                  font: { size: 11, weight: 'bold' }
-                }
-              },
+              legend: { display: false },
               tooltip: {
+                backgroundColor: '#0f172a',
+                titleFont: { size: 12, weight: 'bold' },
+                bodyFont: { size: 11 },
+                padding: 10,
+                cornerRadius: 8,
                 callbacks: {
                   label: function(ctx) {
                     const val = ctx.raw || 0;
                     const sName = labels[ctx.dataIndex];
                     const c = kpis?.sedesCount[sName]?.count || 0;
+                    const pct = totalSedesUsd > 0 ? ((val / totalSedesUsd) * 100).toFixed(1) : '0.0';
                     return [
-                      ` ${sName}: ${DataStore.formatMillionsUSD(val)} (${DataStore.formatUSD(val)})`,
+                      ` ${sName}: ${DataStore.formatMillionsUSD(val)} (${pct}%)`,
+                      ` Total exacto: ${DataStore.formatUSD(val)}`,
                       ` Obras asignadas: ${c}`
                     ];
                   }
@@ -1002,6 +997,36 @@ const App = {
             }
           }
         });
+
+        // Leyenda destacando sede asignada
+        const legendContainer = document.getElementById('rightWidgetLegend');
+        if (legendContainer) {
+          const colorMap = {
+            'Central': { bg: 'bg-blue-600', text: 'text-blue-700', border: 'border-blue-100' },
+            'San Justo': { bg: 'bg-emerald-500', text: 'text-emerald-700', border: 'border-emerald-100' },
+            'Periféricos': { bg: 'bg-amber-500', text: 'text-amber-700', border: 'border-amber-100' }
+          };
+          let html = '<div class="mt-3 border-t border-slate-100 pt-3 grid grid-cols-3 gap-2">';
+          labels.forEach((sede, idx) => {
+            const val = dataUsd[idx] || 0;
+            const pct = totalSedesUsd > 0 ? ((val / totalSedesUsd) * 100).toFixed(1) : '0.0';
+            const isUserSede = idx === userSedeIndex;
+            const cInfo = colorMap[sede] || { bg: 'bg-slate-500', text: 'text-slate-700', border: 'border-slate-100' };
+            const formatted = DataStore.formatMillionsUSD ? DataStore.formatMillionsUSD(val) : `USD ${(val/1e6).toFixed(2)}M`;
+            html += `
+              <div class="${isUserSede ? 'bg-blue-50/90 border-blue-200 shadow-xs' : 'bg-slate-50/60 border-slate-100 opacity-70'} p-2 rounded-lg border text-center transition-all">
+                <div class="flex items-center justify-center space-x-1.5 mb-1">
+                  <span class="w-2.5 h-2.5 rounded-full ${isUserSede ? cInfo.bg : 'bg-slate-400'} inline-block"></span>
+                  <span class="text-xs font-bold ${isUserSede ? 'text-blue-900' : 'text-slate-600'} truncate">${sede}</span>
+                </div>
+                <div class="text-xs font-extrabold ${isUserSede ? 'text-blue-950' : 'text-slate-700'} font-mono tracking-tight">${formatted}</div>
+                <div class="text-[10px] font-bold ${isUserSede ? 'text-blue-700' : 'text-slate-500'} mt-0.5">${pct}% del total</div>
+              </div>
+            `;
+          });
+          html += '</div>';
+          legendContainer.innerHTML = html;
+        }
       }
     }
   },
