@@ -669,6 +669,19 @@ const DataStore = {
 
         this.persist(false);
       }
+    // Filtrar inmediatamente cualquier obra previamente eliminada para que JAMÁS reaparezca
+    let deletedObraIds = [];
+    try {
+      deletedObraIds = JSON.parse(localStorage.getItem('sigo_deleted_obra_ids') || '[]');
+    } catch (e) {
+      deletedObraIds = [];
+    }
+    if (deletedObraIds.length > 0 && Array.isArray(this.items)) {
+      this.items = this.items.filter(item => {
+        const itemCleanId = (item.id || '').toString().trim().toLowerCase();
+        const itemCleanCod = (item.codigo || '').toString().trim().toLowerCase();
+        return !deletedObraIds.includes(itemCleanId) && (!itemCleanCod || !deletedObraIds.includes(itemCleanCod));
+      });
     }
 
     // Normalizar datos (unificación de Anteproyecto en Factibilidad y Proyecto para licitar en Proyecto)
@@ -3451,15 +3464,29 @@ const DataStore = {
     return true;
   },
 
-  deleteItem(itemId) {
+  async deleteItem(itemId) {
     if (!this.isAdmin()) {
       return { success: false, msg: '⛔ Acceso Denegado: Solo el Administrador General puede borrar obras del sistema.' };
     }
-    const idx = this.items.findIndex(x => x.id === itemId);
-    if (idx === -1) {
-      return { success: false, msg: 'Obra no encontrada.' };
+    const targetId = (itemId || '').toString().trim();
+    if (!targetId) {
+      return { success: false, msg: 'ID de obra inválido.' };
     }
+
+    const cleanTargetId = targetId.toLowerCase();
+    const idx = this.items.findIndex(x => {
+      const xId = (x.id || '').toString().trim().toLowerCase();
+      const xCodigo = (x.codigo || '').toString().trim().toLowerCase();
+      return xId === cleanTargetId || (xCodigo && xCodigo === cleanTargetId);
+    });
+
+    if (idx === -1) {
+      return { success: false, msg: `Obra ${targetId} no encontrada.` };
+    }
+
     const item = this.items[idx];
+    const realId = item.id || targetId;
+    const realCodigo = item.codigo || item.id || targetId;
     const totalUSD = (item.monto_obra_usd || 0) + (item.monto_equipamiento_usd || 0);
 
     // Registrar en el libro de auditoría institucional
@@ -3467,18 +3494,40 @@ const DataStore = {
       tipo: 'BORRADO_OBRA',
       tipo_label: 'Baja Definitiva de Obra',
       nivel: 'critico',
-      obra_id: item.id,
+      obra_id: realId,
       obra_nombre: item.nombre,
       monto_usd: totalUSD,
       estado_obra: item.estado,
-      detalle: `ELIMINACIÓN DEFINITIVA de la obra '${item.nombre}' (${item.id}) en estadio '${item.estado}', sede ${item.sede}, por monto de ${this.formatUSD(totalUSD)}. Confirmación obligatoria BORRAR ejecutada.`
+      detalle: `ELIMINACIÓN DEFINITIVA de la obra '${item.nombre}' (${realId}) en estadio '${item.estado}', sede ${item.sede}, por monto de ${this.formatUSD(totalUSD)}. Confirmación obligatoria BORRAR ejecutada.`
     });
 
+    // Registrar en la lista negra de bajas para que JAMÁS se restaure desde INITIAL_DATA o caché
+    let deletedObraIds = [];
+    try {
+      deletedObraIds = JSON.parse(localStorage.getItem('sigo_deleted_obra_ids') || '[]');
+    } catch (e) {
+      deletedObraIds = [];
+    }
+    const idsToAdd = [realId, realCodigo, targetId].filter(Boolean).map(s => s.toString().trim().toLowerCase());
+    idsToAdd.forEach(idStr => {
+      if (!deletedObraIds.includes(idStr)) deletedObraIds.push(idStr);
+    });
+    localStorage.setItem('sigo_deleted_obra_ids', JSON.stringify(deletedObraIds));
+
+    // Remover elemento físicamente del array local
     const deletedItem = this.items.splice(idx, 1)[0];
     this.persist(true);
 
+    // Sincronizar de forma asíncrona con el backend remoto / Supabase
     if (typeof SupabaseManager !== 'undefined' && SupabaseManager.isConfigured && typeof SupabaseManager.deleteObraInCloud === 'function') {
-      SupabaseManager.deleteObraInCloud(itemId);
+      try {
+        await SupabaseManager.deleteObraInCloud(realId);
+        if (realCodigo && realCodigo !== realId) {
+          await SupabaseManager.deleteObraInCloud(realCodigo);
+        }
+      } catch (errCloud) {
+        console.warn("[CLOUD SYNC WARNING] Error al eliminar en servidor remoto:", errCloud);
+      }
     }
 
     return { success: true, item: deletedItem };

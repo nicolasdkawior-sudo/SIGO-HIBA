@@ -6021,7 +6021,7 @@ const App = {
     if (modal) modal.classList.add('hidden');
   },
 
-  executeDeleteObraConfirmed() {
+  async executeDeleteObraConfirmed() {
     if (!DataStore.isAdmin()) {
       alert("⛔ Acceso Denegado: Solo el Administrador General puede borrar obras.");
       return;
@@ -6034,7 +6034,7 @@ const App = {
     const id = document.getElementById('confirmDeleteObraId')?.innerText;
     if (!id) return;
 
-    const res = DataStore.deleteItem(id);
+    const res = await DataStore.deleteItem(id);
     if (!res.success) {
       alert(res.msg || "Error al eliminar la obra.");
       return;
