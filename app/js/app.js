@@ -6044,8 +6044,7 @@ const App = {
     this.closeObraModal();
 
     // Actualizar vista activa y dashboards
-    this.renderActiveView();
-    this.updateStats();
+    this.render();
 
     alert(`🗑️ Obra ${id} eliminada definitivamente de la base de datos institucional. La baja ha sido asentada formalmente en el Libro de Auditoría.`);
   },
