@@ -466,26 +466,14 @@
           </div>
         </div>
 
-        <!-- Chart Tiempos Promedio de Adjudicación -->
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+        <!-- Chart Derecho Dinámico por Perfil (Sedes / Adjudicación / Sede Específica) -->
+        <div id="rightDashboardWidgetCard" class="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs">
+          <div id="rightWidgetHeader" class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
             <div>
-              <h3 class="font-bold text-slate-800 text-sm">Tiempos promedio de adjudicación</h3>
-              <p class="text-xs text-slate-400" id="adjudicacionChartSubtitle">Días promedio desde fin de proyecto a cierre licitatorio</p>
+              <h3 class="font-bold text-slate-800 text-sm">Inversión por Sede (USD)</h3>
+              <p class="text-xs text-slate-400">Proyecto + Licitación + En Curso + Finalizadas</p>
             </div>
-            <div class="flex flex-wrap items-center gap-2">
-              <!-- Filtro Categoría -->
-              <div class="inline-flex rounded-lg border border-slate-200 p-0.5 bg-slate-50 text-xs font-medium">
-                <button type="button" id="btnFilterCatTodos" onclick="App.setLeadTimeCategoryFilter('todos')" class="px-2 py-1 rounded-md text-slate-700 hover:text-slate-900 transition-colors btn-leadtime-cat bg-white shadow-xs font-semibold text-blue-600">Todos</button>
-                <button type="button" id="btnFilterCatObras" onclick="App.setLeadTimeCategoryFilter('obra')" class="px-2 py-1 rounded-md text-slate-500 hover:text-slate-800 transition-colors btn-leadtime-cat">Obras</button>
-                <button type="button" id="btnFilterCatInfra" onclick="App.setLeadTimeCategoryFilter('infraestructura')" class="px-2 py-1 rounded-md text-slate-500 hover:text-slate-800 transition-colors btn-leadtime-cat">Infraestructura</button>
-              </div>
-              <!-- Filtro Rango Temporal -->
-              <div class="inline-flex rounded-lg border border-slate-200 p-0.5 bg-slate-50 text-xs font-medium">
-                <button type="button" id="btnFilterTime1M" onclick="App.setLeadTimeTimeFilter('1m')" class="px-2 py-1 rounded-md text-slate-500 hover:text-slate-800 transition-colors btn-leadtime-time">Último Mes</button>
-                <button type="button" id="btnFilterTime12M" onclick="App.setLeadTimeTimeFilter('12m')" class="px-2 py-1 rounded-md text-slate-700 hover:text-slate-900 transition-colors btn-leadtime-time bg-white shadow-xs font-semibold text-blue-600">Últimos 12 Meses</button>
-              </div>
-            </div>
+            <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded">Todas las Sedes</span>
           </div>
           <div class="h-64 relative flex items-center justify-center">
             <canvas id="chartSedes"></canvas>

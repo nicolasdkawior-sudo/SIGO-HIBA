@@ -587,219 +587,422 @@ const App = {
       });
     }
 
-    // Chart Tiempos Promedio de Adjudicación (Lead Time Licitatorio)
+    // Chart Derecho Dinámico por Perfil (Sedes / Adjudicación / Sede Específica)
     const ctxSedes = document.getElementById('chartSedes')?.getContext('2d');
+    const headerContainer = document.getElementById('rightWidgetHeader');
+
     if (ctxSedes) {
-      if (!this.leadTimeCatFilter) this.leadTimeCatFilter = 'todos';
-      if (!this.leadTimeTimeFilter) this.leadTimeTimeFilter = '12m';
-
-      this.setLeadTimeCategoryFilter = function(cat) {
-        this.leadTimeCatFilter = cat;
-        this.updateLeadTimeButtonsUI();
-        const currentKpis = (typeof DataStore !== 'undefined' && DataStore.getKPIs) ? DataStore.getKPIs(this.filters) : null;
-        this.renderCharts(currentKpis);
-      };
-
-      this.setLeadTimeTimeFilter = function(range) {
-        this.leadTimeTimeFilter = range;
-        this.updateLeadTimeButtonsUI();
-        const currentKpis = (typeof DataStore !== 'undefined' && DataStore.getKPIs) ? DataStore.getKPIs(this.filters) : null;
-        this.renderCharts(currentKpis);
-      };
-
-      this.updateLeadTimeButtonsUI = function() {
-        const catMap = {
-          'todos': 'btnFilterCatTodos',
-          'obra': 'btnFilterCatObras',
-          'infraestructura': 'btnFilterCatInfra'
-        };
-        const timeMap = {
-          '1m': 'btnFilterTime1M',
-          '12m': 'btnFilterTime12M'
-        };
-
-        const catActive = this.leadTimeCatFilter || 'todos';
-        Object.keys(catMap).forEach(key => {
-          const btn = document.getElementById(catMap[key]);
-          if (btn) {
-            if (key === catActive) {
-              btn.className = 'px-2 py-1 rounded-md text-slate-700 hover:text-slate-900 transition-colors btn-leadtime-cat bg-white shadow-xs font-semibold text-blue-600';
-            } else {
-              btn.className = 'px-2 py-1 rounded-md text-slate-500 hover:text-slate-800 transition-colors btn-leadtime-cat';
-            }
-          }
-        });
-
-        const timeActive = this.leadTimeTimeFilter || '12m';
-        Object.keys(timeMap).forEach(key => {
-          const btn = document.getElementById(timeMap[key]);
-          if (btn) {
-            if (key === timeActive) {
-              btn.className = 'px-2 py-1 rounded-md text-slate-700 hover:text-slate-900 transition-colors btn-leadtime-time bg-white shadow-xs font-semibold text-blue-600';
-            } else {
-              btn.className = 'px-2 py-1 rounded-md text-slate-500 hover:text-slate-800 transition-colors btn-leadtime-time';
-            }
-          }
-        });
-      };
-
       if (this.charts.sedes) this.charts.sedes.destroy();
 
-      // Cálculo de Tiempos Promedio (Lead Time en Días)
-      const now = new Date();
-      const cutoffDays = this.leadTimeTimeFilter === '1m' ? 30 : 365;
+      const u = DataStore.currentUser;
+      const isComprador = Boolean(u && (u.rol === 'licitaciones' || u.dependencia === 'Compras & Licitaciones'));
+      const isAdminOrDireccion = Boolean(u && (
+        u.rol === 'admin' || 
+        u.rol === 'direccion_medica' || 
+        u.rol === 'direccion' || 
+        (u.dependencia && u.dependencia.toLowerCase().includes('dirección')) ||
+        u.sede === 'Todas'
+      ));
 
-      const items = (typeof DataStore !== 'undefined' && DataStore.items) ? DataStore.items : [];
-      
-      const computeItemLeadTime = (item) => {
-        if (typeof item.lead_time_dias === 'number' && item.lead_time_dias > 0) return item.lead_time_dias;
-        if (typeof item.dias_adjudicacion === 'number' && item.dias_adjudicacion > 0) return item.dias_adjudicacion;
+      if (isComprador) {
+        // ================= PERFIL COMPRAS & LICITACIONES: TIEMPOS PROMEDIO DE ADJUDICACIÓN =================
+        if (headerContainer) {
+          headerContainer.innerHTML = `
+            <div>
+              <h3 class="font-bold text-slate-800 text-sm">Tiempos promedio de adjudicación</h3>
+              <p class="text-xs text-slate-400" id="adjudicacionChartSubtitle">Días promedio desde fin de proyecto a cierre licitatorio</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <!-- Filtro Categoría -->
+              <div class="inline-flex rounded-lg border border-slate-200 p-0.5 bg-slate-50 text-xs font-medium">
+                <button type="button" id="btnFilterCatTodos" onclick="App.setLeadTimeCategoryFilter('todos')" class="px-2 py-1 rounded-md text-slate-700 hover:text-slate-900 transition-colors btn-leadtime-cat bg-white shadow-xs font-semibold text-blue-600">Todos</button>
+                <button type="button" id="btnFilterCatObras" onclick="App.setLeadTimeCategoryFilter('obra')" class="px-2 py-1 rounded-md text-slate-500 hover:text-slate-800 transition-colors btn-leadtime-cat">Obras</button>
+                <button type="button" id="btnFilterCatInfra" onclick="App.setLeadTimeCategoryFilter('infraestructura')" class="px-2 py-1 rounded-md text-slate-500 hover:text-slate-800 transition-colors btn-leadtime-cat">Infraestructura</button>
+              </div>
+              <!-- Filtro Rango Temporal -->
+              <div class="inline-flex rounded-lg border border-slate-200 p-0.5 bg-slate-50 text-xs font-medium">
+                <button type="button" id="btnFilterTime1M" onclick="App.setLeadTimeTimeFilter('1m')" class="px-2 py-1 rounded-md text-slate-500 hover:text-slate-800 transition-colors btn-leadtime-time">Último Mes</button>
+                <button type="button" id="btnFilterTime12M" onclick="App.setLeadTimeTimeFilter('12m')" class="px-2 py-1 rounded-md text-slate-700 hover:text-slate-900 transition-colors btn-leadtime-time bg-white shadow-xs font-semibold text-blue-600">Últimos 12 Meses</button>
+              </div>
+            </div>
+          `;
+        }
 
-        const datePase = item.fecha_pase_licitacion || item.fecha_inicio_etapa || item.fecha_inicio || item.fecha;
-        const dateAdj = item.fecha_adjudicacion || item.fecha_real_finalizada || item.fecha_fin_compulsa || item.fecha_fin;
+        if (!this.leadTimeCatFilter) this.leadTimeCatFilter = 'todos';
+        if (!this.leadTimeTimeFilter) this.leadTimeTimeFilter = '12m';
 
-        if (datePase && dateAdj) {
-          const d1 = new Date(datePase);
-          const d2 = new Date(dateAdj);
-          if (!isNaN(d1.getTime()) && !isNaN(d2.getTime())) {
-            const diffDays = Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
-            if (diffDays > 0) return diffDays;
+        this.setLeadTimeCategoryFilter = function(cat) {
+          this.leadTimeCatFilter = cat;
+          this.updateLeadTimeButtonsUI();
+          const currentKpis = (typeof DataStore !== 'undefined' && DataStore.getKPIs) ? DataStore.getKPIs(this.filters) : null;
+          this.renderCharts(currentKpis);
+        };
+
+        this.setLeadTimeTimeFilter = function(range) {
+          this.leadTimeTimeFilter = range;
+          this.updateLeadTimeButtonsUI();
+          const currentKpis = (typeof DataStore !== 'undefined' && DataStore.getKPIs) ? DataStore.getKPIs(this.filters) : null;
+          this.renderCharts(currentKpis);
+        };
+
+        this.updateLeadTimeButtonsUI = function() {
+          const catMap = { 'todos': 'btnFilterCatTodos', 'obra': 'btnFilterCatObras', 'infraestructura': 'btnFilterCatInfra' };
+          const timeMap = { '1m': 'btnFilterTime1M', '12m': 'btnFilterTime12M' };
+
+          const catActive = this.leadTimeCatFilter || 'todos';
+          Object.keys(catMap).forEach(key => {
+            const btn = document.getElementById(catMap[key]);
+            if (btn) btn.className = (key === catActive) ? 'px-2 py-1 rounded-md text-slate-700 hover:text-slate-900 transition-colors btn-leadtime-cat bg-white shadow-xs font-semibold text-blue-600' : 'px-2 py-1 rounded-md text-slate-500 hover:text-slate-800 transition-colors btn-leadtime-cat';
+          });
+
+          const timeActive = this.leadTimeTimeFilter || '12m';
+          Object.keys(timeMap).forEach(key => {
+            const btn = document.getElementById(timeMap[key]);
+            if (btn) btn.className = (key === timeActive) ? 'px-2 py-1 rounded-md text-slate-700 hover:text-slate-900 transition-colors btn-leadtime-time bg-white shadow-xs font-semibold text-blue-600' : 'px-2 py-1 rounded-md text-slate-500 hover:text-slate-800 transition-colors btn-leadtime-time';
+          });
+        };
+
+        // Cálculo de Tiempos Promedio
+        const now = new Date();
+        const cutoffDays = this.leadTimeTimeFilter === '1m' ? 30 : 365;
+        const items = (typeof DataStore !== 'undefined' && DataStore.items) ? DataStore.items : [];
+        
+        const computeItemLeadTime = (item) => {
+          if (typeof item.lead_time_dias === 'number' && item.lead_time_dias > 0) return item.lead_time_dias;
+          if (typeof item.dias_adjudicacion === 'number' && item.dias_adjudicacion > 0) return item.dias_adjudicacion;
+
+          const datePase = item.fecha_pase_licitacion || item.fecha_inicio_etapa || item.fecha_inicio || item.fecha;
+          const dateAdj = item.fecha_adjudicacion || item.fecha_real_finalizada || item.fecha_fin_compulsa || item.fecha_fin;
+
+          if (datePase && dateAdj) {
+            const d1 = new Date(datePase);
+            const d2 = new Date(dateAdj);
+            if (!isNaN(d1.getTime()) && !isNaN(d2.getTime())) {
+              const diffDays = Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
+              if (diffDays > 0) return diffDays;
+            }
           }
-        }
-        return null;
-      };
+          return null;
+        };
 
-      const getItemCategory = (item) => {
-        if (item.tipo_categoria) {
-          const tc = String(item.tipo_categoria).toLowerCase();
-          if (tc.includes('obra')) return 'obra';
-          if (tc.includes('infra')) return 'infraestructura';
-        }
-        const cat = (item.categoria || item.tipo_obra || item.dependencia || '').toLowerCase();
-        if (cat.includes('infra') || cat.includes('instalaciones') || cat.includes('mantenimiento')) {
-          return 'infraestructura';
-        }
-        return 'obra';
-      };
-
-      const isItemInTimeRange = (item) => {
-        const dateStr = item.fecha_pase_licitacion || item.fecha_inicio_etapa || item.fecha_inicio || item.fecha;
-        if (!dateStr) return true;
-        const d = new Date(dateStr);
-        if (isNaN(d.getTime())) return true;
-        const diffDays = Math.round((now - d) / (1000 * 60 * 60 * 24));
-        return diffDays >= 0 && diffDays <= cutoffDays;
-      };
-
-      // Agrupación por categoría
-      let obraLeadTimes = [];
-      let infraLeadTimes = [];
-
-      items.forEach(item => {
-        const isAwarded = (item.estado_id === 'adjudicado' || item.fase === 'licitacion_finalizada' || item.estado === 'Obras en Curso' || item.estado === 'Obras Finalizadas' || item.monto_adjudicado_usd);
-        if (!isAwarded) return;
-        if (!isItemInTimeRange(item)) return;
-
-        const cat = getItemCategory(item);
-        const lt = computeItemLeadTime(item);
-        if (lt !== null) {
-          if (cat === 'infraestructura') infraLeadTimes.push(lt);
-          else obraLeadTimes.push(lt);
-        }
-      });
-
-      // Si no hay suficientes registros en memoria, proveer promedios de referencia consistentes
-      const avgObra = obraLeadTimes.length > 0 ? Math.round(obraLeadTimes.reduce((a, b) => a + b, 0) / obraLeadTimes.length) : (this.leadTimeTimeFilter === '1m' ? 38 : 42);
-      const avgInfra = infraLeadTimes.length > 0 ? Math.round(infraLeadTimes.reduce((a, b) => a + b, 0) / infraLeadTimes.length) : (this.leadTimeTimeFilter === '1m' ? 24 : 28);
-
-      let labels = [];
-      let dataValues = [];
-      let bgColors = [];
-      let borderColors = [];
-
-      if (this.leadTimeCatFilter === 'obra') {
-        labels = ['Obras Civiles'];
-        dataValues = [avgObra];
-        bgColors = ['#2563eb'];
-        borderColors = ['#1d4ed8'];
-      } else if (this.leadTimeCatFilter === 'infraestructura') {
-        labels = ['Infraestructura'];
-        dataValues = [avgInfra];
-        bgColors = ['#10b981'];
-        borderColors = ['#059669'];
-      } else {
-        labels = ['Obras Civiles', 'Infraestructura'];
-        dataValues = [avgObra, avgInfra];
-        bgColors = ['#2563eb', '#10b981'];
-        borderColors = ['#1d4ed8', '#059669'];
-      }
-
-      this.charts.sedes = new Chart(ctxSedes, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Días promedio',
-            data: dataValues,
-            backgroundColor: bgColors,
-            borderColor: borderColors,
-            borderWidth: 1.5,
-            borderRadius: 6,
-            barThickness: 38
-          }]
-        },
-        plugins: [{
-          id: 'barTopValueLabels',
-          afterDatasetsDraw(chart) {
-            const { ctx } = chart;
-            const meta = chart.getDatasetMeta(0);
-            if (!meta || !meta.data) return;
-            meta.data.forEach((bar, index) => {
-              const val = dataValues[index];
-              if (val === undefined || val === null) return;
-              ctx.save();
-              ctx.textAlign = 'center';
-              ctx.textBaseline = 'bottom';
-              ctx.font = 'bold 12px system-ui, -apple-system, sans-serif';
-              ctx.fillStyle = '#1e293b';
-              ctx.fillText(`${val} días`, bar.x, bar.y - 4);
-              ctx.restore();
-            });
+        const getItemCategory = (item) => {
+          if (item.tipo_categoria) {
+            const tc = String(item.tipo_categoria).toLowerCase();
+            if (tc.includes('obra')) return 'obra';
+            if (tc.includes('infra')) return 'infraestructura';
           }
-        }],
-        options: {
-          animation: { duration: 250 },
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: function(ctx) {
-                  return ` Promedio: ${ctx.raw} días corridos`;
+          const cat = (item.categoria || item.tipo_obra || item.dependencia || '').toLowerCase();
+          if (cat.includes('infra') || cat.includes('instalaciones') || cat.includes('mantenimiento')) return 'infraestructura';
+          return 'obra';
+        };
+
+        const isItemInTimeRange = (item) => {
+          const dateStr = item.fecha_pase_licitacion || item.fecha_inicio_etapa || item.fecha_inicio || item.fecha;
+          if (!dateStr) return true;
+          const d = new Date(dateStr);
+          if (isNaN(d.getTime())) return true;
+          const diffDays = Math.round((now - d) / (1000 * 60 * 60 * 24));
+          return diffDays >= 0 && diffDays <= cutoffDays;
+        };
+
+        let obraLeadTimes = [];
+        let infraLeadTimes = [];
+
+        items.forEach(item => {
+          const isAwarded = (item.estado_id === 'adjudicado' || item.fase === 'licitacion_finalizada' || item.estado === 'Obras en Curso' || item.estado === 'Obras Finalizadas' || item.monto_adjudicado_usd);
+          if (!isAwarded || !isItemInTimeRange(item)) return;
+          const cat = getItemCategory(item);
+          const lt = computeItemLeadTime(item);
+          if (lt !== null) {
+            if (cat === 'infraestructura') infraLeadTimes.push(lt);
+            else obraLeadTimes.push(lt);
+          }
+        });
+
+        const avgObra = obraLeadTimes.length > 0 ? Math.round(obraLeadTimes.reduce((a, b) => a + b, 0) / obraLeadTimes.length) : (this.leadTimeTimeFilter === '1m' ? 38 : 42);
+        const avgInfra = infraLeadTimes.length > 0 ? Math.round(infraLeadTimes.reduce((a, b) => a + b, 0) / infraLeadTimes.length) : (this.leadTimeTimeFilter === '1m' ? 24 : 28);
+
+        let labels = [];
+        let dataValues = [];
+        let bgColors = [];
+        let borderColors = [];
+
+        if (this.leadTimeCatFilter === 'obra') {
+          labels = ['Obras Civiles'];
+          dataValues = [avgObra];
+          bgColors = ['#2563eb'];
+          borderColors = ['#1d4ed8'];
+        } else if (this.leadTimeCatFilter === 'infraestructura') {
+          labels = ['Infraestructura'];
+          dataValues = [avgInfra];
+          bgColors = ['#10b981'];
+          borderColors = ['#059669'];
+        } else {
+          labels = ['Obras Civiles', 'Infraestructura'];
+          dataValues = [avgObra, avgInfra];
+          bgColors = ['#2563eb', '#10b981'];
+          borderColors = ['#1d4ed8', '#059669'];
+        }
+
+        this.charts.sedes = new Chart(ctxSedes, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Días promedio',
+              data: dataValues,
+              backgroundColor: bgColors,
+              borderColor: borderColors,
+              borderWidth: 1.5,
+              borderRadius: 6,
+              barThickness: 38
+            }]
+          },
+          plugins: [{
+            id: 'barTopValueLabels',
+            afterDatasetsDraw(chart) {
+              const { ctx } = chart;
+              const meta = chart.getDatasetMeta(0);
+              if (!meta || !meta.data) return;
+              meta.data.forEach((bar, index) => {
+                const val = dataValues[index];
+                if (val === undefined || val === null) return;
+                ctx.save();
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                ctx.font = 'bold 12px system-ui, -apple-system, sans-serif';
+                ctx.fillStyle = '#1e293b';
+                ctx.fillText(`${val} días`, bar.x, bar.y - 4);
+                ctx.restore();
+              });
+            }
+          }],
+          options: {
+            animation: { duration: 250 },
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: { callbacks: { label: function(ctx) { return ` Promedio: ${ctx.raw} días corridos`; } } }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                suggestedMax: Math.max(...dataValues, 10) + 15,
+                grid: { color: '#f1f5f9' },
+                ticks: { font: { size: 11 }, callback: function(val) { return val + 'd'; } }
+              },
+              x: { grid: { display: false }, ticks: { font: { size: 12, weight: 'bold' } } }
+            }
+          }
+        });
+
+        this.updateLeadTimeButtonsUI();
+
+      } else if (isAdminOrDireccion) {
+        // ================= PERFIL ADMINISTRADOR Y DIRECCIÓN: INVERSIÓN POR SEDE (USD) =================
+        if (headerContainer) {
+          headerContainer.innerHTML = `
+            <div>
+              <h3 class="font-bold text-slate-800 text-sm">Inversión por Sede (USD)</h3>
+              <p class="text-xs text-slate-400" title="Excluye Estudio de Factibilidad (sin partida) y Suspendidas">Proyecto + Licitación + En Curso + Finalizadas</p>
+            </div>
+            <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded">Todas las Sedes</span>
+          `;
+        }
+
+        const labels = ['Central', 'San Justo', 'Periféricos'];
+        const dataUsd = labels.map(s => kpis?.sedesCount[s]?.usd || 0);
+        const totalSedesUsd = dataUsd.reduce((a, b) => a + b, 0);
+
+        this.charts.sedes = new Chart(ctxSedes, {
+          type: 'doughnut',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: dataUsd,
+              backgroundColor: ['#2563eb', '#10b981', '#f59e0b'],
+              borderWidth: 2,
+              borderColor: '#ffffff'
+            }]
+          },
+          plugins: [
+            {
+              id: 'doughnutSliceLabels',
+              afterDatasetsDraw(chart) {
+                const { ctx } = chart;
+                const meta = chart.getDatasetMeta(0);
+                if (!meta || !meta.data) return;
+                meta.data.forEach((arc, index) => {
+                  const val = dataUsd[index] || 0;
+                  if (val <= 0) return;
+                  const center = (typeof arc.getCenterPoint === 'function') ? arc.getCenterPoint() : null;
+                  if (!center) return;
+                  const text = DataStore.formatMillionsUSD(val);
+                  ctx.save();
+                  ctx.textAlign = 'center';
+                  ctx.textBaseline = 'middle';
+                  ctx.font = 'bold 11px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                  ctx.fillStyle = '#ffffff';
+                  ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+                  ctx.shadowBlur = 3;
+                  ctx.fillText(text, center.x, center.y);
+                  ctx.restore();
+                });
+              }
+            },
+            {
+              id: 'centerTextDoughnut',
+              beforeDraw(chart) {
+                const { ctx, width, height } = chart;
+                const meta = chart.getDatasetMeta(0);
+                const centerX = (meta && meta.data && meta.data[0]) ? meta.data[0].x : width / 2;
+                const centerY = (meta && meta.data && meta.data[0]) ? meta.data[0].y : height / 2;
+                
+                ctx.save();
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = 'bold 13px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                ctx.fillStyle = '#0f172a';
+                ctx.fillText(DataStore.formatMillionsUSD(totalSedesUsd), centerX, centerY - 7);
+                ctx.font = 'bold 9px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                ctx.fillStyle = '#64748b';
+                ctx.fillText('TOTAL INVERSIÓN', centerX, centerY + 10);
+                ctx.restore();
+              }
+            }
+          ],
+          options: {
+            animation: { duration: 0 },
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '60%',
+            plugins: {
+              legend: { 
+                position: 'bottom',
+                labels: {
+                  boxWidth: 12,
+                  font: { size: 11, weight: 'bold' },
+                  generateLabels: function(chart) {
+                    const data = chart.data;
+                    if (data.labels.length && data.datasets.length) {
+                      return data.labels.map((label, i) => {
+                        const val = data.datasets[0].data[i] || 0;
+                        const fill = data.datasets[0].backgroundColor[i];
+                        return {
+                          text: `${label}: ${DataStore.formatMillionsUSD(val)}`,
+                          fillStyle: fill,
+                          strokeStyle: fill,
+                          lineWidth: 1,
+                          hidden: isNaN(data.datasets[0].data[i]) || chart.getDatasetMeta(0).data[i]?.hidden,
+                          index: i
+                        };
+                      });
+                    }
+                    return [];
+                  }
+                }
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(ctx) {
+                    const val = ctx.raw || 0;
+                    const sName = labels[ctx.dataIndex];
+                    const c = kpis?.sedesCount[sName]?.count || 0;
+                    return [
+                      ` ${sName}: ${DataStore.formatMillionsUSD(val)} (${DataStore.formatUSD(val)})`,
+                      ` Obras asignadas: ${c}`
+                    ];
+                  }
                 }
               }
             }
+          }
+        });
+
+      } else {
+        // ================= RESTO DE USUARIOS / PERFILES ESTÁNDAR: INVERSIÓN EN SU SEDE ASIGNADA =================
+        const userSede = u?.sede || 'Central';
+        if (headerContainer) {
+          headerContainer.innerHTML = `
+            <div>
+              <h3 class="font-bold text-slate-800 text-sm">Inversión en Sede ${userSede} (USD)</h3>
+              <p class="text-xs text-slate-400">Inversión ejecutada y asignada a la Sede ${userSede}</p>
+            </div>
+            <span class="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded">Sede ${userSede}</span>
+          `;
+        }
+
+        const labels = ['Central', 'San Justo', 'Periféricos'];
+        const dataUsd = labels.map(s => kpis?.sedesCount[s]?.usd || 0);
+        const userSedeIndex = labels.indexOf(userSede) >= 0 ? labels.indexOf(userSede) : 0;
+        const userSedeUsd = dataUsd[userSedeIndex] || 0;
+
+        const bgColors = labels.map((s, idx) => idx === userSedeIndex ? (s === 'Central' ? '#2563eb' : (s === 'San Justo' ? '#10b981' : '#f59e0b')) : '#e2e8f0');
+
+        this.charts.sedes = new Chart(ctxSedes, {
+          type: 'doughnut',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: dataUsd,
+              backgroundColor: bgColors,
+              borderWidth: 2,
+              borderColor: '#ffffff'
+            }]
           },
-          scales: {
-            y: {
-              beginAtZero: true,
-              suggestedMax: Math.max(...dataValues, 10) + 15,
-              grid: { color: '#f1f5f9' },
-              ticks: {
-                font: { size: 11 },
-                callback: function(val) { return val + 'd'; }
+          plugins: [
+            {
+              id: 'centerTextDoughnutSede',
+              beforeDraw(chart) {
+                const { ctx, width, height } = chart;
+                const meta = chart.getDatasetMeta(0);
+                const centerX = (meta && meta.data && meta.data[0]) ? meta.data[0].x : width / 2;
+                const centerY = (meta && meta.data && meta.data[0]) ? meta.data[0].y : height / 2;
+                
+                ctx.save();
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = 'bold 13px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                ctx.fillStyle = '#0f172a';
+                ctx.fillText(DataStore.formatMillionsUSD(userSedeUsd), centerX, centerY - 7);
+                ctx.font = 'bold 9px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                ctx.fillStyle = '#64748b';
+                ctx.fillText(`SEDE ${userSede.toUpperCase()}`, centerX, centerY + 10);
+                ctx.restore();
               }
-            },
-            x: {
-              grid: { display: false },
-              ticks: { font: { size: 12, weight: 'bold' } }
+            }
+          ],
+          options: {
+            animation: { duration: 0 },
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '60%',
+            plugins: {
+              legend: { 
+                position: 'bottom',
+                labels: {
+                  boxWidth: 12,
+                  font: { size: 11, weight: 'bold' }
+                }
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(ctx) {
+                    const val = ctx.raw || 0;
+                    const sName = labels[ctx.dataIndex];
+                    const c = kpis?.sedesCount[sName]?.count || 0;
+                    return [
+                      ` ${sName}: ${DataStore.formatMillionsUSD(val)} (${DataStore.formatUSD(val)})`,
+                      ` Obras asignadas: ${c}`
+                    ];
+                  }
+                }
+              }
             }
           }
-        }
-      });
-
-      this.updateLeadTimeButtonsUI();
+        });
+      }
     }
   },
 
