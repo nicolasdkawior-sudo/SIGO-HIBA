@@ -828,8 +828,18 @@ const DataStore = {
               const initList = [...(window.INITIAL_DATA.obras || []), ...(window.INITIAL_DATA.infraestructura || [])];
               const cloudIds = new Set(cloudItems.map(x => x.id));
               let addedAny = false;
+              let deletedObraIds = [];
+              try {
+                deletedObraIds = JSON.parse(localStorage.getItem('sigo_deleted_obra_ids') || '[]');
+              } catch (e) {
+                deletedObraIds = [];
+              }
               initList.forEach(initItem => {
-                if (!cloudIds.has(initItem.id)) {
+                const initCleanId = (initItem.id || '').toString().trim().toLowerCase();
+                const initCleanCod = (initItem.codigo || '').toString().trim().toLowerCase();
+                const isDeleted = deletedObraIds.includes(initCleanId) || (initCleanCod && deletedObraIds.includes(initCleanCod));
+
+                if (!cloudIds.has(initItem.id) && !isDeleted) {
                   cloudItems.push(JSON.parse(JSON.stringify(initItem)));
                   cloudIds.add(initItem.id);
                   addedAny = true;
@@ -3489,6 +3499,17 @@ const DataStore = {
     });
 
     const deletedItem = this.items.splice(idx, 1)[0];
+
+    // Registrar ID en lista negra de borrados para prevenir resurrección desde INITIAL_DATA en syncWithCloud
+    try {
+      let deletedObraIds = JSON.parse(localStorage.getItem('sigo_deleted_obra_ids') || '[]');
+      const idsToAdd = [realId, realCodigo, targetId].filter(Boolean).map(s => s.toString().trim().toLowerCase());
+      idsToAdd.forEach(idStr => {
+        if (!deletedObraIds.includes(idStr)) deletedObraIds.push(idStr);
+      });
+      localStorage.setItem('sigo_deleted_obra_ids', JSON.stringify(deletedObraIds));
+    } catch (e) {}
+
     this.persist(true);
 
     // Sincronizar de forma asíncrona con el backend remoto / Supabase
