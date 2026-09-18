@@ -669,19 +669,6 @@ const DataStore = {
 
         this.persist(false);
       }
-    // Filtrar inmediatamente cualquier obra previamente eliminada para que JAMÁS reaparezca
-    let deletedObraIds = [];
-    try {
-      deletedObraIds = JSON.parse(localStorage.getItem('sigo_deleted_obra_ids') || '[]');
-    } catch (e) {
-      deletedObraIds = [];
-    }
-    if (deletedObraIds.length > 0 && Array.isArray(this.items)) {
-      this.items = this.items.filter(item => {
-        const itemCleanId = (item.id || '').toString().trim().toLowerCase();
-        const itemCleanCod = (item.codigo || '').toString().trim().toLowerCase();
-        return !deletedObraIds.includes(itemCleanId) && (!itemCleanCod || !deletedObraIds.includes(itemCleanCod));
-      });
     }
 
     // Normalizar datos (unificación de Anteproyecto en Factibilidad y Proyecto para licitar en Proyecto)
