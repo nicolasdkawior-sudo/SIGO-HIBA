@@ -5071,9 +5071,12 @@ const App = {
     const panelContratacion = document.getElementById('modalObraContratacionPanel');
     if (panelContratacion) {
       setVal('modalObraOrdenCompra', item.orden_compra || item.numero_oc || '');
-      setVal('modalObraMontoAdjudicado', (item.monto_adjudicado_usd || item.monto_total_usd || montoObra) ? DataStore.formatNumberAR(item.monto_adjudicado_usd || item.monto_total_usd || montoObra) : '0,00');
+      const montoAdj = (item.monto_adjudicado_usd !== undefined && item.monto_adjudicado_usd !== null) ? item.monto_adjudicado_usd : (item.monto_total_usd || montoObra || 0);
+      setVal('modalObraMontoAdjudicado', montoAdj ? DataStore.formatNumberAR(montoAdj) : '0,00');
       setVal('modalObraAnticipoPct', (item.anticipo_porcentaje !== undefined && item.anticipo_porcentaje !== null) ? item.anticipo_porcentaje : 0);
-      setVal('modalObraPlazoMeses', item.plazo_meses || '');
+      if (item.anticipo_monto_usd) {
+        setVal('modalObraAnticipoUSD', DataStore.formatUSD(item.anticipo_monto_usd));
+      }
       this.handleModalAnticipoChange();
     }
 
@@ -5093,6 +5096,29 @@ const App = {
     const saldoUSD = Math.round((monto - anticipoUSD) * 100) / 100;
 
     if (elUSD) elUSD.value = DataStore.formatUSD(anticipoUSD);
+    if (badge) {
+      badge.innerText = pct > 0 
+        ? `Anticipo OC: ${pct}% (USD ${DataStore.formatUSD(anticipoUSD)}) • Saldo Restante: USD ${DataStore.formatUSD(saldoUSD)}`
+        : `Sin anticipo pactado en OC (100% distribuido uniformemente)`;
+    }
+  },
+
+  handleModalAnticipoUSDChange() {
+    const elMonto = document.getElementById('modalObraMontoAdjudicado');
+    const elPct = document.getElementById('modalObraAnticipoPct');
+    const elUSD = document.getElementById('modalObraAnticipoUSD');
+    const badge = document.getElementById('modalObraAnticipoInfoBadge');
+
+    const monto = DataStore.parseCurrency(elMonto ? elMonto.value : 0) || 0;
+    const anticipoUSD = DataStore.parseCurrency(elUSD ? elUSD.value : 0) || 0;
+    
+    let pct = 0;
+    if (monto > 0) {
+      pct = Math.min(100, Math.max(0, Math.round(((anticipoUSD / monto) * 100) * 10) / 10));
+    }
+    if (elPct) elPct.value = pct;
+
+    const saldoUSD = Math.round((monto - anticipoUSD) * 100) / 100;
     if (badge) {
       badge.innerText = pct > 0 
         ? `Anticipo OC: ${pct}% (USD ${DataStore.formatUSD(anticipoUSD)}) • Saldo Restante: USD ${DataStore.formatUSD(saldoUSD)}`
@@ -5241,8 +5267,9 @@ const App = {
       'modalObraPrioridadMed',
       'modalObraDependenciaSelect',
       'modalObraOrdenCompra',
+      'modalObraMontoAdjudicado',
       'modalObraAnticipoPct',
-      'modalObraPlazoMeses',
+      'modalObraAnticipoUSD',
       'modalObraObservaciones'
     ];
 
@@ -5457,7 +5484,7 @@ const App = {
         'modalObraPartida', 'modalObraMontoPartida', 'modalObraMontoObra', 'modalObraMontoEquip',
         'modalObraM2', 'modalObraResponsable', 'modalObraResponsableSelect', 'modalObraProveedor',
         'modalObraCategoria', 'modalObraPrioridadTec', 'modalObraPrioridadMed', 'modalObraDependenciaSelect',
-        'modalObraOrdenCompra', 'modalObraAnticipoPct', 'modalObraPlazoMeses'
+        'modalObraOrdenCompra', 'modalObraMontoAdjudicado', 'modalObraAnticipoPct', 'modalObraAnticipoUSD'
       ];
       lockedFieldIds.forEach(fId => {
         const el = document.getElementById(fId);
@@ -5767,24 +5794,29 @@ const App = {
       item.prioridad_medica_ponderada_default = false;
     }
 
-    // Anticipo en Orden de Compra y Plazo de Ejecución
+    // Anticipo en Orden de Compra y Condiciones de Contratación
     const inputOC = document.getElementById('modalObraOrdenCompra');
     if (inputOC) {
       const ocVal = inputOC.value.trim();
       item.orden_compra = ocVal;
       item.numero_oc = ocVal;
     }
+    const inputMontoAdj = document.getElementById('modalObraMontoAdjudicado');
+    if (inputMontoAdj) {
+      const mAdj = DataStore.parseCurrency(inputMontoAdj.value) || 0;
+      item.monto_adjudicado_usd = mAdj;
+    }
     const inputAnticipoPct = document.getElementById('modalObraAnticipoPct');
+    const inputAnticipoUSD = document.getElementById('modalObraAnticipoUSD');
     if (inputAnticipoPct) {
       const aPct = Math.min(100, Math.max(0, parseFloat(inputAnticipoPct.value) || 0));
       item.anticipo_porcentaje = aPct;
-      const baseMonto = item.monto_adjudicado_usd || newMontoTotal;
-      item.anticipo_monto_usd = Math.round((baseMonto * (aPct / 100)) * 100) / 100;
-    }
-    const inputPlazoMeses = document.getElementById('modalObraPlazoMeses');
-    if (inputPlazoMeses && inputPlazoMeses.value) {
-      const pMeses = parseInt(inputPlazoMeses.value, 10) || 0;
-      if (pMeses > 0) item.plazo_meses = pMeses;
+      const baseMonto = (item.monto_adjudicado_usd > 0) ? item.monto_adjudicado_usd : newMontoTotal;
+      if (inputAnticipoUSD && inputAnticipoUSD.value) {
+        item.anticipo_monto_usd = DataStore.parseCurrency(inputAnticipoUSD.value) || Math.round((baseMonto * (aPct / 100)) * 100) / 100;
+      } else {
+        item.anticipo_monto_usd = Math.round((baseMonto * (aPct / 100)) * 100) / 100;
+      }
     }
 
     const pond = DataStore.getPonderacionGlobal(item);
