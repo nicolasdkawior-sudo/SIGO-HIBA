@@ -916,26 +916,57 @@ const App = {
         // ================= RESTO DE USUARIOS / PERFILES ESTÁNDAR: PANEL DE CONTROL PRESUPUESTARIO =================
         const userSede = u?.sede || 'Central';
         
-        // 1. Filtrar obras de la sede del usuario (excluyendo Factibilidad y Suspendidas)
-        const sedeItems = (DataStore.items || []).filter(item => {
-          const s = item.sede || 'Central';
-          if (userSede !== 'Todas' && s !== userSede) return false;
+        // 1. Detectar el Departamento/Dependencia del Usuario Activo
+        const userDepRaw = (this.filters && this.filters.dependencia && this.filters.dependencia !== 'TODAS')
+          ? this.filters.dependencia
+          : (u?.dependencia || 'Departamento de Proyectos Central');
+
+        const userDepNormalized = (typeof DataStore !== 'undefined' && DataStore.normalizeDependencia) 
+          ? DataStore.normalizeDependencia(userDepRaw) 
+          : userDepRaw;
+
+        const userDepClean = userDepNormalized.trim().toLowerCase();
+        const depDisplay = userDepNormalized.replace('Departamento de ', 'Dpto. ').replace('Centros Periféricos', 'Ctros. Periféricos');
+
+        // 2. Filtrar obras correspondientes ÚNICAMENTE al Departamento del usuario (excluyendo Factibilidad y Suspendidas)
+        const deptItems = (DataStore.items || []).filter(item => {
           const st = (item.estado || item.estado_id || '').toLowerCase();
           if (st.includes('factibilidad') || st.includes('suspendid')) return false;
-          return true;
+
+          const rawObraDep = (typeof DataStore !== 'undefined' && DataStore.getObraDependencia) 
+            ? DataStore.getObraDependencia(item) 
+            : (item.dependencia || '');
+
+          const obraDepNormalized = (typeof DataStore !== 'undefined' && DataStore.normalizeDependencia)
+            ? DataStore.normalizeDependencia(rawObraDep)
+            : rawObraDep;
+
+          const obraDepClean = obraDepNormalized.trim().toLowerCase();
+
+          // Aislamiento por Sede si el usuario no pertenece a "Todas"
+          if (userSede !== 'Todas' && item.sede && item.sede !== 'Todas') {
+            const itemSedeClean = (item.sede || '').trim().toLowerCase();
+            const userSedeClean = userSede.trim().toLowerCase();
+            if (userSedeClean === 'central' && (itemSedeClean.includes('justo') || itemSedeClean.includes('perif'))) return false;
+            if (userSedeClean.includes('justo') && !itemSedeClean.includes('justo')) return false;
+            if (userSedeClean.includes('perif') && !itemSedeClean.includes('perif')) return false;
+          }
+
+          // Verificación de coincidencia departamental estricta
+          return obraDepClean === userDepClean || (obraDepClean.length > 5 && (obraDepClean.includes(userDepClean) || userDepClean.includes(obraDepClean)));
         });
 
-        // 2. Inversión Acumulada (Ejecutada / Comprometida)
-        const inversionAcumulada = sedeItems.reduce((acc, x) => acc + (x.monto_adjudicado_usd || x.monto_total_usd || x.monto_obra_usd || 0), 0);
+        // 3. Inversión Acumulada del Departamento (Ejecutada / Comprometida)
+        const inversionAcumulada = deptItems.reduce((acc, x) => acc + (x.monto_adjudicado_usd || x.monto_total_usd || x.monto_obra_usd || 0), 0);
 
-        // 3. Presupuesto Autorizado (Partidas Asignadas)
-        let presupuestoAutorizado = sedeItems.reduce((acc, x) => acc + (x.monto_partida_usd || x.monto_total_usd || x.monto_obra_usd || 0), 0);
+        // 4. Presupuesto Autorizado del Departamento (Partidas Asignadas)
+        let presupuestoAutorizado = deptItems.reduce((acc, x) => acc + (x.monto_partida_usd || x.monto_total_usd || x.monto_obra_usd || 0), 0);
         
-        // Resguardo si no hay partidas registradas aún para esa sede: usar un valor de referencia representativo
+        // Resguardo de margen presupuestario si no hay partidas individuales cargadas
         if (presupuestoAutorizado === 0 && inversionAcumulada > 0) {
           presupuestoAutorizado = Math.round(inversionAcumulada * 1.15); // baseline con margen
         } else if (presupuestoAutorizado === 0) {
-          presupuestoAutorizado = 15000000; // baseline 15M USD
+          presupuestoAutorizado = 5000000; // baseline 5M USD
         }
 
         const isOverBudget = inversionAcumulada > presupuestoAutorizado;
@@ -951,8 +982,8 @@ const App = {
 
           headerContainer.innerHTML = `
             <div>
-              <h3 class="font-bold text-slate-800 text-sm">Control Presupuestario — Sede ${userSede}</h3>
-              <p class="text-xs text-slate-400">Inversión acumulada vs. partidas autorizadas del ejercicio</p>
+              <h3 class="font-bold text-slate-800 text-sm">Control Presupuestario — ${depDisplay}</h3>
+              <p class="text-xs text-slate-400">Inversión acumulada vs. partidas del departamento (${deptItems.length} obra${deptItems.length === 1 ? '' : 's'})</p>
             </div>
             <span class="text-xs font-semibold ${badgeClass} px-2.5 py-1 rounded-md flex items-center space-x-1">
               <span>${badgeIcon}</span>
