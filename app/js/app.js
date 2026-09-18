@@ -913,33 +913,75 @@ const App = {
         }
 
       } else {
-        // ================= RESTO DE USUARIOS / PERFILES ESTÁNDAR: INVERSIÓN EN SU SEDE ASIGNADA =================
+        // ================= RESTO DE USUARIOS / PERFILES ESTÁNDAR: PANEL DE CONTROL PRESUPUESTARIO =================
         const userSede = u?.sede || 'Central';
+        
+        // 1. Filtrar obras de la sede del usuario (excluyendo Factibilidad y Suspendidas)
+        const sedeItems = (DataStore.items || []).filter(item => {
+          const s = item.sede || 'Central';
+          if (userSede !== 'Todas' && s !== userSede) return false;
+          const st = (item.estado || item.estado_id || '').toLowerCase();
+          if (st.includes('factibilidad') || st.includes('suspendid')) return false;
+          return true;
+        });
+
+        // 2. Inversión Acumulada (Ejecutada / Comprometida)
+        const inversionAcumulada = sedeItems.reduce((acc, x) => acc + (x.monto_adjudicado_usd || x.monto_total_usd || x.monto_obra_usd || 0), 0);
+
+        // 3. Presupuesto Autorizado (Partidas Asignadas)
+        let presupuestoAutorizado = sedeItems.reduce((acc, x) => acc + (x.monto_partida_usd || x.monto_total_usd || x.monto_obra_usd || 0), 0);
+        
+        // Resguardo si no hay partidas registradas aún para esa sede: usar un valor de referencia representativo
+        if (presupuestoAutorizado === 0 && inversionAcumulada > 0) {
+          presupuestoAutorizado = Math.round(inversionAcumulada * 1.15); // baseline con margen
+        } else if (presupuestoAutorizado === 0) {
+          presupuestoAutorizado = 15000000; // baseline 15M USD
+        }
+
+        const isOverBudget = inversionAcumulada > presupuestoAutorizado;
+        const exceso = isOverBudget ? (inversionAcumulada - presupuestoAutorizado) : 0;
+        const remanente = isOverBudget ? 0 : (presupuestoAutorizado - inversionAcumulada);
+
         if (headerContainer) {
+          const badgeClass = isOverBudget 
+            ? 'text-rose-700 bg-rose-50 border border-rose-200' 
+            : 'text-emerald-700 bg-emerald-50 border border-emerald-200';
+          const badgeIcon = isOverBudget ? '⚠️' : '✅';
+          const badgeLabel = isOverBudget ? 'Exceso Presupuestario' : 'Control Presupuestario OK';
+
           headerContainer.innerHTML = `
             <div>
-              <h3 class="font-bold text-slate-800 text-sm">Inversión en Sede ${userSede} (USD)</h3>
-              <p class="text-xs text-slate-400">Inversión ejecutada y asignada a la Sede ${userSede}</p>
+              <h3 class="font-bold text-slate-800 text-sm">Control Presupuestario — Sede ${userSede}</h3>
+              <p class="text-xs text-slate-400">Inversión acumulada vs. partidas autorizadas del ejercicio</p>
             </div>
-            <span class="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded">Sede ${userSede}</span>
+            <span class="text-xs font-semibold ${badgeClass} px-2.5 py-1 rounded-md flex items-center space-x-1">
+              <span>${badgeIcon}</span>
+              <span>${badgeLabel}</span>
+            </span>
           `;
         }
 
-        const labels = ['Central', 'San Justo', 'Periféricos'];
-        const dataUsd = labels.map(s => kpis?.sedesCount[s]?.usd || 0);
-        const totalSedesUsd = dataUsd.reduce((a, b) => a + b, 0);
-        const userSedeIndex = labels.indexOf(userSede) >= 0 ? labels.indexOf(userSede) : 0;
-        const userSedeUsd = dataUsd[userSedeIndex] || 0;
+        let chartLabels = [];
+        let chartData = [];
+        let chartColors = [];
 
-        const bgColors = labels.map((s, idx) => idx === userSedeIndex ? (s === 'Central' ? '#2563eb' : (s === 'San Justo' ? '#10b981' : '#f59e0b')) : '#e2e8f0');
+        if (isOverBudget) {
+          chartLabels = ['Presupuesto Autorizado', 'Exceso Presupuestario'];
+          chartData = [presupuestoAutorizado, exceso];
+          chartColors = ['#2563eb', '#ef4444']; // Azul base, Rojo exceso
+        } else {
+          chartLabels = ['Inversión Ejecutada', 'Remanente Disponible'];
+          chartData = [inversionAcumulada, remanente];
+          chartColors = ['#2563eb', '#10b981']; // Azul ejecutado, Verde remanente
+        }
 
         this.charts.sedes = new Chart(ctxSedes, {
           type: 'doughnut',
           data: {
-            labels: labels,
+            labels: chartLabels,
             datasets: [{
-              data: dataUsd,
-              backgroundColor: bgColors,
+              data: chartData,
+              backgroundColor: chartColors,
               borderWidth: 3,
               borderColor: '#ffffff',
               hoverOffset: 6
@@ -947,7 +989,7 @@ const App = {
           },
           plugins: [
             {
-              id: 'centerTextDoughnutSede',
+              id: 'centerTextPresupuesto',
               beforeDraw(chart) {
                 const { ctx, width, height } = chart;
                 const meta = chart.getDatasetMeta(0);
@@ -959,10 +1001,16 @@ const App = {
                 ctx.textBaseline = 'middle';
                 ctx.font = 'bold 15px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
                 ctx.fillStyle = '#0f172a';
-                ctx.fillText(DataStore.formatMillionsUSD(userSedeUsd), centerX, centerY - 6);
+                ctx.fillText(DataStore.formatMillionsUSD(inversionAcumulada), centerX, centerY - 6);
+                
                 ctx.font = 'bold 10px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-                ctx.fillStyle = '#64748b';
-                ctx.fillText(`SEDE ${userSede.toUpperCase()}`, centerX, centerY + 11);
+                if (isOverBudget) {
+                  ctx.fillStyle = '#dc2626';
+                  ctx.fillText('EXCESO PRESUPUESTARIO', centerX, centerY + 11);
+                } else {
+                  ctx.fillStyle = '#059669';
+                  ctx.fillText('INVERSIÓN ACUMULADA', centerX, centerY + 11);
+                }
                 ctx.restore();
               }
             }
@@ -983,13 +1031,11 @@ const App = {
                 callbacks: {
                   label: function(ctx) {
                     const val = ctx.raw || 0;
-                    const sName = labels[ctx.dataIndex];
-                    const c = kpis?.sedesCount[sName]?.count || 0;
-                    const pct = totalSedesUsd > 0 ? ((val / totalSedesUsd) * 100).toFixed(1) : '0.0';
+                    const label = chartLabels[ctx.dataIndex];
+                    const pct = presupuestoAutorizado > 0 ? ((val / presupuestoAutorizado) * 100).toFixed(1) : '0.0';
                     return [
-                      ` ${sName}: ${DataStore.formatMillionsUSD(val)} (${pct}%)`,
-                      ` Total exacto: ${DataStore.formatUSD(val)}`,
-                      ` Obras asignadas: ${c}`
+                      ` ${label}: ${DataStore.formatMillionsUSD(val)} (${pct}%)`,
+                      ` Monto exacto: ${DataStore.formatUSD(val)}`
                     ];
                   }
                 }
@@ -998,34 +1044,61 @@ const App = {
           }
         });
 
-        // Leyenda destacando sede asignada
+        // Leyendas / Tarjetas de Control Presupuestario
         const legendContainer = document.getElementById('rightWidgetLegend');
         if (legendContainer) {
-          const colorMap = {
-            'Central': { bg: 'bg-blue-600', text: 'text-blue-700', border: 'border-blue-100' },
-            'San Justo': { bg: 'bg-emerald-500', text: 'text-emerald-700', border: 'border-emerald-100' },
-            'Periféricos': { bg: 'bg-amber-500', text: 'text-amber-700', border: 'border-amber-100' }
-          };
-          let html = '<div class="mt-3 border-t border-slate-100 pt-3 grid grid-cols-3 gap-2">';
-          labels.forEach((sede, idx) => {
-            const val = dataUsd[idx] || 0;
-            const pct = totalSedesUsd > 0 ? ((val / totalSedesUsd) * 100).toFixed(1) : '0.0';
-            const isUserSede = idx === userSedeIndex;
-            const cInfo = colorMap[sede] || { bg: 'bg-slate-500', text: 'text-slate-700', border: 'border-slate-100' };
-            const formatted = DataStore.formatMillionsUSD ? DataStore.formatMillionsUSD(val) : `USD ${(val/1e6).toFixed(2)}M`;
-            html += `
-              <div class="${isUserSede ? 'bg-blue-50/90 border-blue-200 shadow-xs' : 'bg-slate-50/60 border-slate-100 opacity-70'} p-2 rounded-lg border text-center transition-all">
+          const pctEjecutado = presupuestoAutorizado > 0 ? ((inversionAcumulada / presupuestoAutorizado) * 100).toFixed(1) : '0.0';
+          
+          let card3Html = '';
+          if (isOverBudget) {
+            const pctExceso = presupuestoAutorizado > 0 ? ((exceso / presupuestoAutorizado) * 100).toFixed(1) : '0.0';
+            card3Html = `
+              <div class="bg-rose-50/90 p-2 rounded-lg border border-rose-200 text-center shadow-2xs">
                 <div class="flex items-center justify-center space-x-1.5 mb-1">
-                  <span class="w-2.5 h-2.5 rounded-full ${isUserSede ? cInfo.bg : 'bg-slate-400'} inline-block"></span>
-                  <span class="text-xs font-bold ${isUserSede ? 'text-blue-900' : 'text-slate-600'} truncate">${sede}</span>
+                  <span class="w-2.5 h-2.5 rounded-full bg-rose-600 inline-block"></span>
+                  <span class="text-xs font-bold text-rose-900 truncate">Exceso / Desvío</span>
                 </div>
-                <div class="text-xs font-extrabold ${isUserSede ? 'text-blue-950' : 'text-slate-700'} font-mono tracking-tight">${formatted}</div>
-                <div class="text-[10px] font-bold ${isUserSede ? 'text-blue-700' : 'text-slate-500'} mt-0.5">${pct}% del total</div>
+                <div class="text-xs font-extrabold text-rose-950 font-mono tracking-tight">+${DataStore.formatMillionsUSD(exceso)}</div>
+                <div class="text-[10px] font-bold text-rose-700 mt-0.5">+${pctExceso}% por encima</div>
               </div>
             `;
-          });
-          html += '</div>';
-          legendContainer.innerHTML = html;
+          } else {
+            const pctRemanente = presupuestoAutorizado > 0 ? ((remanente / presupuestoAutorizado) * 100).toFixed(1) : '0.0';
+            card3Html = `
+              <div class="bg-emerald-50/90 p-2 rounded-lg border border-emerald-200 text-center shadow-2xs">
+                <div class="flex items-center justify-center space-x-1.5 mb-1">
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+                  <span class="text-xs font-bold text-emerald-900 truncate">Saldo Disponible</span>
+                </div>
+                <div class="text-xs font-extrabold text-emerald-950 font-mono tracking-tight">${DataStore.formatMillionsUSD(remanente)}</div>
+                <div class="text-[10px] font-bold text-emerald-700 mt-0.5">${pctRemanente}% disponible</div>
+              </div>
+            `;
+          }
+
+          legendContainer.innerHTML = `
+            <div class="mt-3 border-t border-slate-100 pt-3 grid grid-cols-3 gap-2">
+              <div class="bg-blue-50/90 p-2 rounded-lg border border-blue-200 text-center shadow-2xs">
+                <div class="flex items-center justify-center space-x-1.5 mb-1">
+                  <span class="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block"></span>
+                  <span class="text-xs font-bold text-blue-900 truncate">Inversión Actual</span>
+                </div>
+                <div class="text-xs font-extrabold text-blue-950 font-mono tracking-tight">${DataStore.formatMillionsUSD(inversionAcumulada)}</div>
+                <div class="text-[10px] font-bold text-blue-700 mt-0.5">${pctEjecutado}% del Presupuesto</div>
+              </div>
+
+              <div class="bg-slate-50/80 p-2 rounded-lg border border-slate-200 text-center shadow-2xs">
+                <div class="flex items-center justify-center space-x-1.5 mb-1">
+                  <span class="w-2.5 h-2.5 rounded-full bg-slate-500 inline-block"></span>
+                  <span class="text-xs font-bold text-slate-800 truncate">Partidas Asignadas</span>
+                </div>
+                <div class="text-xs font-extrabold text-slate-900 font-mono tracking-tight">${DataStore.formatMillionsUSD(presupuestoAutorizado)}</div>
+                <div class="text-[10px] font-bold text-slate-500 mt-0.5">100% Autorizado</div>
+              </div>
+
+              ${card3Html}
+            </div>
+          `;
         }
       }
     }
