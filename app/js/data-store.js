@@ -3354,7 +3354,7 @@ const DataStore = {
     const storedHash = user.password_hash || null;
     const hasStoredPassword = Boolean(user.password_hash || user.password);
 
-    console.log(`[LOGIN DEBUG] 2. Hash calculated en tiempo real: "${computedHash}" (Salt: "${userSalt}")`);
+    console.log(`[LOGIN DEBUG] 2. Hash calculado en tiempo real: "${computedHash}" (Salt: "${userSalt}")`);
     console.log(`[LOGIN DEBUG] 3. Hash exacto almacenado en base de datos: "${storedHash}"`);
     console.log(`[LOGIN DEBUG] 3.1. ¿Existe campo de contraseña/hash en JSON?: ${hasStoredPassword ? 'SÍ' : 'NO (Falta campo de contraseña en el objeto de usuario)'}`);
 

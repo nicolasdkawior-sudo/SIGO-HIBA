@@ -775,7 +775,7 @@ const App = {
                 ctx.textBaseline = 'bottom';
                 ctx.font = 'bold 12px system-ui, -apple-system, sans-serif';
                 ctx.fillStyle = '#1e293b';
-                ctx.fillText(`${val} days`, bar.x, bar.y - 4);
+                ctx.fillText(`${val} días`, bar.x, bar.y - 4);
                 ctx.restore();
               });
             }
